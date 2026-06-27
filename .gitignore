@@ -1,0 +1,81 @@
+# ===== Dependencias =====
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# ===== Entorno / secretos =====
+.env
+.env.*
+!.env.example
+*.local
+
+# ===== Expo / React Native =====
+.expo/
+dist/
+web-build/
+*.orig.*
+.expo-shared/
+
+# Builds nativas generadas por prebuild
+/app/android/
+/app/ios/
+
+# Metro
+.metro-health-check*
+
+# EAS
+.easignore
+
+# ===== TypeScript / build =====
+*.tsbuildinfo
+build/
+lib/
+
+# ===== Supabase =====
+supabase/.branches
+supabase/.temp
+supabase/.env
+# El esquema generado SÍ se versiona; los volcados temporales no:
+supabase/seed.local.sql
+
+# ===== Bases de datos locales =====
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+
+# ===== Logs =====
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+pnpm-debug.*
+logs/
+*.log
+
+# ===== Sistema operativo =====
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+
+# ===== Editores =====
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.shared.json
+*.swp
+*.swo
+
+# ===== Caché / temporales =====
+.cache/
+.turbo/
+coverage/
+*.pem

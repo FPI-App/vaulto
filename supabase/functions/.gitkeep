@@ -1,0 +1,2 @@
+# Edge functions (Deno) de Supabase.
+# Cada función en su propio subdirectorio: supabase/functions/<nombre>/index.ts
