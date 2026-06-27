@@ -2,15 +2,30 @@
   "name": "@vaulto/shared",
   "version": "0.0.0",
   "private": true,
-  "description": "Código compartido entre la app y el backend de Vaulto: tipos del esquema, dominio puro y esquema PowerSync",
+  "description": "Código compartido entre la app y el backend de Vaulto: tipos del esquema, dominio puro (contrato de integración + dinero) y esquema PowerSync",
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types/index.ts",
+    "./domain": "./src/domain/index.ts",
+    "./powersync": "./src/powersync/index.ts"
+  },
   "scripts": {
     "lint": "echo \"(pendiente configurar linter)\" && exit 0",
     "typecheck": "tsc --noEmit"
   },
+  "peerDependencies": {
+    "@powersync/react-native": ">=1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@powersync/react-native": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@powersync/react-native": "^1.20.0",
     "typescript": "^5.6.0"
   }
 }

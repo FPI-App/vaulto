@@ -1,0 +1,45 @@
+-- ============================================================================
+-- Vaulto — Seed de desarrollo (OPCIONAL)
+-- ============================================================================
+-- Datos mínimos para desarrollo local: un set de categorías sugeridas.
+--
+-- ⚠️  NO ejecutar en producción. Las categorías reales las crea el onboarding
+--     de cada usuario en SU espacio. Este seed asume un espacio de prueba fijo.
+--
+-- Cómo usarlo en local:
+--   1. Crea (o identifica) un espacio de prueba y copia su id.
+--   2. Reemplaza el placeholder ESPACIO_DEV_ID de abajo por ese uuid.
+--   3. Descomenta el bloque y corre `pnpm db:migrate` (o ejecútalo a mano).
+--
+-- Se deja comentado a propósito para que `supabase db reset` no lo aplique solo
+-- y para que NUNCA viaje a prod por accidente.
+-- ============================================================================
+
+-- do $$
+-- declare
+--   v_espacio uuid := 'ESPACIO_DEV_ID';  -- <-- reemplazar por el uuid del espacio de prueba
+-- begin
+--   -- Categorías de egreso sugeridas (Colombia/LATAM).
+--   insert into public.categoria (espacio_id, nombre, tipo, icono, color) values
+--     (v_espacio, 'Mercado',        'egreso', 'cart',        '#22c55e'),
+--     (v_espacio, 'Arriendo',       'egreso', 'home',        '#3b82f6'),
+--     (v_espacio, 'Servicios',      'egreso', 'bolt',        '#f59e0b'),
+--     (v_espacio, 'Transporte',     'egreso', 'bus',         '#06b6d4'),
+--     (v_espacio, 'Restaurantes',   'egreso', 'utensils',    '#ef4444'),
+--     (v_espacio, 'Salud',          'egreso', 'heart-pulse', '#ec4899'),
+--     (v_espacio, 'Entretenimiento','egreso', 'film',        '#8b5cf6'),
+--     (v_espacio, 'Educación',      'egreso', 'book',        '#14b8a6'),
+--     (v_espacio, 'Suscripciones',  'egreso', 'repeat',      '#a855f7'),
+--     (v_espacio, 'Otros',          'egreso', 'ellipsis',    '#64748b')
+--   on conflict do nothing;
+--
+--   -- Categorías de ingreso sugeridas.
+--   insert into public.categoria (espacio_id, nombre, tipo, icono, color) values
+--     (v_espacio, 'Salario',        'ingreso', 'briefcase', '#16a34a'),
+--     (v_espacio, 'Freelance',      'ingreso', 'laptop',    '#0ea5e9'),
+--     (v_espacio, 'Inversiones',    'ingreso', 'trending-up','#22c55e'),
+--     (v_espacio, 'Regalo',         'ingreso', 'gift',      '#f43f5e'),
+--     (v_espacio, 'Otros ingresos', 'ingreso', 'plus',      '#64748b')
+--   on conflict do nothing;
+-- end;
+-- $$;

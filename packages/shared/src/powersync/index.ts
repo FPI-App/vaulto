@@ -1,9 +1,7 @@
-// Definición del esquema de sincronización de PowerSync (lado cliente).
+// Punto de entrada del esquema de PowerSync (lado cliente).
 //
-// Describe las tablas que PowerSync replica a la SQLite local cifrada (SQLCipher).
-// Debe ser coherente con las migraciones de `supabase/migrations` y con las
-// reglas de sincronización de la instancia de PowerSync.
-//
-// Se completa tras decidir el esquema definitivo (post-spike de sync).
+// Reexporta el AppSchema y el tipo Database derivado. La app importa desde
+// `@vaulto/shared` (que reexporta esto) para construir el PowerSyncDatabase.
 
-export {}
+export { AppSchema } from './schema'
+export type { Database } from './schema'

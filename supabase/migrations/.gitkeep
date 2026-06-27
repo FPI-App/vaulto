@@ -1,2 +1,0 @@
-# Las migraciones SQL van aquí, una por archivo, ordenadas por nombre.
-# Crea la primera con: supabase migration new <nombre_en_imperativo>
