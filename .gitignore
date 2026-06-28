@@ -35,6 +35,7 @@ web-build/
 *.tsbuildinfo
 build/
 lib/
+!app/src/lib/
 
 # ===== Supabase =====
 supabase/.branches
