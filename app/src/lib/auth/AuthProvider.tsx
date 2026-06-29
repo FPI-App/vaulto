@@ -1,6 +1,7 @@
 import { Session } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../supabase';
+import * as Linking from 'expo-linking';
 
 interface AuthContextType {
   session: Session | null;
@@ -40,7 +41,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
     },
     signUpWithPassword: async (email, password) => {
-      const { error } = await supabase.auth.signUp({ email, password });
+      // expo-linking se importa arriba
+      const redirectUrl = Linking.createURL('/'); 
+      const { error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+        }
+      });
       if (error) throw error;
     },
     resetPassword: async (email) => {

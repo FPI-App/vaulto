@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@op-engineering/op-sqlite": "^17.1.0",
+    "@op-engineering/op-sqlite": "^17.1.1",
     "@powersync/op-sqlite": "^0.9.13",
     "@powersync/react-native": "^1.35.7",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -22,6 +22,7 @@
     "expo": "^56.0.12",
     "expo-constants": "~56.0.18",
     "expo-crypto": "~56.0.4",
+    "expo-dev-client": "~56.0.20",
     "expo-linking": "~56.0.14",
     "expo-router": "~56.2.11",
     "expo-secure-store": "~56.0.4",
@@ -39,6 +40,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.0",
+    "@journeyapps/react-native-quick-sqlite": "^2.5.2",
     "@types/react": "~19.2.0",
     "typescript": "^5.6.0"
   },
