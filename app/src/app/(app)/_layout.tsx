@@ -1,5 +1,5 @@
 import { Tabs, useRouter, useSegments } from 'expo-router'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@powersync/react-native'
 
 import { useTheme } from '@/theme'
@@ -16,27 +16,41 @@ export default function AppTabsLayout() {
   const segments = useSegments()
 
   // Verificamos el estado del perfil en la base local (PowerSync)
-  const { data: perfilData, isLoading } = useQuery(
-    'SELECT onboarding_completo FROM perfil WHERE id = ?',
-    [session?.user?.id]
-  )
+  const { data: perfilData, isLoading } = useQuery('SELECT * FROM perfil')
+
+  const [optimisticComplete, setOptimisticComplete] = useState(false)
 
   useEffect(() => {
+    console.log('[Layout] useEffect disparado. isLoading:', isLoading, 'session:', !!session)
     if (isLoading || !session) return
 
-    const isOnboarding = segments[segments.length - 1] === 'onboarding'
-    const hasProfile = perfilData && perfilData.length > 0
-    const isCompleted = hasProfile && perfilData[0].onboarding_completo === 1
+    const isOnboarding = segments.includes('onboarding')
+    const myProfile = perfilData?.find((p: any) => p.id === session.user.id)
+    const hasProfile = !!myProfile
+    const isCompleted = hasProfile && (myProfile.onboarding_completo == 1 || myProfile.onboarding_completo === true)
 
-    if (!isCompleted && !isOnboarding) {
+    // Si detectamos que se completó, guardamos este estado de forma optimista
+    // Esto previene el "PowerSync Flicker" (cuando la mutación local se borra al subir, 
+    // pero la descarga del servidor tarda un par de segundos en llegar).
+    if (isCompleted && !optimisticComplete) {
+      setOptimisticComplete(true)
+    }
+
+    const effectivelyCompleted = isCompleted || optimisticComplete
+
+    console.log('[Layout] Estado actual -> isOnboarding:', isOnboarding, '| isCompleted (real):', isCompleted, '| effectivelyCompleted:', effectivelyCompleted)
+
+    if (!effectivelyCompleted && !isOnboarding) {
+      console.log('[Layout] Redirigiendo a onboarding porque no está completado.')
       router.replace('/(app)/onboarding')
-    } else if (isCompleted && isOnboarding) {
+    } else if (effectivelyCompleted && isOnboarding) {
+      console.log('[Layout] Redirigiendo al dashboard porque ya está completado.')
       router.replace('/(app)')
     }
-  }, [isLoading, perfilData, segments, router, session])
+  }, [isLoading, perfilData, segments, router, session, optimisticComplete])
 
   // Ocultamos la barra de navegación si estamos en el flujo de onboarding
-  const isOnboardingRoute = segments[segments.length - 1] === 'onboarding'
+  const isOnboardingRoute = segments.includes('onboarding')
 
   return (
     <Tabs

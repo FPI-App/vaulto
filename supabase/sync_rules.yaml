@@ -1,0 +1,22 @@
+bucket_definitions:
+  # El bucket 'user' contiene datos directos del usuario autenticado
+  user_data:
+    parameters: SELECT request.user_id() as user_id
+    data:
+      - SELECT * FROM public.perfil WHERE id = bucket.user_id
+      - SELECT * FROM public.espacio_miembro WHERE user_id = bucket.user_id
+
+  # El bucket 'espacios_compartidos' se instancia por CADA espacio en el que el usuario sea miembro
+  espacios_compartidos:
+    parameters: |
+      SELECT espacio_id as id 
+      FROM public.espacio_miembro 
+      WHERE user_id = request.user_id()
+    data:
+      - SELECT * FROM public.espacio WHERE id = bucket.id
+      - SELECT * FROM public.perfil WHERE espacio_id = bucket.id
+      - SELECT * FROM public.cuenta WHERE espacio_id = bucket.id
+      - SELECT * FROM public.categoria WHERE espacio_id = bucket.id
+      - SELECT * FROM public.movimiento WHERE espacio_id = bucket.id
+      - SELECT * FROM public.deuda WHERE espacio_id = bucket.id
+      - SELECT * FROM public.pago WHERE espacio_id = bucket.id

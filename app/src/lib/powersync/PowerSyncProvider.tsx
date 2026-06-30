@@ -1,7 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { PowerSyncContext } from '@powersync/react-native';
 import { db, setupPowerSync } from '../sync/db';
-
-const PowerSyncContext = createContext<typeof db | null>(null);
 
 export const PowerSyncProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isReady, setIsReady] = useState(false);
@@ -33,12 +32,4 @@ export const PowerSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       {children}
     </PowerSyncContext.Provider>
   );
-};
-
-export const usePowerSync = () => {
-  const context = useContext(PowerSyncContext);
-  if (!context) {
-    throw new Error('usePowerSync debe usarse dentro de un PowerSyncProvider');
-  }
-  return context;
 };

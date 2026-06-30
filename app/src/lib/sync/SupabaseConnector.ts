@@ -32,9 +32,29 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
 
     let lastOp: CrudEntry | null = null;
     try {
+      // 1. Obtener el token directamente de la sesión para asegurar autenticación
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        throw new Error('No token found for uploadData');
+      }
+
+      // 2. Usar un cliente autenticado al vuelo para garantizar que auth.uid() funcione en RLS
+      const { createClient } = require('@supabase/supabase-js');
+      const uploadClient = createClient(
+        process.env.EXPO_PUBLIC_SUPABASE_URL!,
+        process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          global: {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        }
+      );
+
       for (let op of transaction.crud) {
         lastOp = op;
-        const table = supabase.from(op.table);
+        const table = uploadClient.from(op.table);
         
         switch (op.op) {
           case UpdateType.PUT:
