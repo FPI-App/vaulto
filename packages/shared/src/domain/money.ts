@@ -105,3 +105,23 @@ export function formatNumero(monto: string | number, currency = 'COP'): string {
     maximumFractionDigits: sinDecimales ? 0 : 2,
   }).format(valor)
 }
+
+/**
+ * Normaliza lo que el usuario teclea en un input de monto a un string decimal
+ * con punto, apto para guardar en una columna numeric(14,2). Devuelve `null` si
+ * no es un monto válido y no-negativo.
+ *
+ * Convención es-CO: '.' es separador de miles y ',' el decimal
+ * ("1.250.000" -> "1250000.00", "1.250,50" -> "1250.50"). Pensado para reusarse
+ * en cuentas, movimientos y deudas.
+ */
+export function normalizarMontoInput(texto: string): string | null {
+  const limpio = texto.trim().replace(/\s/g, '')
+  if (!limpio) return null
+  // Quita los puntos de miles y convierte la coma decimal en punto.
+  const normal = limpio.replace(/\./g, '').replace(',', '.')
+  if (!/^\d+(\.\d+)?$/.test(normal)) return null
+  const n = Number.parseFloat(normal)
+  if (!Number.isFinite(n) || n < 0) return null
+  return desdeCentavos(aCentavos(normal))
+}
