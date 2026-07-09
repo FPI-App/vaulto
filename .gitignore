@@ -34,8 +34,8 @@ web-build/
 # ===== TypeScript / build =====
 *.tsbuildinfo
 build/
-lib/
-!app/src/lib/
+# Salida compilada de paquetes (NO el código fuente app/src/lib).
+packages/*/lib/
 
 # ===== Supabase =====
 supabase/.branches
