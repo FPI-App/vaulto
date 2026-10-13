@@ -14,7 +14,8 @@
   },
   "scripts": {
     "lint": "echo \"(pendiente configurar linter)\" && exit 0",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "peerDependencies": {
     "@powersync/react-native": ">=1.0.0"
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@powersync/react-native": "^1.20.0",
-    "typescript": "^5.6.0"
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.4"
   }
 }

@@ -78,23 +78,27 @@ export function calcularSaldos(
   cuentas: readonly CuentaParaSaldo[],
   movimientos: readonly MovimientoParaSaldo[],
 ): Record<string, string> {
-  const centavos: Record<string, number> = {}
-  for (const c of cuentas) centavos[c.id] = aCentavos(c.saldo_inicial)
+  const centavos = new Map<string, number>()
+  for (const c of cuentas) centavos.set(c.id, aCentavos(c.saldo_inicial))
+
+  const aplicar = (cuentaId: string | null, delta: number) => {
+    if (cuentaId === null) return
+    const actual = centavos.get(cuentaId)
+    if (actual !== undefined) centavos.set(cuentaId, actual + delta)
+  }
 
   for (const m of movimientos) {
     const monto = aCentavos(m.monto)
     if (m.tipo === 'transferencia') {
-      if (m.cuenta_id in centavos) centavos[m.cuenta_id] -= monto
-      if (m.cuenta_destino_id && m.cuenta_destino_id in centavos) {
-        centavos[m.cuenta_destino_id] += monto
-      }
-    } else if (m.cuenta_id in centavos) {
-      centavos[m.cuenta_id] += m.tipo === 'ingreso' ? monto : -monto
+      aplicar(m.cuenta_id, -monto)
+      aplicar(m.cuenta_destino_id, monto)
+    } else {
+      aplicar(m.cuenta_id, m.tipo === 'ingreso' ? monto : -monto)
     }
   }
 
   const saldos: Record<string, string> = {}
-  for (const id in centavos) saldos[id] = desdeCentavos(centavos[id])
+  for (const [id, total] of centavos) saldos[id] = desdeCentavos(total)
   return saldos
 }
 
