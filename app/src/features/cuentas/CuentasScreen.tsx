@@ -2,15 +2,12 @@
 // Sienta el patrón que copian Categorías y Movimientos: hook reactivo de datos +
 // pantalla que solo pinta y navega.
 import { useRouter } from 'expo-router'
-import { usePowerSync } from '@powersync/react-native'
-import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import { formatCOP, sumarSaldos } from '@vaulto/shared'
 
 import { Button } from '@/components/Button'
 import { EmptyState } from '@/components/EmptyState'
 import { Screen } from '@/components/Screen'
-import { useAuth } from '@/lib/auth/AuthProvider'
-import { asegurarEspacioDev } from '@/lib/dev/bootstrapEspacioDev'
 import { useEspacioActual } from '@/lib/espacio/useEspacioActual'
 import { useTheme } from '@/theme'
 
@@ -19,31 +16,15 @@ import { useCuentas, type CuentaConSaldo } from './data/useCuentas'
 export function CuentasScreen() {
   const theme = useTheme()
   const router = useRouter()
-  const db = usePowerSync()
-  const { session } = useAuth()
   const { espacioId, cargando: cargandoEspacio } = useEspacioActual()
   const { cuentas, cargando } = useCuentas(espacioId)
 
-  // Sin espacio todavía: el onboarding (Track B) aún no corrió. En dev se puede
-  // crear uno de prueba para no bloquear el desarrollo de Track A.
+  // El onboarding (Track B) crea el espacio; el layout redirige ahí si falta.
+  // Este estado solo se ve el instante en que la réplica local aún no lo trae.
   if (!cargandoEspacio && !espacioId) {
     return (
       <Screen>
-        <EmptyState
-          title="Aún no tienes un espacio"
-          hint="El espacio lo crea el onboarding (Track B). Mientras tanto, en desarrollo puedes crear uno de prueba para empezar a registrar cuentas."
-          action={
-            <Button
-              label="Crear espacio de prueba (dev)"
-              onPress={() => {
-                if (!session) return
-                asegurarEspacioDev(db, session.user.id).catch((e) =>
-                  Alert.alert('No se pudo crear el espacio', String(e)),
-                )
-              }}
-            />
-          }
-        />
+        <EmptyState title="Preparando tu espacio" hint="Sincronizando tus datos…" />
       </Screen>
     )
   }
