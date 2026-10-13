@@ -39,6 +39,15 @@ export function useCategoria(id: string): { categoria: CategoriaRow | null; carg
 }
 
 /**
+ * Categoría por id aunque esté borrada: al editar un movimiento viejo hay que
+ * seguir mostrando la que tenía. null si no hay id o no existe.
+ */
+export function useCategoriaHistorica(id: string | null): CategoriaRow | null {
+  const { data } = useQuery<CategoriaRow>(`SELECT ${COLUMNAS} FROM categoria WHERE id = ? LIMIT 1`, [id ?? ''])
+  return id ? (data[0] ?? null) : null
+}
+
+/**
  * Siembra las categorías sugeridas la primera vez, pero SOLO después del primer
  * sync completo: un dispositivo recién instalado ve la réplica vacía hasta
  * descargar, y sembrar antes haría que el upsert pisara las categorías que el
