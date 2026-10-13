@@ -125,3 +125,17 @@ export function normalizarMontoInput(texto: string): string | null {
   if (!Number.isFinite(n) || n < 0) return null
   return desdeCentavos(aCentavos(normal))
 }
+
+/**
+ * Monto de la DB → texto para precargar un input al editar, en convención es-CO.
+ * A diferencia de `formatNumero`, NO redondea: si hay centavos los conserva, para
+ * que abrir y guardar sin tocar nada no cambie el valor ("25000.50" -> "25.000,50").
+ */
+export function formatMontoInput(monto: string | number): string {
+  const centavos = aCentavos(monto)
+  const decimales = centavos % FACTOR === 0 ? 0 : DECIMALES
+  return new Intl.NumberFormat('es-CO', {
+    minimumFractionDigits: decimales,
+    maximumFractionDigits: decimales,
+  }).format(centavos / FACTOR)
+}

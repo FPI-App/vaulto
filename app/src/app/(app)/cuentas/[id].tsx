@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import { usePowerSync } from '@powersync/react-native'
 import { useState } from 'react'
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native'
-import { formatNumero } from '@vaulto/shared'
+import { formatMontoInput } from '@vaulto/shared'
 
 import { ModalHeader } from '@/components/ModalHeader'
 import { Screen } from '@/components/Screen'
@@ -76,7 +76,7 @@ export default function EditarCuentaScreen() {
               nombre: cuenta.nombre,
               tipo: cuenta.tipo,
               banco: cuenta.banco,
-              saldoInicialTexto: formatNumero(cuenta.saldo_inicial),
+              saldoInicialTexto: formatMontoInput(cuenta.saldo_inicial),
             }}
           />
           <View style={styles.acciones}>

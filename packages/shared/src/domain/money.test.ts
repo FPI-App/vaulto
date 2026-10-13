@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { aCentavos, desdeCentavos, normalizarMontoInput, restarMontos, sumarMontos } from './money'
+import { aCentavos, desdeCentavos, formatMontoInput, normalizarMontoInput, restarMontos, sumarMontos } from './money'
 
 describe('aCentavos / desdeCentavos', () => {
   it('ida y vuelta conserva 2 decimales', () => {
@@ -32,5 +32,16 @@ describe('normalizarMontoInput (es-CO)', () => {
 
   it.each(['', 'abc', '-500', '1,2,3', '12a'])('rechaza %j', (entrada) => {
     expect(normalizarMontoInput(entrada)).toBeNull()
+  })
+})
+
+describe('formatMontoInput', () => {
+  it.each([
+    ['25000.00', '25.000'],
+    ['25000.50', '25.000,50'],
+    ['1250000.05', '1.250.000,05'],
+  ])('%s -> %s y vuelve igual al normalizar', (db, texto) => {
+    expect(formatMontoInput(db)).toBe(texto)
+    expect(normalizarMontoInput(formatMontoInput(db))).toBe(db)
   })
 })
