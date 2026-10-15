@@ -1,5 +1,5 @@
 import { Tabs, useRouter, useSegments } from 'expo-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useQuery } from '@powersync/react-native'
 
 import { useTheme } from '@/theme'
@@ -18,7 +18,8 @@ export default function AppTabsLayout() {
   // Verificamos el estado del perfil en la base local (PowerSync)
   const { data: perfilData, isLoading } = useQuery('SELECT * FROM perfil')
 
-  const [optimisticComplete, setOptimisticComplete] = useState(false)
+  // Ref y no estado: el latch solo lo lee este efecto, no necesita re-render
+  const completedRef = useRef(false)
 
   useEffect(() => {
     console.log('[Layout] useEffect disparado. isLoading:', isLoading, 'session:', !!session)
@@ -32,11 +33,9 @@ export default function AppTabsLayout() {
     // Si detectamos que se completó, guardamos este estado de forma optimista
     // Esto previene el "PowerSync Flicker" (cuando la mutación local se borra al subir, 
     // pero la descarga del servidor tarda un par de segundos en llegar).
-    if (isCompleted && !optimisticComplete) {
-      setOptimisticComplete(true)
-    }
+    if (isCompleted) completedRef.current = true
 
-    const effectivelyCompleted = isCompleted || optimisticComplete
+    const effectivelyCompleted = completedRef.current
 
     console.log('[Layout] Estado actual -> isOnboarding:', isOnboarding, '| isCompleted (real):', isCompleted, '| effectivelyCompleted:', effectivelyCompleted)
 
@@ -47,7 +46,7 @@ export default function AppTabsLayout() {
       console.log('[Layout] Redirigiendo al dashboard porque ya está completado.')
       router.replace('/(app)')
     }
-  }, [isLoading, perfilData, segments, router, session, optimisticComplete])
+  }, [isLoading, perfilData, segments, router, session])
 
   // Ocultamos la barra de navegación si estamos en el flujo de onboarding
   const isOnboardingRoute = segments.includes('onboarding')
