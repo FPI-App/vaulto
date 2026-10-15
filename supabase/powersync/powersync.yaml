@@ -1,0 +1,25 @@
+# Config del servicio PowerSync local. Los valores sensibles salen de .env (ver .env.example).
+replication:
+  connections:
+    - type: postgresql
+      uri: !env PS_DATA_SOURCE_URI
+      sslmode: disable
+
+storage:
+  type: postgresql
+  uri: !env PS_STORAGE_URI
+  sslmode: disable
+
+port: 8080
+
+sync_rules:
+  path: sync_rules.yaml
+
+client_auth:
+  # Supabase local firma con ES256 (JWKS); el secreto HS256 cubre tokens legacy
+  supabase: true
+  supabase_jwt_secret: !env PS_SUPABASE_JWT_SECRET
+  jwks_uri: http://supabase_kong_vaulto:8000/auth/v1/.well-known/jwks.json
+  # Kong vive en la red privada de Docker; sin esto PowerSync rechaza el JWKS
+  block_local_jwks: false
+  audience: ['authenticated']

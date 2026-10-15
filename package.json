@@ -15,6 +15,8 @@
     "app:ios": "pnpm --filter @vaulto/app ios",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
+    "powersync:start": "docker compose -f supabase/powersync/docker-compose.yml up -d",
+    "powersync:stop": "docker compose -f supabase/powersync/docker-compose.yml down",
     "db:migrate": "supabase db reset",
     "db:types": "supabase gen types typescript --local > packages/shared/src/types/database.ts",
     "lint": "pnpm -r lint",

@@ -48,6 +48,18 @@ pnpm supabase:stop
 
 La instancia de PowerSync se conecta a este Postgres y replica el esquema a la SQLite local (cifrada con SQLCipher) de cada dispositivo. La definición del esquema de sincronización del lado cliente vive en `../packages/shared/src/powersync/`. Las reglas de sincronización (qué filas ve cada usuario) deben ser coherentes con las políticas RLS de aquí.
 
+### PowerSync en local
+
+`powersync/` levanta el servicio self-hosted contra el Supabase local, con `sync_rules.yaml` montado tal cual. Con Supabase arriba:
+
+```bash
+cp supabase/powersync/.env.example supabase/powersync/.env   # completar JWT_SECRET de `supabase status -o env`
+pnpm powersync:start    # http://localhost:8085
+pnpm powersync:stop
+```
+
+En `app/.env`: `EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321` y `EXPO_PUBLIC_POWERSYNC_URL=http://localhost:8085`. Un teléfono por USB llega a esos puertos con `adb reverse tcp:54321 tcp:54321 && adb reverse tcp:8085 tcp:8085`.
+
 ## Convenciones
 
 - Nombres de migración descriptivos en español imperativo: `agrega_tabla_deudas`, `agrega_rls_movimientos`.
