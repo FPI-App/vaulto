@@ -27,6 +27,8 @@ Postgres sigue siendo la garantía de unicidad global al sincronizar.
 - Exportación web Expo SDK 58: pasa (1628 módulos).
 - Checklist React: hooks antes de retornos, formularios ligados al usuario, acciones
   duplicadas bloqueadas y operaciones de escritura desde eventos.
+- CI: la primera ejecución remota falló con Node 20 porque no soporta `node:sqlite`.
+  El workflow se alinea a Node 26.8.1 (la versión local validada) e incorpora `pnpm test`.
 
 Las pruebas de SQLite usan una base `:memory:` con tablas mínimas. Verifican las
 mutaciones y sus transacciones, pero no emulan PowerSync ni las políticas de Postgres.
@@ -42,4 +44,5 @@ mutaciones y sus transacciones, pero no emulan PowerSync ni las políticas de Po
   para bases existentes antes de cambiar su apertura; SecureStore hoy guarda la sesión.
 - La PAT previamente rechaza escrituras en Projects. El conector GitHub sigue
   sin estar disponible; no se cambiaron estados ni se cerraron issues.
-- Publicar esta rama requiere confirmación del comando de push conforme a AGENTS.md.
+- Rama publicada con autorización del usuario. PR draft [#20](https://github.com/FPI-App/vaulto/pull/20)
+  contra `feat/edav-track-b`; la integración permanece pendiente de revisión.
