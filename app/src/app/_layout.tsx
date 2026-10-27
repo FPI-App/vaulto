@@ -46,7 +46,7 @@ function SyncProviders({ children }: { children: ReactNode }) {
   }
 
   return (
-    <PowerSyncProvider>
+    <PowerSyncProvider key={session.user.id} userId={session.user.id}>
       <DeudasSelectorsProvider>{children}</DeudasSelectorsProvider>
     </PowerSyncProvider>
   )

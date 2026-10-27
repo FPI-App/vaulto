@@ -28,8 +28,7 @@ web-build/
 # Metro
 .metro-health-check*
 
-# EAS
-.easignore
+# EAS: .easignore se versiona para que el archivo subido sea reproducible.
 
 # ===== TypeScript / build =====
 *.tsbuildinfo
