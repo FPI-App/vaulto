@@ -1,5 +1,6 @@
 import type { AbstractPowerSyncDatabase } from '@powersync/react-native'
-import { calcularSaldoPendiente, sumarANumero, type DeudasSelectors, type DireccionDeuda, type VencimientoResumen } from '@vaulto/shared'
+import { calcularSaldoPendiente, sumarANumero, type DeudasSelectors, type VencimientoResumen } from '@vaulto/shared/domain'
+import type { DireccionDeuda } from '@vaulto/shared/types'
 
 interface DeudaSelectorRow {
   id: string
@@ -20,7 +21,7 @@ interface PagoSelectorRow {
 /** Selectores locales, limitados al espacio activo y a filas no eliminadas. */
 export class SQLiteDeudasSelectors implements DeudasSelectors {
   constructor(
-    private readonly db: AbstractPowerSyncDatabase,
+    private readonly db: Pick<AbstractPowerSyncDatabase, 'getAll'>,
     private readonly espacioId: string,
   ) {}
 

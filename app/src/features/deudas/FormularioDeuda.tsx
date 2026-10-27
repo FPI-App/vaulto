@@ -39,8 +39,8 @@ export function FormularioDeuda({
       Alert.alert('Fecha inválida', 'Usa el formato AAAA-MM-DD.')
       return
     }
-    const nivel = Number.parseInt(prioridad, 10)
-    if (!Number.isInteger(nivel) || nivel < 0 || nivel > 5) {
+    const nivel = Number(prioridad)
+    if (!prioridad.trim() || !Number.isInteger(nivel) || nivel < 0 || nivel > 5) {
       Alert.alert('Prioridad inválida', 'Elige un valor entre 0 y 5.')
       return
     }

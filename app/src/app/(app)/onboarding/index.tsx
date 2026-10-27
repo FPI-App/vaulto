@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { StyleSheet, View, Text, Alert } from 'react-native'
 import { useRouter } from 'expo-router'
-import * as Crypto from 'expo-crypto'
+import { completarOnboarding } from '@/features/onboarding/onboardingRepo'
 import { usePowerSync } from '@powersync/react-native'
 
 import { useTheme } from '@/theme'
@@ -20,89 +20,23 @@ export default function OnboardingScreen() {
   const [apellido, setApellido] = useState('')
   const [username, setUsername] = useState('')
   const [loading, setLoading] = useState(false)
+  const submitting = useRef(false)
 
   const handleComenzar = async () => {
-    console.log('[Onboarding] handleComenzar iniciado')
-    if (!nombre.trim() || !apellido.trim() || !username.trim()) {
-      Alert.alert('Datos incompletos', 'Por favor completa todos los campos para continuar.')
+    if (submitting.current) return
+    if (!session?.user.id) {
+      Alert.alert('Inicia sesión', 'Necesitas una sesión activa para continuar.')
       return
     }
-
-    if (!session?.user?.id) {
-      Alert.alert('Error', 'No hay sesión activa.')
-      return
-    }
-
+    submitting.current = true
     setLoading(true)
-
     try {
-      const userId = session.user.id
-      const espacioId = Crypto.randomUUID()
-      const miembroId = Crypto.randomUUID()
-      const now = new Date().toISOString()
-      
-      console.log('[Onboarding] Iniciando writeTransaction para el usuario:', userId)
-
-      await db.writeTransaction(async (tx) => {
-        console.log('[Onboarding] Transacción iniciada, verificando espacio...')
-        const espacioExiste = await tx.getOptional('SELECT id FROM espacio WHERE id = ?', [espacioId])
-        if (espacioExiste) {
-          console.log('[Onboarding] Espacio existe, haciendo UPDATE...')
-          await tx.execute(
-            `UPDATE espacio SET nombre = ?, owner_user_id = ?, base_currency = ?, country = ?, updated_at = ? WHERE id = ?`,
-            ['Personal', userId, 'COP', 'CO', now, espacioId]
-          )
-        } else {
-          console.log('[Onboarding] Espacio NO existe, haciendo INSERT...')
-          await tx.execute(
-            `INSERT INTO espacio (id, nombre, owner_user_id, base_currency, country, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [espacioId, 'Personal', userId, 'COP', 'CO', now, now]
-          )
-        }
-
-        console.log('[Onboarding] Verificando espacio_miembro...')
-        const miembroExiste = await tx.getOptional('SELECT id FROM espacio_miembro WHERE id = ?', [miembroId])
-        if (!miembroExiste) {
-          console.log('[Onboarding] Miembro NO existe, haciendo INSERT...')
-          await tx.execute(
-            `INSERT INTO espacio_miembro (id, espacio_id, user_id, rol, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
-            [miembroId, espacioId, userId, 'owner', now, now]
-          )
-        } else {
-          console.log('[Onboarding] Miembro ya existe, ignorando.')
-        }
-
-        console.log('[Onboarding] Verificando perfil...')
-        const perfilExiste = await tx.getOptional('SELECT id FROM perfil WHERE id = ?', [userId])
-        if (perfilExiste) {
-          console.log('[Onboarding] Perfil existe, haciendo UPDATE...')
-          await tx.execute(
-            `UPDATE perfil SET espacio_id = ?, nombre = ?, apellido = ?, username = ?, country = ?, onboarding_completo = ?, updated_at = ? WHERE id = ?`,
-            [espacioId, nombre.trim(), apellido.trim(), username.trim().toLowerCase(), 'CO', 1, now, userId]
-          )
-        } else {
-          console.log('[Onboarding] Perfil NO existe, haciendo INSERT...')
-          await tx.execute(
-            `INSERT INTO perfil (id, espacio_id, nombre, apellido, username, country, onboarding_completo, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [userId, espacioId, nombre.trim(), apellido.trim(), username.trim().toLowerCase(), 'CO', 1, now, now]
-          )
-        }
-      })
-
-      console.log('[Onboarding] Transacción finalizada con éxito. Programando redirección...')
-      
-      const allProfiles = await db.getAll('SELECT * FROM perfil')
-      console.log('[Onboarding] RAW PERFIL DUMP DESPUES DE TX:', JSON.stringify(allProfiles))
-
-      setTimeout(() => {
-        console.log('[Onboarding] Ejecutando router.replace(app)')
-        router.replace('/(app)')
-      }, 500)
+      await completarOnboarding(db, session.user.id, { nombre, apellido, username })
+      router.replace('/(app)')
     } catch (error) {
-      console.error('[Onboarding] Error completando onboarding:', error)
-      Alert.alert('Error', 'Hubo un problema guardando tu perfil. Por favor intenta de nuevo.')
+      Alert.alert('No se pudo completar el registro', error instanceof Error ? error.message : 'Intenta de nuevo.')
     } finally {
-      console.log('[Onboarding] Proceso terminado. setLoading(false)')
+      submitting.current = false
       setLoading(false)
     }
   }

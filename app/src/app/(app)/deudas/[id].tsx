@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { usePowerSync } from '@powersync/react-native'
-import { useState } from 'react'
-import { Alert, Text, View } from 'react-native'
+import { useRef, useState } from 'react'
+import { Alert, ScrollView, Text, View } from 'react-native'
 import { formatCOP, formatMontoInput, normalizarMontoInput } from '@vaulto/shared'
 
 import { Button } from '@/components/Button'
@@ -18,10 +18,12 @@ export default function DeudaDetalleScreen() {
   const router = useRouter()
   const db = usePowerSync()
   const { id } = useLocalSearchParams<{ id: string }>()
-  const { deuda, cargando, espacioId } = useDeuda(id)
+  const { deuda, abonos, cargando, espacioId } = useDeuda(id)
   const [editando, setEditando] = useState(false)
   const [abono, setAbono] = useState('')
+  const [notaAbono, setNotaAbono] = useState('')
   const [guardando, setGuardando] = useState(false)
+  const submitting = useRef(false)
 
   if (cargando || !deuda || !espacioId) {
     return (
@@ -38,23 +40,29 @@ export default function DeudaDetalleScreen() {
   const espacioActual = espacioId
 
   async function registrar() {
+    if (submitting.current) return
     const monto = normalizarMontoInput(abono)
     if (!monto || Number(monto) <= 0) {
       Alert.alert('Abono inválido', 'Escribe un monto mayor que cero.')
       return
     }
+    submitting.current = true
     setGuardando(true)
     try {
-      await registrarAbono(db, espacioActual, deudaActual.id, monto)
+      await registrarAbono(db, espacioActual, deudaActual.id, monto, notaAbono)
       setAbono('')
+      setNotaAbono('')
     } catch (error) {
       Alert.alert('No se pudo registrar el abono', String(error))
     } finally {
+      submitting.current = false
       setGuardando(false)
     }
   }
 
   async function guardarCambios(datos: Parameters<typeof actualizarDeuda>[3]) {
+    if (submitting.current) return
+    submitting.current = true
     setGuardando(true)
     try {
       await actualizarDeuda(db, espacioActual, deudaActual.id, datos)
@@ -62,6 +70,7 @@ export default function DeudaDetalleScreen() {
     } catch (error) {
       Alert.alert('No se pudo actualizar', String(error))
     } finally {
+      submitting.current = false
       setGuardando(false)
     }
   }
@@ -88,7 +97,7 @@ export default function DeudaDetalleScreen() {
           onSubmit={guardarCambios}
         />
       ) : (
-        <View style={{ flex: 1, paddingTop: theme.space.lg }}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: theme.space.lg, paddingBottom: theme.space['4xl'] }}>
           <Text style={{ ...theme.typography.scale.label, color: theme.colors.textMuted }}>
             {deuda.direccion === 'yo_debo' ? 'Debes a' : 'Te debe'}
           </Text>
@@ -105,15 +114,26 @@ export default function DeudaDetalleScreen() {
           {deuda.nota ? <Text style={{ ...theme.typography.scale.body, color: theme.colors.text, marginTop: theme.space.lg }}>{deuda.nota}</Text> : null}
           {deuda.estado === 'activa' ? (
             <View style={{ marginTop: theme.space['2xl'] }}>
-              <Field label="Registrar abono" value={abono} onChangeText={setAbono} placeholder="Monto" keyboardType="decimal-pad" />
+              <Field label="Registrar abono" value={abono} onChangeText={setAbono} placeholder="Monto" keyboardType="decimal-pad" editable={!guardando} />
+              <Field label="Nota del abono (opcional)" value={notaAbono} onChangeText={setNotaAbono} multiline maxLength={500} editable={!guardando} />
               <Button label="Aplicar abono" onPress={registrar} loading={guardando} />
             </View>
           ) : null}
-          <View style={{ gap: theme.space.sm, marginTop: theme.space['2xl'] }}>
-            <Button label="Editar" variant="ghost" onPress={() => setEditando(true)} />
-            <Button label="Eliminar" variant="ghost" onPress={confirmarEliminar} />
+          <View style={{ marginTop: theme.space['2xl'], gap: theme.space.md }}>
+            <Text accessibilityRole="header" style={{ ...theme.typography.scale.h2, color: theme.colors.text }}>Historial de abonos</Text>
+            {abonos.length === 0 ? <Text style={{ ...theme.typography.scale.body, color: theme.colors.textMuted }}>Aún no has registrado abonos.</Text> : abonos.map((pago) => (
+              <View key={pago.id} style={{ paddingVertical: theme.space.md, borderBottomWidth: 1, borderBottomColor: theme.colors.border }}>
+                <Text style={{ ...theme.typography.scale.label, color: theme.colors.text, fontVariant: ['tabular-nums'] }}>{formatCOP(pago.monto, pago.currency)}</Text>
+                <Text style={{ ...theme.typography.scale.caption, color: theme.colors.textMuted }}>{new Date(pago.fecha).toLocaleDateString('es-CO')}</Text>
+                {pago.nota ? <Text style={{ ...theme.typography.scale.body, color: theme.colors.text, marginTop: theme.space.xs }}>{pago.nota}</Text> : null}
+              </View>
+            ))}
           </View>
-        </View>
+          <View style={{ gap: theme.space.sm, marginTop: theme.space['2xl'] }}>
+            <Button label="Editar" variant="ghost" onPress={() => setEditando(true)} disabled={guardando} />
+            <Button label="Eliminar" variant="ghost" onPress={confirmarEliminar} disabled={guardando} />
+          </View>
+        </ScrollView>
       )}
     </Screen>
   )
