@@ -75,7 +75,19 @@ La integración EAS vinculó el proyecto Supabase existente sin crear otra base 
 URL y publishable key en `.env.local` y en los tres entornos de EAS. Las claves no se
 versionan. Auth y las ocho tablas del dominio respondieron HTTP 200 a consultas de
 solo lectura sin filas. Esto no verifica autenticación de usuarios, RLS ni sincronización.
-La URL de PowerSync sigue pendiente.
+PowerSync Cloud quedó vinculado con la instancia `6a40d30835ca576ca0e055fd`.
+La CLI recuperó la configuración remota como `powersync/service-fetched.yaml`, sin
+sobrescribir `service.yaml`. La conexión PostgreSQL figura conectada, la replicación
+inicial terminó y el lag reportado fue 0 bytes para las ocho tablas del dominio.
+La autenticación de clientes con Supabase está habilitada en el servicio.
+
+Se reemplazó el ejemplo `mytable` por un stream `vaulto` que sincroniza las ocho tablas
+del MVP solo para espacios donde el JWT tiene una membresía activa. Se validó y desplegó
+solo la configuración de streams; el dry-run confirmó que el servicio y la conexión
+PostgreSQL no cambiaban. La URL pública quedó en `app/.env.local` y en EAS Development.
+Las reglas limitan la descarga, mientras que RLS de Supabase sigue siendo quien protege
+las escrituras. Aún falta probar autenticación real, lectura/sync con una cuenta de
+prueba, aislamiento entre cuentas y el flujo nativo en el Android.
 
 El primer build Android (`20f424bd-6944-4206-bf51-23f2545c9366`) falló en
 `mergeDebugNativeLibs`: el driver antiguo `@journeyapps/react-native-quick-sqlite`
