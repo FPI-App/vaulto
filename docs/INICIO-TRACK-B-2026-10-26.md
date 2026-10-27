@@ -54,3 +54,11 @@ Verificación local: 62 pruebas pasan en shared; typecheck de shared y app pasa;
 - `expo export --platform web` compiló las rutas nuevas y generó el bundle web. No equivale a prueba en dispositivo ni a validar autenticación/sync real.
 - Bloqueo de #6 confirmado: no hay archivos `app/.env` ni `supabase/powersync/.env`, Supabase CLI ni ADB; Docker está instalado pero su daemon no está corriendo. No se pueden aplicar migraciones ni probar sync entre dispositivos aún.
 - `pnpm.cmd` rechazó instalar/ejecutar `pnpm@9.12.0` porque no pudo verificar la firma del paquete. Se usaron binarios locales y no se desactivó esa protección.
+
+## Cierre local y bloqueos remotos
+
+- Commit local: `ab5f145` (`Implementa deudas y refuerza aislamiento por espacio`). `main` está integrado como ancestro de `feat/edav-track-b`; el árbol de trabajo está limpio salvo los dos informes históricos preexistentes sin seguimiento.
+- Se confirmó mediante GraphQL que #6, #16, #17 y #18 siguen en Todo. Se intentó pasar las cuatro a In Progress, pero GitHub respondió `Resource not accessible by personal access token`; la PAT permite lectura y no escritura del Project.
+- `git ls-remote` no mostró una rama remota `feat/edav-track-b`. No se ejecutó push; requiere confirmación explícita del comando y destino conforme a las reglas globales del proyecto.
+- Para terminar la actualización remota hace falta una PAT con permiso de escritura de Projects para el Project de FPI-App; para push por HTTPS, Contents: read/write en `FPI-App/vaulto`. No se solicitó ni se imprimió un token.
+- #6 sigue pendiente de configuración externa y pruebas reales: faltan los archivos de entorno, Supabase CLI y ADB; Docker está instalado con daemon apagado. No se aplicaron migraciones ni se simuló una validación en dos dispositivos.
