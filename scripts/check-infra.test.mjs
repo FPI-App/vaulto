@@ -13,6 +13,10 @@ test('detecta variables faltantes sin imprimir valores', () => {
   assert.equal(validateEnvironment({}).length, 3)
   assert.deepEqual(validateEnvironment(env), [])
 })
+test('acepta la publishable que escribe EAS por encima de una anon antigua', () => {
+  const configured = { ...env, EXPO_PUBLIC_SUPABASE_ANON_KEY: 'placeholder-antiguo', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fixture' }
+  assert.deepEqual(validateEnvironment(configured), [])
+})
 test('rechaza secretos y JWT service_role en la configuración cliente', () => {
   for (const key of ['sb_secret_fixture', `header.${Buffer.from(JSON.stringify({ role: 'service_role' })).toString('base64url')}.signature`]) {
     const issues = validateEnvironment({ ...env, EXPO_PUBLIC_SUPABASE_ANON_KEY: key })

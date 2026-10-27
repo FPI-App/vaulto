@@ -47,7 +47,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.0",
-    "@journeyapps/react-native-quick-sqlite": "^2.5.2",
     "@types/react": "~19.3.0",
     "eslint": "^9.39.5",
     "eslint-config-expo": "^58.0.4",

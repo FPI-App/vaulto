@@ -36,7 +36,7 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
     if (!transaction) return
     const uploadClient = createClient(
       process.env.EXPO_PUBLIC_SUPABASE_URL!,
-      process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
+      (process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY)!,
       {
         global: { headers: { Authorization: `Bearer ${session.access_token}` } },
         auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },

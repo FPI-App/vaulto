@@ -2,7 +2,9 @@ import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parseEnv } from 'node:util'
 
-const variables = ['EXPO_PUBLIC_SUPABASE_URL', 'EXPO_PUBLIC_SUPABASE_ANON_KEY', 'EXPO_PUBLIC_POWERSYNC_URL']
+const variables = ['EXPO_PUBLIC_SUPABASE_URL', 'EXPO_PUBLIC_POWERSYNC_URL']
+const keyField = 'EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY (o EXPO_PUBLIC_SUPABASE_ANON_KEY)'
+const clientKey = (env) => env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() || env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.trim() || ''
 
 function validEndpoint(value) {
   try {
@@ -28,11 +30,12 @@ export function validateEnvironment(env) {
   for (const name of variables) {
     if (!env[name]?.trim()) issues.push(`${name}: falta configurar`)
   }
-  for (const name of [variables[0], variables[2]]) {
+  if (!clientKey(env)) issues.push(`${keyField}: falta configurar`)
+  for (const name of variables) {
     if (env[name] && !validEndpoint(env[name])) issues.push(`${name}: URL inválida; usa HTTPS remoto o HTTP de red local`)
   }
-  if (env[variables[1]] && !publicKey(env[variables[1]])) {
-    issues.push(`${variables[1]}: requiere publishable o anon; no uses secret ni service_role`)
+  if (clientKey(env) && !publicKey(clientKey(env))) {
+    issues.push(`${keyField}: requiere publishable o anon; no uses secret ni service_role`)
   }
   return issues
 }
@@ -41,7 +44,7 @@ export async function probeEnvironment(env, request = fetch) {
   const issues = validateEnvironment(env)
   if (issues.length) return { ok: false, lines: issues }
   const checks = [
-    { name: 'Supabase Auth', base: env.EXPO_PUBLIC_SUPABASE_URL, route: 'auth/v1/health', headers: { apikey: env.EXPO_PUBLIC_SUPABASE_ANON_KEY } },
+    { name: 'Supabase Auth', base: env.EXPO_PUBLIC_SUPABASE_URL, route: 'auth/v1/health', headers: { apikey: clientKey(env) } },
     { name: 'PowerSync liveness', base: env.EXPO_PUBLIC_POWERSYNC_URL, route: 'probes/liveness', headers: {} },
   ]
   const results = await Promise.all(checks.map(async (check) => {
@@ -59,12 +62,14 @@ export async function probeEnvironment(env, request = fetch) {
 }
 
 async function main() {
-  const envPath = fileURLToPath(new URL('../app/.env', import.meta.url))
   let local = {}
   try {
-    if (existsSync(envPath)) local = parseEnv(readFileSync(envPath, 'utf8'))
+    for (const filename of ['.env', '.env.local']) {
+      const envPath = fileURLToPath(new URL(`../app/${filename}`, import.meta.url))
+      if (existsSync(envPath)) local = { ...local, ...parseEnv(readFileSync(envPath, 'utf8')) }
+    }
   } catch {
-    console.error('No se pudo leer app/.env; revisa su formato y permisos.')
+    console.error('No se pudo leer la configuración local; revisa .env y .env.local.')
     process.exitCode = 1
     return
   }

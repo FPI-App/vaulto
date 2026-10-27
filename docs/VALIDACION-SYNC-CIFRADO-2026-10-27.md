@@ -3,7 +3,7 @@
 ## Confirmado en código
 
 - Rama `feat/edav-sync-cifrado`, desde `519ab79`.
-- `pnpm infra:check` lee `app/.env` y las variables del proceso. Valida nombres,
+- `pnpm infra:check` lee `app/.env`, `app/.env.local` y las variables del proceso. Valida nombres,
   URLs y tipo de clave; consulta Supabase Auth y PowerSync liveness sin escribir datos.
   Nunca imprime claves, cabeceras, contenido de respuestas o errores de red completos.
 - Solo admite una publishable o una anon legacy para Supabase; rechaza secret/service_role.
@@ -32,16 +32,16 @@ durante una exportación; eso requiere un build nativo y datos de prueba control
 
 ## Configurar #6
 
-Completar `app/.env` (ignorado por Git):
+Completar `app/.env.local` (ignorado por Git):
 
 ```dotenv
 EXPO_PUBLIC_SUPABASE_URL=https://TU_PROYECTO.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
+EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 EXPO_PUBLIC_POWERSYNC_URL=https://TU_INSTANCIA.powersync.journeyapps.com
 ```
 
 Supabase: proyecto → Connect para URL/publishable; Settings → API Keys para una clave
-específica. El nombre ANON_KEY se conserva por compatibilidad de la app.
+específica. ANON_KEY se admite como alternativa para configuraciones anteriores.
 PowerSync: instancia → Connect para URL; Client Auth → Use Supabase Auth.
 La contraseña Postgres, secret/service_role y JWT signing secrets no van en el cliente.
 
@@ -62,7 +62,7 @@ El inicio de sesión se completa en el navegador; no se comparten contraseñas/t
 
 ## Verificaciones locales realizadas
 
-- 36 pruebas de la app, 62 de shared y 7 del diagnóstico: 105 pruebas pasadas.
+- 36 pruebas de la app, 62 de shared y 8 del diagnóstico: 106 pruebas pasadas.
 - Typecheck del workspace y lint sin errores (una advertencia previa de igualdad).
 - Dependencias Expo alineadas y exportación web correcta (1645 módulos).
 - `build:inspect --stage archive` confirma app/shared incluidos y `.env`, documentos
@@ -71,8 +71,17 @@ El inicio de sesión se completa en el navegador; no se comparten contraseñas/t
 - Los scripts typecheck usan el compilador de la raíz para evitar shims de Windows
   que apuntaban a una copia TypeScript inexistente en los paquetes hoisted.
 
-El chequeo de entorno aún rechaza los placeholders de `app/.env`. No se ejecutaron
-pruebas reales de autenticación, RLS ni sincronización con servicios remotos.
+La integración EAS vinculó el proyecto Supabase existente sin crear otra base y escribió
+URL y publishable key en `.env.local` y en los tres entornos de EAS. Las claves no se
+versionan. Auth y las ocho tablas del dominio respondieron HTTP 200 a consultas de
+solo lectura sin filas. Esto no verifica autenticación de usuarios, RLS ni sincronización.
+La URL de PowerSync sigue pendiente.
+
+El primer build Android (`20f424bd-6944-4206-bf51-23f2545c9366`) falló en
+`mergeDebugNativeLibs`: el driver antiguo `@journeyapps/react-native-quick-sqlite`
+duplicaba `libpowersync.so`. Se retiró esa dependencia sin usos en el código; se conserva
+OP-SQLite. También se retiró el `expo-sqlite` añadido automáticamente por la integración,
+sin usos en la app. Expo Doctor posterior: 20/20 comprobaciones correctas.
 
 ## Verificación pendiente en dispositivo
 

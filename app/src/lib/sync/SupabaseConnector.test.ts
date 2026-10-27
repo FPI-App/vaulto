@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { UpdateType } from '@powersync/react-native'
 
 import { SupabaseConnector } from './SupabaseConnector'
@@ -10,8 +10,11 @@ vi.mock('@powersync/react-native', () => ({ UpdateType: { PUT: 'PUT', PATCH: 'PA
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.stubEnv('EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_fixture')
+  vi.stubEnv('EXPO_PUBLIC_SUPABASE_ANON_KEY', 'legacy-fixture')
   mocks.session.mockResolvedValue({ data: { session: { user: { id: 'a' }, access_token: 'fixture-not-a-real-token', expires_at: 2000000000 } }, error: null })
 })
+afterEach(() => vi.unstubAllEnvs())
 
 describe('Conector ligado a la cuenta propietaria de la base', () => {
   it('no entrega credenciales ni lee la cola cuando la sesión pertenece a otra cuenta', async () => {
@@ -41,6 +44,7 @@ describe('Conector ligado a la cuenta propietaria de la base', () => {
     expect(eq).toHaveBeenCalledWith('id', 'deuda')
     expect(complete).toHaveBeenCalledTimes(1)
     expect(mocks.createClient.mock.calls[0]?.[2].auth.persistSession).toBe(false)
+    expect(mocks.createClient.mock.calls[0]?.[1]).toBe('sb_publishable_fixture')
   })
   it('si falla la subida no completa la cola ni expone el error con datos de la fila', async () => {
     const throwOnError = async () => { throw new Error('detalle privado de prueba') }
