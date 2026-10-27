@@ -73,7 +73,7 @@ export function CategoriasScreen() {
           <FilaCategoria categoria={item} onPress={() => router.push(`/categorias/${item.id}`)} />
         )}
         ListEmptyComponent={
-          cargando ? null : (
+          cargando ? undefined : (
             <View style={styles.emptyWrap}>
               <EmptyState
                 title={tipo === 'egreso' ? 'Sin categorías de gasto' : 'Sin categorías de ingreso'}

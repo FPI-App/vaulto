@@ -153,7 +153,7 @@ export function MovimientosScreen() {
               <Total etiqueta="Salidas" valor={resumen.salidas} color={theme.colors.financial.expense} />
               <Total etiqueta="Neto" valor={resumen.neto} color={theme.colors.text} />
             </View>
-          ) : null
+          ) : undefined
         }
         renderSectionHeader={({ section }) => (
           <Text
@@ -176,7 +176,7 @@ export function MovimientosScreen() {
           />
         )}
         ListEmptyComponent={
-          cargando ? null : (
+          cargando ? undefined : (
             <View style={styles.emptyWrap}>
               <EmptyState
                 title={hayFiltros ? 'Nada con estos filtros' : 'Sin movimientos todavía'}

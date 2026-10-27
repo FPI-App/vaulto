@@ -88,11 +88,11 @@ export function CuentasScreen() {
                 {formatCOP(totalDisponible)}
               </Text>
             </View>
-          ) : null
+          ) : undefined
         }
         renderItem={({ item }) => <FilaCuenta cuenta={item} onPress={() => router.push(`/cuentas/${item.id}`)} />}
         ListEmptyComponent={
-          cargando ? null : (
+          cargando ? undefined : (
             <View style={styles.emptyWrap}>
               <EmptyState
                 title="Sin cuentas todavía"

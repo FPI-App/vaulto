@@ -62,3 +62,11 @@ Verificación local: 62 pruebas pasan en shared; typecheck de shared y app pasa;
 - `git ls-remote` no mostró una rama remota `feat/edav-track-b`. No se ejecutó push; requiere confirmación explícita del comando y destino conforme a las reglas globales del proyecto.
 - Para terminar la actualización remota hace falta una PAT con permiso de escritura de Projects para el Project de FPI-App; para push por HTTPS, Contents: read/write en `FPI-App/vaulto`. No se solicitó ni se imprimió un token.
 - #6 sigue pendiente de configuración externa y pruebas reales: faltan los archivos de entorno, Supabase CLI y ADB; Docker está instalado con daemon apagado. No se aplicaron migraciones ni se simuló una validación en dos dispositivos.
+
+## Actualización a Expo SDK 58
+
+- Se actualizó `expo` a `^58.0.19` y se alinearon las dependencias gestionadas por Expo. SDK 58 usa React Native 0.88 y React 19.3; TypeScript del workspace y la app quedó en 6.0.3.
+- Se quitó `baseUrl` de `app/tsconfig.json` porque TypeScript 6 lo marca obsoleto. Se ajustaron rutas tipadas y componentes de listas para los tipos nuevos de Expo Router y React Native.
+- Se actualizó PowerSync React Native a 2.3.3 y `@powersync/common` a 2.4 o superior. Se retiró `@powersync/op-sqlite` (adapter obsoleto e incompatible con op-sqlite 17) y la base usa ahora la configuración integrada de OP-SQLite.
+- Verificación local: Expo Doctor 20/20, `expo install --check`, typecheck de app/shared, 62 pruebas shared, exportación web y lint sin errores (tres advertencias previas).
+- No se pudo compilar ni abrir un development build Android: este equipo no tiene Android SDK/ADB disponible. Al usar módulos nativos de PowerSync y OP-SQLite, se necesita generar e instalar un nuevo development build tras el upgrade.

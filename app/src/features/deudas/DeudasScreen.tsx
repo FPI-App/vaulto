@@ -39,7 +39,7 @@ export function DeudasScreen() {
         data={deudas}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingTop: theme.space.lg, paddingBottom: theme.space['4xl'], flexGrow: 1 }}
-        ListEmptyComponent={cargando ? null : <EmptyState title="Sin deudas" hint="Registra lo que debes o lo que te deben." />}
+        ListEmptyComponent={cargando ? undefined : <EmptyState title="Sin deudas" hint="Registra lo que debes o lo que te deben." />}
         renderItem={({ item }) => (
           <Pressable
             accessibilityRole="button"

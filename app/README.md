@@ -1,16 +1,17 @@
 # @vaulto/app
 
-App móvil de Vaulto: finanzas personales offline-first. Expo SDK 56 · expo-router v4
-(file-based) · React Native 0.85 · TypeScript estricto · PowerSync (SQLite cifrada con
+App móvil de Vaulto: finanzas personales offline-first. Expo SDK 58 · Expo Router
+(file-based) · React Native 0.88 · TypeScript 6 estricto · PowerSync 2 (SQLite cifrada con
 SQLCipher) sobre Supabase.
 
 > Tu vida financiera, en orden y a la vista.
 
 ## Requisitos
 
-- Node >= 20, pnpm >= 9 (el repo es un monorepo pnpm).
+- Node 22.13+, 24.3+ o 26+; pnpm 9.12.0 (versión fijada por el monorepo).
 - Para correr con módulos nativos (op-sqlite/SQLCipher, secure-store) necesitas un
   **development build**. **No funciona en Expo Go** por el adaptador nativo de SQLCipher.
+- Después de actualizar el SDK, vuelve a generar e instalar el development build Android/iOS.
 - Opcional: Supabase CLI para el entorno local.
 
 ## Puesta en marcha

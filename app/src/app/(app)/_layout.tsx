@@ -1,4 +1,4 @@
-import { Tabs, useRouter, useSegments } from 'expo-router'
+import { Tabs, usePathname, useRouter } from 'expo-router'
 import { useEffect, useRef } from 'react'
 import { useQuery } from '@powersync/react-native'
 
@@ -13,7 +13,7 @@ export default function AppTabsLayout() {
   const theme = useTheme()
   const { session } = useAuth()
   const router = useRouter()
-  const segments = useSegments()
+  const pathname = usePathname()
 
   // Verificamos el estado del perfil en la base local (PowerSync)
   const { data: perfilData, isLoading } = useQuery('SELECT * FROM perfil')
@@ -25,7 +25,7 @@ export default function AppTabsLayout() {
     console.log('[Layout] useEffect disparado. isLoading:', isLoading, 'session:', !!session)
     if (isLoading || !session) return
 
-    const isOnboarding = segments.includes('onboarding')
+    const isOnboarding = pathname === '/onboarding'
     const myProfile = perfilData?.find((p: any) => p.id === session.user.id)
     const hasProfile = !!myProfile
     const isCompleted = hasProfile && (myProfile.onboarding_completo == 1 || myProfile.onboarding_completo === true)
@@ -41,15 +41,15 @@ export default function AppTabsLayout() {
 
     if (!effectivelyCompleted && !isOnboarding) {
       console.log('[Layout] Redirigiendo a onboarding porque no está completado.')
-      router.replace('/(app)/onboarding')
+      router.replace('/onboarding')
     } else if (effectivelyCompleted && isOnboarding) {
       console.log('[Layout] Redirigiendo al dashboard porque ya está completado.')
       router.replace('/(app)')
     }
-  }, [isLoading, perfilData, segments, router, session])
+  }, [isLoading, perfilData, pathname, router, session])
 
   // Ocultamos la barra de navegación si estamos en el flujo de onboarding
-  const isOnboardingRoute = segments.includes('onboarding')
+  const isOnboardingRoute = pathname === '/onboarding'
 
   return (
     <Tabs
