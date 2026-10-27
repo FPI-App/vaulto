@@ -13,17 +13,18 @@ Desde la primera migración, cada tabla de dominio incluye estos campos. No son 
 | `id` | `uuid` | **Generado en el cliente** (no autoincremental). Indispensable para offline-first: la app crea registros sin internet y sin colisiones. |
 | `updated_at` | `timestamptz` | Marca de última escritura. Base del LWW de fallback y de la detección de cambios para sync. |
 | `deleted_at` | `timestamptz` nullable | **Soft delete.** Nunca se borran filas físicamente en el flujo normal: borrar es escribir `deleted_at`. Un DELETE físico no se puede sincronizar de forma fiable. |
-| `espacio_id` | `uuid` nullable | Identificador del espacio de datos (multiusuario / modo pareja). Nullable en MVP = espacio personal. Permite el modo pareja futuro sin migración disruptiva. |
+| `espacio_id` | `uuid` NOT NULL | Identificador del espacio de datos y frontera de aislamiento. Solo la tabla raíz `espacio` carece de esta columna. |
 | `currency` | `text` | Moneda del registro. Multimoneda-ready. **MVP fija `COP`.** |
-| `country` | `text` | País del registro (ISO, ej. `CO`). Multimoneda/locale-ready. |
+| `country` | `text` | País de `espacio` y `perfil` (ISO, ej. `CO`). |
 
-Además, las tablas con dueño llevan `user_id` (`uuid`, FK a `auth.users`) para RLS. `created_at` (`timestamptz`) es recomendado para auditoría.
+Todas las tablas tienen `created_at` (`timestamptz`) para auditoría. La pertenencia y la autorización se resuelven mediante `espacio_miembro`, no con un `user_id` suelto en cada tabla.
 
 > **Regla dura:** una migración que cree una tabla de dominio sin estos campos no se mergea. Esto se revisa en cada PR.
 
-### Por qué nullable y por qué desde el día 1
-- `espacio_id` nullable evita construir el modo pareja hoy (YAGNI) pero garantiza que cuando llegue, los datos existentes ya tienen la columna y el sync ya la transporta. Añadir la columna después es trivial; reconciliar millones de filas históricas y reescribir las reglas de sync, no.
-- `currency` y `country` se llenan con `COP` / `CO` en MVP. No hay selector de moneda todavía. Pero el esquema ya distingue el monto de su moneda, así que activar multimoneda es trabajo de UI + lógica, no una migración de datos de alto riesgo.
+### Por qué `espacio_id` es obligatorio
+- Todo registro de dominio pertenece a un único espacio desde su creación. El espacio personal también usa `espacio` y `espacio_miembro`; no existe un caso de negocio para filas huérfanas.
+- La misma frontera se aplica en PostgreSQL/RLS, PowerSync y las consultas SQLite locales.
+- `currency` se conserva en entidades monetarias; el MVP opera en COP.
 
 ---
 

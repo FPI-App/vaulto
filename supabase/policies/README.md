@@ -1,6 +1,6 @@
 # Políticas RLS — modelo de aislamiento por espacio
 
-Referencia legible de las políticas Row Level Security de Vaulto. Las políticas **reales** se aplican vía migración (`../migrations/0001_init.sql`); este documento explica el modelo y sirve para revisar coherencia con las reglas de sincronización de PowerSync.
+Referencia legible de las políticas Row Level Security de Vaulto. Las políticas **reales** se aplican vía migraciones, incluida `../migrations/0008_restringe_membresias.sql`, que limita alta y edición de membresías al owner del espacio.
 
 ## El pivot `espacio_miembro` es el corazón del modelo
 
@@ -38,7 +38,7 @@ La función helper se declara `security definer` con `search_path = public`. Est
 | Tabla | SELECT | INSERT (`with check`) | UPDATE |
 |---|---|---|---|
 | `espacio` | `is_espacio_member(id)` | `owner_user_id = auth.uid()` | miembro del espacio |
-| `espacio_miembro` | propio (`user_id = auth.uid()`) **o** miembro del espacio | igual | igual |
+| `espacio_miembro` | propio (`user_id = auth.uid()`) **o** miembro del espacio | owner del espacio | owner del espacio |
 | `perfil` | propio (`id = auth.uid()`) **o** miembro del espacio | propio **y** miembro del espacio | solo propio |
 | `cuenta` | miembro del espacio | miembro del espacio | miembro del espacio |
 | `categoria` | miembro del espacio | miembro del espacio | miembro del espacio |
@@ -49,7 +49,7 @@ La función helper se declara `security definer` con `search_path = public`. Est
 Notas sobre los casos especiales:
 
 - **`espacio`** es la raíz y no tiene `espacio_id`: la condición se aplica sobre su propia `id`. El INSERT exige que el creador sea el `owner_user_id` (no puedes crear un espacio a nombre de otro).
-- **`espacio_miembro`** permite ver/editar la fila propia *o* las del espacio donde ya eres miembro. Así el owner puede agregar a su pareja (siendo miembro del espacio) y un invitado puede ver su propia membresía.
+- **`espacio_miembro`** permite ver la fila propia y las de espacios compartidos. Solo el owner crea o edita membresías; así no se puede autoinscribir a un espacio conocido ni escalar el propio rol.
 - **`perfil`** se ve a sí mismo siempre y, en modo pareja, también el perfil de la pareja (mismo espacio). Pero solo el dueño edita su perfil.
 
 ## Principios transversales
@@ -71,6 +71,7 @@ bucket_definitions:
       select espacio_id
       from espacio_miembro
       where user_id = request.user_id()
+        and deleted_at is null
         and deleted_at is null
     data:
       - select * from espacio        where id         = bucket.espacio_id

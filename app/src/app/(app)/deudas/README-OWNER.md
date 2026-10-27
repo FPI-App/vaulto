@@ -22,6 +22,11 @@ Entrega la impl real y pásala al `DeudasSelectorsProvider` (en el árbol autent
 root `_layout.tsx`) vía su prop `value`. Hasta entonces el dashboard usa
 `noopDeudasSelectors` (0 / []) — **cero bloqueo** entre tracks.
 
+La lógica de dominio vive en `packages/shared/src/domain/deudas.ts`. Los selectores
+locales implementan el contrato en `app/src/features/deudas/data/deudasSelectors.ts`;
+leen únicamente el espacio activo, omiten filas con soft delete y consultan la copia
+local de PowerSync para funcionar sin conexión.
+
 ## Reglas de la costura (no romper el spine)
 - Importa tipos/esquema desde `@vaulto/shared`. No redefinas el `AppSchema` ni el contrato.
 - `movimiento_id` en `pago` es el puente con Movimientos (Track A): comunícate por columnas, no por código.

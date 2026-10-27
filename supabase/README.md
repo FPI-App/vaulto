@@ -40,7 +40,7 @@ pnpm supabase:stop
 ## Reglas no negociables
 
 1. **RLS obligatorio.** Toda tabla nueva habilita RLS y define sus políticas en la misma migración. Tabla sin política = inaccesible (es el comportamiento correcto, no un bug).
-2. **Campos transversales.** Toda tabla de dominio incluye `id` (uuid, cliente), `updated_at`, `deleted_at`, `espacio_id` (nullable), `currency`, `country`, más `user_id` para RLS. Ver `../ARQUITECTURA.md`.
+2. **Campos transversales.** Toda tabla de dominio incluye `id` (uuid, cliente), `created_at`, `updated_at`, `deleted_at` y `espacio_id` NOT NULL. La raíz `espacio` no tiene `espacio_id`; `currency` aplica a entidades monetarias y `country` a `espacio`/`perfil`. El acceso se autoriza mediante `espacio_miembro`. Ver `../ARQUITECTURA.md`.
 3. **Soft delete.** Borrar = escribir `deleted_at`. No hay DELETE físico en el flujo normal (no se sincroniza fiablemente).
 4. **UUID en cliente.** Las PKs son `uuid` generados por la app, no `serial`/`identity`.
 

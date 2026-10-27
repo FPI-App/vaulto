@@ -12,6 +12,7 @@ bucket_definitions:
       SELECT espacio_id as id 
       FROM public.espacio_miembro 
       WHERE user_id = request.user_id()
+        AND deleted_at IS NULL
     data:
       - SELECT * FROM public.espacio WHERE id = bucket.id
       - SELECT * FROM public.perfil WHERE espacio_id = bucket.id

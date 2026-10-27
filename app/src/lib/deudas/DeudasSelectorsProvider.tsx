@@ -1,18 +1,25 @@
-import React, { createContext, useContext } from 'react';
-import { noopDeudasSelectors } from '@vaulto/shared';
+import { createContext, useContext, useMemo, type ReactNode } from 'react'
+import { usePowerSync } from '@powersync/react-native'
+import { noopDeudasSelectors, type DeudasSelectors } from '@vaulto/shared'
 
-const DeudasSelectorsContext = createContext<any>({});
+import { SQLiteDeudasSelectors } from '@/features/deudas/data/deudasSelectors'
+import { useEspacioActual } from '@/lib/espacio/useEspacioActual'
 
-export const DeudasSelectorsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const DeudasSelectorsContext = createContext<DeudasSelectors>(noopDeudasSelectors)
+
+export function DeudasSelectorsProvider({ children }: { children: ReactNode }) {
+  const db = usePowerSync()
+  const { espacioId } = useEspacioActual()
+  const selectors = useMemo(
+    () => (espacioId ? new SQLiteDeudasSelectors(db, espacioId) : noopDeudasSelectors),
+    [db, espacioId],
+  )
+
   return (
-    <DeudasSelectorsContext.Provider value={noopDeudasSelectors}>
+    <DeudasSelectorsContext.Provider value={selectors}>
       {children}
     </DeudasSelectorsContext.Provider>
-  );
-};
+  )
+}
 
-export const useDeudasSelectors = () => {
-  const context = useContext(DeudasSelectorsContext);
-  // Si context está vacío, retornamos noopDeudasSelectors para que no fallen los métodos como getTotalPorDireccion
-  return Object.keys(context).length > 0 ? context : noopDeudasSelectors;
-};
+export const useDeudasSelectors = () => useContext(DeudasSelectorsContext)

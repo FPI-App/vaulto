@@ -108,7 +108,7 @@ No se rehace. El plan parte de aquí:
 - **Theme** — tokens del brandbook (`app/src/theme/`).
 - **Contrato `DeudasSelectors`** — la interfaz vive en `packages/shared` (ver Contrato de integración). El dashboard arranca contra una impl noop.
 
-> 🛑 **DECISIÓN HUMANA — reconciliación RLS spine vs. canónico.** El spine documentaba RLS por `user_id = auth.uid()` y `espacio_id` nullable (ARQUITECTURA.md §1, supabase/README). El modelo canónico de esta reunión **manda**: RLS por pivot `espacio_miembro` y `espacio_id` NOT NULL (salvo `espacio`). **Resuelto en planeación:** se sigue el canónico. edav debe alinear los docs del spine (ARQUITECTURA.md, supabase/policies/README) en su primer PR de infra para que no haya dos verdades. No es decisión de agente: confírmalo con lmilo antes de aplicar la primera migración.
+> **Decisión canónica:** RLS por el pivot `espacio_miembro` y `espacio_id NOT NULL` en todas las tablas de dominio (salvo la raíz `espacio`). Los documentos principales ya están alineados; la migración `0008_restringe_membresias.sql` añade la autorización del owner para invitar y administrar membresías.
 
 ---
 
