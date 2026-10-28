@@ -2,12 +2,14 @@ import { Session } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 import * as Linking from 'expo-linking';
+import * as Crypto from 'expo-crypto';
 import { parseAuthCallback } from './parseAuthCallback';
 
 interface AuthContextType {
   session: Session | null;
   initializing: boolean;
   authCallbackError: string | null;
+  authCallbackSucceeded: boolean;
   isRecoveringPassword: boolean;
   signInWithPassword: (e: string, p: string) => Promise<void>;
   signUpWithPassword: (e: string, p: string) => Promise<void>;
@@ -22,9 +24,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [initializing, setInitializing] = useState(true);
   const [authCallbackError, setAuthCallbackError] = useState<string | null>(null);
+  const [authCallbackSucceeded, setAuthCallbackSucceeded] = useState(false);
   const [isRecoveringPassword, setIsRecoveringPassword] = useState(false);
-  const processingAuthCallback = React.useRef(false);
-  const handledAuthCallback = React.useRef(false);
+  const authCallbackQueue = React.useRef<Promise<void>>(Promise.resolve());
+  const lastHandledCallbackHash = React.useRef<string | null>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -34,51 +37,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const processAuthUrl = (url: string) => {
       const callback = parseAuthCallback(url);
-      if (!callback || processingAuthCallback.current || handledAuthCallback.current) return Promise.resolve();
+      if (!callback) return Promise.resolve();
 
-      processingAuthCallback.current = true;
-      return (async () => {
+      const operation = authCallbackQueue.current.then(async () => {
+        let fingerprint: string;
         try {
-          if (callback.type === 'error') {
-            setAuthCallbackError('El enlace venció o ya fue utilizado. Solicita uno nuevo e inténtalo otra vez.');
-            return;
-          }
+          fingerprint = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, url);
+        } catch {
+          setAuthCallbackSucceeded(false);
+          setAuthCallbackError('No pudimos procesar el enlace. Solicita uno nuevo e inténtalo otra vez.');
+          return;
+        }
 
+        if (fingerprint === lastHandledCallbackHash.current) return;
+
+        setAuthCallbackSucceeded(false);
+        setAuthCallbackError(null);
+        if (callback.type === 'error') {
+          lastHandledCallbackHash.current = fingerprint;
+          setAuthCallbackError('El enlace venció o ya fue utilizado. Solicita uno nuevo e inténtalo otra vez.');
+          return;
+        }
+
+        try {
           if (callback.type === 'code') {
             const { error } = await supabase.auth.exchangeCodeForSession(callback.code);
             if (error) throw error;
             if (callback.isRecovery) setIsRecoveringPassword(true);
-            setAuthCallbackError(null);
-            handledAuthCallback.current = true;
-            return;
-          }
-
-          if (callback.type === 'otp') {
+          } else if (callback.type === 'otp') {
             const { error } = await supabase.auth.verifyOtp({
               token_hash: callback.tokenHash,
               type: callback.otpType,
             });
             if (error) throw error;
             if (callback.otpType === 'recovery') setIsRecoveringPassword(true);
-            setAuthCallbackError(null);
-            handledAuthCallback.current = true;
-            return;
+          } else {
+            const { error } = await supabase.auth.setSession({
+              access_token: callback.accessToken,
+              refresh_token: callback.refreshToken,
+            });
+            if (error) throw error;
+            if (callback.isRecovery) setIsRecoveringPassword(true);
           }
 
-          const { error } = await supabase.auth.setSession({
-            access_token: callback.accessToken,
-            refresh_token: callback.refreshToken,
-          });
-          if (error) throw error;
-          if (callback.isRecovery) setIsRecoveringPassword(true);
+          lastHandledCallbackHash.current = fingerprint;
           setAuthCallbackError(null);
-          handledAuthCallback.current = true;
+          setAuthCallbackSucceeded(true);
         } catch {
+          setAuthCallbackSucceeded(false);
           setAuthCallbackError('No pudimos confirmar el correo. Solicita un enlace nuevo e inténtalo otra vez.');
-        } finally {
-          processingAuthCallback.current = false;
         }
-      })();
+      });
+      authCallbackQueue.current = operation.then(() => undefined, () => undefined);
+      return operation;
     };
 
     const linkSubscription = Linking.addEventListener('url', ({ url }) => {
@@ -111,14 +122,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     session,
     initializing,
     authCallbackError,
+    authCallbackSucceeded,
     isRecoveringPassword,
     signInWithPassword: async (email, password) => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
     },
     signUpWithPassword: async (email, password) => {
-      handledAuthCallback.current = false;
       setAuthCallbackError(null);
+      setAuthCallbackSucceeded(false);
       setIsRecoveringPassword(false);
       const redirectUrl = Linking.createURL('auth/callback');
       const { error } = await supabase.auth.signUp({
@@ -131,8 +143,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
     },
     resetPassword: async (email) => {
-      handledAuthCallback.current = false;
       setAuthCallbackError(null);
+      setAuthCallbackSucceeded(false);
       setIsRecoveringPassword(false);
       const redirectUrl = Linking.createURL('auth/callback');
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl });
@@ -148,6 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       setIsRecoveringPassword(false);
+      setAuthCallbackSucceeded(false);
     },
   };
 

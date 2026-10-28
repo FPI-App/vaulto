@@ -3,9 +3,9 @@
 //   GestureHandlerRootView → SafeAreaProvider → ThemeProvider → AuthProvider →
 //   [SyncProviders cuando hay sesión] → Stack
 // PowerSync abre/cifra la SQLite local: solo se monta con sesión (no en login).
-import { Stack, usePathname, useRouter, useSegments } from 'expo-router'
+import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import { useEffect, useRef, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
@@ -13,38 +13,6 @@ import { AuthProvider, useAuth } from '@/lib/auth/AuthProvider'
 import { DeudasSelectorsProvider } from '@/lib/deudas/DeudasSelectorsProvider'
 import { PowerSyncProvider } from '@/lib/powersync/PowerSyncProvider'
 import { ThemeProvider, useTheme } from '@/theme'
-
-/** Redirige según haya o no sesión. El grupo (auth) es público; (app), protegido. */
-function useRouteGuard() {
-  const { session, initializing, isRecoveringPassword } = useAuth()
-  const segments = useSegments()
-  const pathname = usePathname()
-  const router = useRouter()
-  const pendingRedirect = useRef<string | null>(null)
-
-  useEffect(() => {
-    if (initializing) return
-
-    const inAuthGroup = segments[0] === '(auth)'
-    const target = isRecoveringPassword && session && pathname !== '/set-password'
-      ? '/(auth)/set-password'
-      : !session && !inAuthGroup
-        ? '/(auth)/login'
-        : session && inAuthGroup && !isRecoveringPassword
-          ? '/(app)'
-          : null
-
-    if (!target) {
-      pendingRedirect.current = null
-      return
-    }
-
-    if (pendingRedirect.current === target) return
-
-    pendingRedirect.current = target
-    router.replace(target)
-  }, [session, initializing, isRecoveringPassword, pathname, segments, router])
-}
 
 /**
  * Monta los providers de sincronización solo cuando hay sesión. Sin ella
@@ -66,10 +34,19 @@ function SyncProviders({ children }: { children: ReactNode }) {
 }
 
 function Navigation() {
-  useRouteGuard()
+  const { session, initializing, isRecoveringPassword } = useAuth()
+
   return (
     <SyncProviders>
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Protected
+          guard={initializing || Boolean(session && !isRecoveringPassword)}
+          redirectTo={isRecoveringPassword ? '/(auth)/set-password' : '/(auth)/login'}
+        >
+          <Stack.Screen name="(app)" />
+        </Stack.Protected>
+      </Stack>
     </SyncProviders>
   )
 }

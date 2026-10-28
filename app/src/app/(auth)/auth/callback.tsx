@@ -9,9 +9,10 @@ import { useTheme } from '@/theme'
 export default function AuthCallbackScreen() {
   const theme = useTheme()
   const router = useRouter()
-  const { authCallbackError, initializing, session } = useAuth()
-  const complete = Boolean(session)
-  const waiting = !authCallbackError && !complete
+  const { authCallbackError, authCallbackSucceeded, initializing, isRecoveringPassword, session } = useAuth()
+  const complete = authCallbackSucceeded && Boolean(session) && !authCallbackError && !isRecoveringPassword
+  const recoveryReady = authCallbackSucceeded && Boolean(session) && !authCallbackError && isRecoveringPassword
+  const waiting = !authCallbackError && !complete && !recoveryReady
 
   return (
     <Screen padded>
@@ -20,17 +21,32 @@ export default function AuthCallbackScreen() {
           accessibilityRole="header"
           style={{ ...theme.typography.scale.h1, fontFamily: theme.typography.fontFamily, color: theme.colors.text }}
         >
-          {complete ? 'Correo confirmado' : waiting ? 'Verificando correo' : 'No pudimos confirmar el correo'}
+          {recoveryReady
+            ? 'Verifica el enlace de recuperación'
+            : complete
+              ? 'Correo confirmado'
+              : waiting
+                ? 'Verificando correo'
+                : 'No pudimos confirmar el correo'}
         </Text>
         <Text style={{ ...theme.typography.scale.body, color: theme.colors.textMuted }}>
-          {complete
+          {recoveryReady
+            ? 'El enlace es válido. Continúa para elegir una nueva contraseña.'
+            : complete
             ? 'Tu sesión está lista. Ya puedes continuar en Vaulto.'
             : waiting || initializing
               ? 'Estamos validando el enlace de forma segura.'
               : authCallbackError}
         </Text>
-        {authCallbackError ? (
-          <Button label="Volver a iniciar sesión" onPress={() => router.replace('/(auth)/login')} />
+        {recoveryReady ? (
+          <Button label="Crear nueva contraseña" onPress={() => router.replace('/(auth)/set-password')} />
+        ) : complete ? (
+          <Button label="Ir a Vaulto" onPress={() => router.replace('/(app)')} />
+        ) : authCallbackError ? (
+          <Button
+            label={session ? 'Ir a Vaulto' : 'Volver a iniciar sesión'}
+            onPress={() => router.replace(session ? '/(app)' : '/(auth)/login')}
+          />
         ) : null}
       </View>
     </Screen>

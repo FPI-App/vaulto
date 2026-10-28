@@ -1,6 +1,6 @@
 # Diagnóstico y corrección del redirect de autenticación
 
-**Estado:** código local implementado y validado; configuración remota y prueba en dispositivo pendientes.
+**Estado:** código local implementado y validado; el usuario confirmó la allowlist remota; prueba en dispositivo pendiente.
 **Fecha:** 2026-10-27
 
 ## Confirmado
@@ -8,7 +8,7 @@
 - El correo anterior redirigió a `http://localhost:3000`, que en Android apunta al propio teléfono y no a Vaulto.
 - `app/app.json` registra el esquema `vaulto`; la URI nativa esperada es `vaulto://auth/callback`.
 - El enlace compartido incluía credenciales de sesión. Se consideran expuestas y no se reproducen aquí.
-- El proyecto Supabase remoto aún debe permitir la URI nativa en **Authentication → URL Configuration → Redirect URLs**. La configuración de `supabase/config.toml` solo afecta al entorno local.
+- El usuario confirmó que agregó la URI nativa en **Authentication → URL Configuration → Redirect URLs**. La configuración de `supabase/config.toml` solo afecta al entorno local.
 
 ## Cambios locales
 
@@ -21,16 +21,15 @@
 ## Verificación local
 
 - TypeScript: `tsc --noEmit -p app/tsconfig.json`, correcto.
-- Vitest: 9 archivos, 44 pruebas pasadas.
+- Vitest: 9 archivos, 45 pruebas pasadas.
 - ESLint en los archivos modificados, sin errores.
 - Estos resultados no prueban que Android abra el enlace ni que Auth remoto acepte la URI.
 
 ## Pendiente externo
 
-1. En Supabase Cloud, agregar exactamente `vaulto://auth/callback` a la allowlist de Redirect URLs. Mantener un Site URL web válido para los flujos web; el localhost de desarrollo no debe ser el fallback de producción.
-2. Instalar/abrir la APK de desarrollo, registrar una cuenta de prueba nueva y abrir el enlace del correo en el mismo Android. Confirmar llegada a Vaulto y persistencia de sesión tras reiniciar.
-3. Probar recuperación: solicitar enlace, abrirlo en Android, cambiar contraseña e iniciar sesión.
-4. Cerrar todas las sesiones de la cuenta expuesta. En Vaulto, **Perfil → Cerrar sesión** usa el alcance global predeterminado; después, iniciar sesión de nuevo. Un access token ya emitido podría seguir válido hasta expirar. No compartir enlaces ni tokens.
+1. Abrir la APK de desarrollo, registrar una cuenta de prueba nueva y abrir el enlace del correo en el mismo Android. Confirmar llegada a Vaulto y persistencia de sesión tras reiniciar.
+2. Probar recuperación: solicitar enlace, abrirlo en Android, cambiar contraseña e iniciar sesión.
+3. Cerrar todas las sesiones de la cuenta expuesta. En Vaulto, **Perfil → Cerrar sesión** usa el alcance global predeterminado; después, iniciar sesión de nuevo. Un access token ya emitido podría seguir válido hasta expirar. No compartir enlaces ni tokens.
 
 ## Límites relacionados
 

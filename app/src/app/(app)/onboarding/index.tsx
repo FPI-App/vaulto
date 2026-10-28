@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
 import { StyleSheet, View, Text, Alert } from 'react-native'
-import { useRouter } from 'expo-router'
 import { completarOnboarding } from '@/features/onboarding/onboardingRepo'
 import { usePowerSync } from '@powersync/react-native'
 
@@ -14,7 +13,6 @@ export default function OnboardingScreen() {
   const theme = useTheme()
   const { session } = useAuth()
   const db = usePowerSync()
-  const router = useRouter()
 
   const [nombre, setNombre] = useState('')
   const [apellido, setApellido] = useState('')
@@ -32,7 +30,6 @@ export default function OnboardingScreen() {
     setLoading(true)
     try {
       await completarOnboarding(db, session.user.id, { nombre, apellido, username })
-      router.replace('/(app)')
     } catch (error) {
       Alert.alert('No se pudo completar el registro', error instanceof Error ? error.message : 'Intenta de nuevo.')
     } finally {

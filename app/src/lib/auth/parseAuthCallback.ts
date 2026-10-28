@@ -40,5 +40,5 @@ export function parseAuthCallback(url: string): AuthCallback | null {
     return { type: 'session', accessToken, refreshToken, isRecovery }
   }
 
-  return null
+  return { type: 'error' }
 }

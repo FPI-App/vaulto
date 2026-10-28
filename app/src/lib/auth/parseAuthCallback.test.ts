@@ -53,6 +53,10 @@ describe('parseAuthCallback', () => {
     expect(parseAuthCallback('vaulto://auth/callback?error=access_denied&error_description=expired')).toEqual({ type: 'error' })
   })
 
+  it('rechaza un callback de Vaulto sin credencial de confirmación', () => {
+    expect(parseAuthCallback('vaulto://auth/callback')).toEqual({ type: 'error' })
+  })
+
   it('detecta callbacks de recuperación de contraseña', () => {
     expect(parseAuthCallback('vaulto://auth/callback?code=one-time-code&type=recovery')).toEqual({
       type: 'code',

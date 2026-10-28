@@ -1,7 +1,8 @@
-import { Tabs, usePathname, useRouter } from 'expo-router'
-import { useEffect, useRef } from 'react'
+import { Tabs, usePathname } from 'expo-router'
+import { ActivityIndicator, View } from 'react-native'
 import { useQuery } from '@powersync/react-native'
 
+import { Screen } from '@/components/Screen'
 import { useTheme } from '@/theme'
 import { useAuth } from '@/lib/auth/AuthProvider'
 
@@ -10,49 +11,32 @@ import { useAuth } from '@/lib/auth/AuthProvider'
 // Iconos definitivos: Lucide outline (BRAND.md §4). Aquí texto-only para no
 // acoplar el spine a una librería de iconos antes de tiempo.
 export default function AppTabsLayout() {
+  const { session, initializing } = useAuth()
+
+  if (initializing || !session) {
+    return (
+      <Screen>
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <ActivityIndicator accessibilityLabel="Cargando sesión" />
+        </View>
+      </Screen>
+    )
+  }
+
+  return <AuthenticatedTabs userId={session.user.id} />
+}
+
+function AuthenticatedTabs({ userId }: { userId: string }) {
   const theme = useTheme()
-  const { session } = useAuth()
-  const router = useRouter()
   const pathname = usePathname()
 
   // Verificamos el estado del perfil en la base local (PowerSync)
   const { data: perfilData, isLoading } = useQuery('SELECT * FROM perfil')
 
-  // Ref y no estado: el latch solo lo lee este efecto, no necesita re-render
-  const completedRef = useRef(false)
-  const pendingRedirect = useRef<string | null>(null)
-
-  useEffect(() => {
-    if (isLoading || !session) return
-
-    const isOnboarding = pathname === '/onboarding'
-    const myProfile = perfilData?.find((p: any) => p.id === session.user.id)
-    const hasProfile = !!myProfile
-    const isCompleted = hasProfile && (myProfile.onboarding_completo == 1 || myProfile.onboarding_completo === true)
-
-    // Si detectamos que se completó, guardamos este estado de forma optimista
-    // Esto previene el "PowerSync Flicker" (cuando la mutación local se borra al subir, 
-    // pero la descarga del servidor tarda un par de segundos en llegar).
-    if (isCompleted) completedRef.current = true
-
-    const effectivelyCompleted = completedRef.current
-
-    const target = !effectivelyCompleted && !isOnboarding
-      ? '/onboarding'
-      : effectivelyCompleted && isOnboarding
-        ? '/(app)'
-        : null
-
-    if (!target) {
-      pendingRedirect.current = null
-      return
-    }
-
-    if (pendingRedirect.current === target) return
-
-    pendingRedirect.current = target
-    router.replace(target)
-  }, [isLoading, perfilData, pathname, router, session])
+  const myProfile = perfilData?.find((profile: { id: string }) => profile.id === userId)
+  const isCompleted = Boolean(
+    myProfile && (myProfile.onboarding_completo === 1 || myProfile.onboarding_completo === true),
+  )
 
   // Ocultamos la barra de navegación si estamos en el flujo de onboarding
   const isOnboardingRoute = pathname === '/onboarding'
@@ -75,14 +59,17 @@ export default function AppTabsLayout() {
         },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Inicio' }} />
-      <Tabs.Screen name="cuentas" options={{ title: 'Cuentas' }} />
-      <Tabs.Screen name="movimientos" options={{ title: 'Movimientos' }} />
-      <Tabs.Screen name="deudas" options={{ title: 'Deudas' }} />
-      <Tabs.Screen name="perfil" options={{ title: 'Perfil' }} />
-      {/* Rutas fuera de la tab bar (modales / flujos): se ocultan como tabs. */}
-      <Tabs.Screen name="categorias" options={{ href: null }} />
-      <Tabs.Screen name="onboarding" options={{ href: null }} />
+      <Tabs.Protected guard={isLoading || isCompleted} redirectTo="/onboarding">
+        <Tabs.Screen name="index" options={{ title: 'Inicio' }} />
+        <Tabs.Screen name="cuentas" options={{ title: 'Cuentas' }} />
+        <Tabs.Screen name="movimientos" options={{ title: 'Movimientos' }} />
+        <Tabs.Screen name="deudas" options={{ title: 'Deudas' }} />
+        <Tabs.Screen name="perfil" options={{ title: 'Perfil' }} />
+        <Tabs.Screen name="categorias" options={{ href: null }} />
+      </Tabs.Protected>
+      <Tabs.Protected guard={isLoading || !isCompleted} redirectTo="/(app)">
+        <Tabs.Screen name="onboarding" options={{ href: null }} />
+      </Tabs.Protected>
     </Tabs>
   )
 }
