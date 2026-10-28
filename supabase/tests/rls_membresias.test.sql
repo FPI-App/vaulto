@@ -1,6 +1,7 @@
 -- Verifica bootstrap del owner y bloqueo de autoinscripciones a espacios ajenos.
 begin;
 select plan(7);
+select set_config('vaulto.sync_protocol', '1', true);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'owner@test.local'),

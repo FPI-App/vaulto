@@ -24,13 +24,14 @@ function docker(args, input) {
   const result = spawnSync('docker', args, { input, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 })
   if (result.status !== 0 || result.error) {
     // Nunca volcar inspect/env ni respuestas externas que puedan contener credenciales.
-    throw new Error('Falló Docker/psql en el contenedor de pruebas. No se consultó ningún servidor remoto.')
+    const sqlState = result.stderr?.match(/ERROR:\s+([A-Z0-9]{5})\b/)?.[1]
+    throw new Error(`Falló Docker/psql en el contenedor de pruebas${sqlState ? ` (SQLSTATE ${sqlState})` : ''}. No se consultó ningún servidor remoto.`)
   }
   return result.stdout
 }
 
 function sql(input, transaction = false) {
-  return docker(['exec', '-i', CONTAINER, 'psql', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1',
+  return docker(['exec', '-i', CONTAINER, 'psql', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=sqlstate',
     '-h', '/var/run/postgresql', '-U', 'postgres', '-d', DATABASE,
     ...(transaction ? ['--single-transaction'] : []), '-f', '-'], input)
 }
@@ -58,12 +59,23 @@ GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated;
 CREATE EXTENSION pgtap;
 `
 
+export function migrationMarker(contents) {
+  return `vaulto-qa:${createHash('sha256').update(contents.join('\n')).digest('hex')}`
+}
+
+export function pendingMigrations(installed, contents) {
+  for (let count = contents.length; count > 0; count--) {
+    if (installed === migrationMarker(contents.slice(0, count))) return contents.slice(count)
+  }
+  throw new Error('La versión instalada no es un prefijo conocido. La base se conserva sin reset.')
+}
+
 export function main(mode = '--check') {
   if (!['--check', '--apply-migrations', '--test'].includes(mode)) throw new Error('Modo no admitido.')
   validateContainer(JSON.parse(docker(['inspect', CONTAINER]))[0])
   const files = readdirSync(join(root, 'supabase/migrations')).filter((name) => name.endsWith('.sql')).sort()
-  const migrations = files.map((name) => readFileSync(join(root, 'supabase/migrations', name), 'utf8')).join('\n')
-  const marker = `vaulto-qa:${createHash('sha256').update(migrations).digest('hex')}`
+  const contents = files.map((name) => readFileSync(join(root, 'supabase/migrations', name), 'utf8'))
+  const marker = migrationMarker(contents)
   const installed = sql("SELECT coalesce(shobj_description(oid, 'pg_database'), '') FROM pg_database WHERE datname = current_database();").trim()
   if (mode === '--check') {
     console.log(`Destino: ${CONTAINER}/${DATABASE}; puertos publicados: ninguno; esquema actualizado: ${installed === marker}`)
@@ -72,10 +84,18 @@ export function main(mode = '--check') {
   }
   if (installed !== marker) {
     if (mode !== '--apply-migrations') throw new Error('Las migraciones de pruebas requieren aprobación y aplicación explícitas.')
-    const occupied = sql("SELECT count(*) FROM information_schema.tables WHERE table_schema IN ('auth', 'public');").trim()
-    if (occupied !== '0') throw new Error('La base ya contiene tablas. Se conserva intacta; no se hace reset.')
-    sql(`${bootstrap}\n${migrations}\nCOMMENT ON DATABASE ${DATABASE} IS '${marker}';`, true)
-    console.log(`Aplicadas ${files.length} migraciones únicamente en ${CONTAINER}/${DATABASE}.`)
+    let pending
+    let initialize = ''
+    if (installed) {
+      pending = pendingMigrations(installed, contents)
+    } else {
+      const occupied = sql("SELECT count(*) FROM information_schema.tables WHERE table_schema IN ('auth', 'public', 'private');").trim()
+      if (occupied !== '0') throw new Error('La base ya contiene tablas. Se conserva intacta; no se hace reset.')
+      initialize = bootstrap
+      pending = contents
+    }
+    sql(`${initialize}\n${pending.join('\n')}\nCOMMENT ON DATABASE ${DATABASE} IS '${marker}';`, true)
+    console.log(`Aplicadas ${pending.length} migraciones pendientes únicamente en ${CONTAINER}/${DATABASE}.`)
   }
   let count = 0
   for (const file of readdirSync(join(root, 'supabase/tests')).filter((name) => name.endsWith('.test.sql')).sort()) {

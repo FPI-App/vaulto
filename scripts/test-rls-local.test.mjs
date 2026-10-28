@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { CONTAINER, validateContainer, validateTap } from './test-rls-local.mjs'
+import { CONTAINER, migrationMarker, pendingMigrations, validateContainer, validateTap } from './test-rls-local.mjs'
 
 const fixture = () => ({
   Name: `/${CONTAINER}`, Config: { Image: 'postgres:15-bookworm', Labels: { 'com.vaulto.purpose': 'local-rls' } },
@@ -28,4 +28,13 @@ test('no confunde salida psql sin errores con una suite pgTAP aprobada', () => {
   for (const output of ['1..2\nok 1\n', '1..1\nnot ok 1\n', '1..0', '1..0\n# Looks like no tests\n', 'BEGIN\nROLLBACK', '1..1\nok 1\nBail out!']) {
     assert.throws(() => validateTap(output))
   }
+})
+
+test('solo aplica migraciones añadidas, nunca reconstruye una base divergente', () => {
+  const initial = ['primera', 'segunda']
+  const marker = migrationMarker(initial)
+  assert.deepEqual(pendingMigrations(marker, [...initial, 'tercera']), ['tercera'])
+  assert.deepEqual(pendingMigrations(marker, initial), [])
+  assert.throws(() => pendingMigrations(marker, ['primera-modificada', 'segunda', 'tercera']))
+  assert.throws(() => pendingMigrations('ajeno', initial))
 })

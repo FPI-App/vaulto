@@ -1,6 +1,8 @@
 -- Integridad de pagos, saldos y aislamiento entre espacios.
 begin;
 select plan(4);
+-- Aísla RLS/invariantes del guard de transporte; el protocolo se prueba aparte.
+select set_config('vaulto.sync_protocol', '1', true);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'a-deudas@test.local'),

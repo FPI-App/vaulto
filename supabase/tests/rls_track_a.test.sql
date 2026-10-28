@@ -5,6 +5,7 @@
 -- escribir ni referenciar filas del espacio de B, y nadie puede borrar físicamente.
 begin;
 select plan(17);
+select set_config('vaulto.sync_protocol', '1', true);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures (como postgres, sin RLS)
