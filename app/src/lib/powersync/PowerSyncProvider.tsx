@@ -9,6 +9,7 @@ import type { DatabaseLease } from '@/lib/db/DatabaseSessions'
 import { StorageError } from '@/lib/db/storageErrors'
 import { databaseSessions } from '@/lib/sync/db'
 import { useTheme } from '@/theme'
+import { SyncUploadNotice } from './SyncUploadNotice'
 
 type StorageState = { database: PowerSyncDatabase; error?: never } | { error: string; database?: never }
 
@@ -38,7 +39,14 @@ export function PowerSyncProvider({ children, userId }: { children: ReactNode; u
   }, [userId, attempt])
 
   if (state?.database) {
-    return <PowerSyncContext.Provider value={state.database}>{children}</PowerSyncContext.Provider>
+    return (
+      <PowerSyncContext.Provider value={state.database}>
+        <View style={{ flex: 1 }}>
+          <SyncUploadNotice />
+          <View style={{ flex: 1 }}>{children}</View>
+        </View>
+      </PowerSyncContext.Provider>
+    )
   }
 
   return (
