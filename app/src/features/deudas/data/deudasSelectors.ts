@@ -11,11 +11,7 @@ interface DeudaSelectorRow {
   fecha_limite: string | null
   prioridad: number
   created_at: string
-}
-
-interface PagoSelectorRow {
-  deuda_id: string
-  monto: string
+  pago_monto: string | null
 }
 
 /** Selectores locales, limitados al espacio activo y a filas no eliminadas. */
@@ -26,25 +22,25 @@ export class SQLiteDeudasSelectors implements DeudasSelectors {
   ) {}
 
   private async getDeudas(): Promise<VencimientoResumen[]> {
-    const [deudas, pagos] = await Promise.all([
-      this.db.getAll<DeudaSelectorRow>(
-        `SELECT id, direccion, contraparte, monto_inicial, currency, fecha_limite, prioridad, created_at
-         FROM deuda WHERE espacio_id = ? AND deleted_at IS NULL
-         ORDER BY fecha_limite IS NULL, fecha_limite ASC, prioridad DESC, created_at ASC`,
-        [this.espacioId],
-      ),
-      this.db.getAll<PagoSelectorRow>(
-        `SELECT deuda_id, monto FROM pago WHERE espacio_id = ? AND deleted_at IS NULL`,
-        [this.espacioId],
-      ),
-    ])
+    // Una consulta evita combinar principal y pagos de snapshots diferentes.
+    const filas = await this.db.getAll<DeudaSelectorRow>(
+      `SELECT d.id, d.direccion, d.contraparte, d.monto_inicial, d.currency,
+              d.fecha_limite, d.prioridad, d.created_at, p.monto AS pago_monto
+       FROM deuda d LEFT JOIN pago p ON p.deuda_id = d.id
+         AND p.espacio_id = d.espacio_id AND p.deleted_at IS NULL
+       WHERE d.espacio_id = ? AND d.deleted_at IS NULL
+       ORDER BY d.fecha_limite IS NULL, d.fecha_limite ASC, d.prioridad DESC, d.created_at ASC, d.id`,
+      [this.espacioId],
+    )
+    const deudas = new Map<string, DeudaSelectorRow>()
     const pagosPorDeuda = new Map<string, string[]>()
-    for (const pago of pagos) {
-      const montos = pagosPorDeuda.get(pago.deuda_id) ?? []
-      montos.push(pago.monto)
-      pagosPorDeuda.set(pago.deuda_id, montos)
+    for (const fila of filas) {
+      deudas.set(fila.id, fila)
+      const montos = pagosPorDeuda.get(fila.id) ?? []
+      if (fila.pago_monto !== null) montos.push(fila.pago_monto)
+      pagosPorDeuda.set(fila.id, montos)
     }
-    return deudas.flatMap((deuda) => {
+    return [...deudas.values()].flatMap((deuda) => {
       const saldo = calcularSaldoPendiente(deuda.monto_inicial, pagosPorDeuda.get(deuda.id) ?? [])
       return saldo === '0.00' ? [] : [{
         deuda_id: deuda.id,
