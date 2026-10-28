@@ -68,7 +68,7 @@ function AuthenticatedTabs({ userId }: { userId: string }) {
         <Tabs.Screen name="categorias" options={{ href: null }} />
       </Tabs.Protected>
       <Tabs.Protected guard={isLoading || !isCompleted} redirectTo="/(app)">
-        <Tabs.Screen name="onboarding" options={{ href: null }} />
+        <Tabs.Screen name="onboarding" options={{ title: 'Configuración inicial' }} />
       </Tabs.Protected>
     </Tabs>
   )
