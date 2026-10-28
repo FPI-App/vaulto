@@ -1,6 +1,6 @@
 # Políticas RLS — modelo de aislamiento por espacio
 
-Referencia legible de las políticas Row Level Security de Vaulto. Las políticas **reales** se aplican vía migraciones, incluida `../migrations/0008_restringe_membresias.sql`, que limita alta y edición de membresías al owner del espacio.
+Referencia legible de las políticas Row Level Security de Vaulto. Las políticas **reales** se aplican vía migraciones: 0008 limita membresías al propietario, 0010 restringe la propiedad del espacio y 0011 fija los permisos de tablas del Track B. La existencia del archivo en Git no prueba su aplicación remota.
 
 ## El pivot `espacio_miembro` es el corazón del modelo
 
@@ -37,7 +37,7 @@ La función helper se declara `security definer` con `search_path = public`. Est
 
 | Tabla | SELECT | INSERT (`with check`) | UPDATE |
 |---|---|---|---|
-| `espacio` | `is_espacio_member(id)` | `owner_user_id = auth.uid()` | miembro del espacio |
+| `espacio` | propietario **o** `is_espacio_member(id)` | `owner_user_id = auth.uid()` | propietario vigente, conservando `owner_user_id` |
 | `espacio_miembro` | propio (`user_id = auth.uid()`) **o** miembro del espacio | owner del espacio | owner del espacio |
 | `perfil` | propio (`id = auth.uid()`) **o** miembro del espacio | propio **y** miembro del espacio | solo propio |
 | `cuenta` | miembro del espacio | miembro del espacio | miembro del espacio |
@@ -48,7 +48,7 @@ La función helper se declara `security definer` con `search_path = public`. Est
 
 Notas sobre los casos especiales:
 
-- **`espacio`** es la raíz y no tiene `espacio_id`: la condición se aplica sobre su propia `id`. El INSERT exige que el creador sea el `owner_user_id` (no puedes crear un espacio a nombre de otro).
+- **`espacio`** es la raíz y no tiene `espacio_id`. El propietario puede leerlo antes de crear su membresía, lo que permite el bootstrap de onboarding. INSERT y UPDATE exigen `owner_user_id = auth.uid()`; un miembro no puede apropiarse del espacio y no existe transferencia de propiedad en MVP1.
 - **`espacio_miembro`** permite ver la fila propia y las de espacios compartidos. Solo el owner crea o edita membresías; así no se puede autoinscribir a un espacio conocido ni escalar el propio rol.
 - **`perfil`** se ve a sí mismo siempre y, en modo pareja, también el perfil de la pareja (mismo espacio). Pero solo el dueño edita su perfil.
 
@@ -71,7 +71,6 @@ bucket_definitions:
       select espacio_id
       from espacio_miembro
       where user_id = request.user_id()
-        and deleted_at is null
         and deleted_at is null
     data:
       - select * from espacio        where id         = bucket.espacio_id
