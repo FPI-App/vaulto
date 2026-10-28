@@ -3,7 +3,7 @@
 //   GestureHandlerRootView → SafeAreaProvider → ThemeProvider → AuthProvider →
 //   [SyncProviders cuando hay sesión] → Stack
 // PowerSync abre/cifra la SQLite local: solo se monta con sesión (no en login).
-import { Stack, useRouter, useSegments } from 'expo-router'
+import { Stack, usePathname, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useEffect, useRef, type ReactNode } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -16,8 +16,9 @@ import { ThemeProvider, useTheme } from '@/theme'
 
 /** Redirige según haya o no sesión. El grupo (auth) es público; (app), protegido. */
 function useRouteGuard() {
-  const { session, initializing } = useAuth()
+  const { session, initializing, isRecoveringPassword } = useAuth()
   const segments = useSegments()
+  const pathname = usePathname()
   const router = useRouter()
   const pendingRedirect = useRef<string | null>(null)
 
@@ -25,11 +26,13 @@ function useRouteGuard() {
     if (initializing) return
 
     const inAuthGroup = segments[0] === '(auth)'
-    const target = !session && !inAuthGroup
-      ? '/(auth)/login'
-      : session && inAuthGroup
-        ? '/(app)'
-        : null
+    const target = isRecoveringPassword && session && pathname !== '/set-password'
+      ? '/(auth)/set-password'
+      : !session && !inAuthGroup
+        ? '/(auth)/login'
+        : session && inAuthGroup && !isRecoveringPassword
+          ? '/(app)'
+          : null
 
     if (!target) {
       pendingRedirect.current = null
@@ -40,7 +43,7 @@ function useRouteGuard() {
 
     pendingRedirect.current = target
     router.replace(target)
-  }, [session, initializing, segments, router])
+  }, [session, initializing, isRecoveringPassword, pathname, segments, router])
 }
 
 /**
