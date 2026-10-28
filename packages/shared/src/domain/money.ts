@@ -12,6 +12,7 @@
  *  no usa centavos, pero el esquema es numeric(14,2): trabajamos a 2 decimales. */
 const DECIMALES = 2
 const FACTOR = 10 ** DECIMALES
+const MAX_MONTO_CENTAVOS = 10 ** 14 - 1
 
 /**
  * Convierte un monto string/number a centavos (entero).
@@ -109,7 +110,7 @@ export function formatNumero(monto: string | number, currency = 'COP'): string {
 /**
  * Normaliza lo que el usuario teclea en un input de monto a un string decimal
  * con punto, apto para guardar en una columna numeric(14,2). Devuelve `null` si
- * no es un monto válido y no-negativo.
+ * no es un monto válido, no-negativo y representable como numeric(14,2).
  *
  * Convención es-CO: '.' es separador de miles y ',' el decimal
  * ("1.250.000" -> "1250000.00", "1.250,50" -> "1250.50"). Pensado para reusarse
@@ -123,7 +124,9 @@ export function normalizarMontoInput(texto: string): string | null {
   if (!/^\d+(\.\d+)?$/.test(normal)) return null
   const n = Number.parseFloat(normal)
   if (!Number.isFinite(n) || n < 0) return null
-  return desdeCentavos(aCentavos(normal))
+  const centavos = aCentavos(normal)
+  if (!Number.isSafeInteger(centavos) || centavos > MAX_MONTO_CENTAVOS) return null
+  return desdeCentavos(centavos)
 }
 
 /**

@@ -26,11 +26,22 @@ describe('normalizarMontoInput (es-CO)', () => {
     ['1.250,50', '1250.50'],
     ['  25 000 ', '25000.00'],
     ['0', '0.00'],
+    ['1,234', '1.23'],
+    ['999.999.999.999,99', '999999999999.99'],
   ])('%s -> %s', (entrada, esperado) => {
     expect(normalizarMontoInput(entrada)).toBe(esperado)
   })
 
   it.each(['', 'abc', '-500', '1,2,3', '12a'])('rechaza %j', (entrada) => {
+    expect(normalizarMontoInput(entrada)).toBeNull()
+  })
+
+  it.each([
+    '1.000.000.000.000',
+    '999.999.999.999,999',
+    '999999999999999999999999',
+    `1${'0'.repeat(308)}`,
+  ])('rechaza %j fuera de numeric(14,2)', (entrada) => {
     expect(normalizarMontoInput(entrada)).toBeNull()
   })
 })
