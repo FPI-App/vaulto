@@ -48,13 +48,13 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
         const data = Object.fromEntries(Object.entries(op.opData ?? {}).filter(([key]) => key !== 'id'))
         switch (op.op) {
           case UpdateType.PUT:
-            await table.upsert({ ...data, id: op.id }).throwOnError()
+            await table.upsert({ ...data, id: op.id }).select('id').single().throwOnError()
             break
           case UpdateType.PATCH:
-            await table.update(data).eq('id', op.id).throwOnError()
+            await table.update(data).eq('id', op.id).select('id').single().throwOnError()
             break
           case UpdateType.DELETE:
-            await table.update({ deleted_at: new Date().toISOString() }).eq('id', op.id).throwOnError()
+            await table.update({ deleted_at: new Date().toISOString() }).eq('id', op.id).select('id').single().throwOnError()
             break
           default:
             throw new Error('Operación de sincronización no admitida')

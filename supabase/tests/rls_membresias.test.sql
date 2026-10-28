@@ -1,6 +1,6 @@
 -- Verifica bootstrap del owner y bloqueo de autoinscripciones a espacios ajenos.
 begin;
-select plan(4);
+select plan(7);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'owner@test.local'),
@@ -34,6 +34,24 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000b","role":"authenticated"}', true);
 select is(public.is_espacio_member('e0000000-0000-0000-0000-00000000000a'), true,
   'La invitación concede pertenencia solo después de que la inserta el owner');
+
+with changed as (
+  update public.espacio set owner_user_id = '00000000-0000-0000-0000-00000000000b'
+  where id = 'e0000000-0000-0000-0000-00000000000a' returning id
+)
+select is((select count(*) from changed), 0::bigint, 'Un miembro no puede apropiarse del espacio');
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000a","role":"authenticated"}', true);
+select lives_ok(
+  $$update public.espacio set nombre = 'Espacio actualizado'
+    where id = 'e0000000-0000-0000-0000-00000000000a'$$,
+  'El propietario conserva la edición del espacio'
+);
+select throws_ok(
+  $$update public.espacio set owner_user_id = '00000000-0000-0000-0000-00000000000b'
+    where id = 'e0000000-0000-0000-0000-00000000000a'$$,
+  '42501', null, 'La transferencia de propiedad requiere un flujo explícito'
+);
 
 select * from finish();
 rollback;

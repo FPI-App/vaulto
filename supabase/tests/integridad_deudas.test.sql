@@ -18,18 +18,18 @@ insert into public.deuda (id, espacio_id, direccion, contraparte, monto_inicial,
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000a","role":"authenticated"}', true);
 select lives_ok(
-  $$insert into public.pago (espacio_id, deuda_id, monto) values
-    ('e0000000-0000-0000-0000-00000000000a', 'd0000000-0000-0000-0000-00000000000a', 25)$$,
+  $$insert into public.pago (espacio_id, deuda_id, monto, fecha) values
+    ('e0000000-0000-0000-0000-00000000000a', 'd0000000-0000-0000-0000-00000000000a', 25, '2026-01-01T12:00:00Z')$$,
   'El pago referencia una deuda del mismo espacio'
 );
 select throws_ok(
-  $$insert into public.pago (espacio_id, deuda_id, monto) values
-    ('e0000000-0000-0000-0000-00000000000a', 'd0000000-0000-0000-0000-00000000000b', 25)$$,
+  $$insert into public.pago (espacio_id, deuda_id, monto, fecha) values
+    ('e0000000-0000-0000-0000-00000000000a', 'd0000000-0000-0000-0000-00000000000b', 25, '2026-01-01T12:00:00Z')$$,
   '23514', null, 'El pago no puede referenciar deuda de otro espacio'
 );
 select throws_ok(
-  $$insert into public.pago (espacio_id, deuda_id, monto) values
-    ('e0000000-0000-0000-0000-00000000000a', 'd0000000-0000-0000-0000-00000000000a', 0)$$,
+  $$insert into public.pago (espacio_id, deuda_id, monto, fecha) values
+    ('e0000000-0000-0000-0000-00000000000a', 'd0000000-0000-0000-0000-00000000000a', 0, '2026-01-01T12:00:00Z')$$,
   '23514', null, 'El monto del pago debe ser positivo'
 );
 select throws_ok(
