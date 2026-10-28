@@ -76,9 +76,16 @@ imagen `postgres:15-bookworm`, pgTAP instalado y ningún puerto publicado.
 
 `--apply-migrations` prepara el esquema y ejecuta los tests. **Requiere confirmación explícita**:
 las migraciones contienen DROP de políticas/triggers y los tests incluyen borrados de fixtures.
-Solo admite una base vacía o la misma versión ya preparada; nunca resetea una base existente.
+Solo admite una base vacía o una versión conocida como prefijo de las migraciones actuales;
+aplica únicamente archivos añadidos. Una modificación de una migración ya instalada provoca
+un rechazo: nunca resetea una base existente.
 `--test` repite las pruebas sobre esa versión sin volver a aplicar migraciones.
 
 El bootstrap de prueba implementa únicamente `auth.users`, `auth.uid()` y los roles usados
 por RLS. No emula el servicio Supabase Auth, PostgREST, PowerSync ni los dispositivos.
 Los tests usan usuarios ficticios y hacen rollback; una suite pgTAP aprobada no valida sync.
+
+`node scripts/test-sync-concurrency.mjs` comprueba dos conexiones PostgreSQL simultáneas,
+incluidos usuarios distintos del mismo espacio, sobre una copia nueva de la base de pruebas.
+No publica puertos ni borra fixtures. Conserva la copia `vaulto_qa_race_<timestamp>` para diagnóstico;
+su limpieza requiere autorización explícita. Detalle en `../docs/PROTOCOLO-SYNC-ATOMICO.md`.

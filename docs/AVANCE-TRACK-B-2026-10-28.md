@@ -8,20 +8,21 @@ Se conserva ese estado: una entrega local no demuestra los criterios nativos ni 
 
 | Issue | Avance de esta entrega | Pendiente para cerrar |
 |---|---|---|
-| #16 Deudas y abonos | Lecturas tolerantes a sobrepagos: saldo desconocido explícito, historial conservado, edición/abonos bloqueados en conflicto; errores de consulta visibles. | Resolución del conflicto, atomicidad remota e interacción Android. |
+| #16 Deudas y abonos | Conflictos visibles y protocolo atómico 0012 validado con dos sesiones PostgreSQL simultáneas. | Despliegue remoto, flujo explícito de resolución e interacción Android pospuesta. |
 | #17 Selectores | Principal y pagos consultados en una sola sentencia SQLite; sin doble conteo por JOIN. El contrato existente no cambia y rechaza KPIs inconsistentes. | Validación integrada del dashboard en Android y sincronización real. |
 | #18 Documentación | Arquitectura y tabla de políticas alineadas a propiedad, grants y campos reales. Estrategias de concurrencia propuestas distinguidas de las implementadas. | Revisión e integración de los cambios. |
-| #6 Entorno y sync | PostgreSQL 15 aislado con las 11 migraciones aplicadas; las tres suites pgTAP pasan con 28 aserciones. | Pruebas de sync en dos dispositivos y comprobación del despliegue remoto. |
+| #6 Entorno y sync | PostgreSQL 15 aislado con 12 migraciones, 60 aserciones pgTAP y dos escenarios concurrentes correctos. | Despliegue remoto coordinado y prueba completa de PowerSync; Android pospuesto por el usuario. |
 | #21 SQLCipher | Sin cambio al mecanismo de apertura: las bases antiguas y llaves faltantes siguen bloqueando de forma segura. Criterios nativos detallados abajo. | Fixture nativo antiguo con cola pendiente y pruebas de exportación/reapertura sin perder metadatos. |
 | #2 Épica | Avanza con las entregas anteriores. | Integrar y completar checkpoints de #6 y #21. |
 
 ## Validación ejecutada
 
-- 52 pruebas de app, 10 archivos: correctas. Incluye conflictos de saldo y selectores sobre SQLite real en memoria.
+- 61 pruebas de app, 10 archivos: correctas. Incluye conflictos, selectores sobre SQLite real y confirmación de lotes.
 - TypeScript de app: correcto; ESLint de fuentes: correcto.
-- 10 pruebas de infraestructura y protección del runner: correctas. La prueba de seguridad del runner no ejecuta Docker ni SQL.
+- 11 pruebas de infraestructura y protección del runner: correctas. La prueba de seguridad del runner no ejecuta Docker ni SQL.
 - Preflight real: `node scripts/test-rls-local.mjs --check`, correcto. Destino `vaulto-qa-pg-20261028/vaulto_qa`; ningún puerto publicado; pgTAP disponible.
 - Tras autorización explícita, `node scripts/test-rls-local.mjs --apply-migrations` aplicó 0001–0011 y ejecutó correctamente 28 aserciones: integridad de deudas (4), membresías/propiedad (7) y Track A (17). Fixtures revertidos mediante rollback.
+- En la entrega siguiente se aplicó incrementalmente 0012 (sin DROP ni reset). La suite ampliada pasa 60 aserciones; dos conexiones PostgreSQL solapadas verifican rechazo de 60+60, aceptación de 40+60 e idempotencia. Ver `PROTOCOLO-SYNC-ATOMICO.md`.
 - Las migraciones se ejecutaron únicamente en PostgreSQL local. No se aplicaron migraciones remotas ni se probaron dispositivos.
 
 ## RLS ejecutada con aprobación
@@ -33,13 +34,13 @@ node scripts/test-rls-local.mjs --apply-migrations
 ```
 
 Destino único: base `vaulto_qa` dentro del contenedor local `vaulto-qa-pg-20261028`.
-No abre conexiones remotas ni lee `.env`. Aplica 0001–0011 en una transacción en una base vacía,
-y ejecuta las tres suites pgTAP; sus fixtures se revierten con rollback. El bootstrap de Auth es
+No abre conexiones remotas ni lee `.env`. En una base vacía aplica todas las migraciones;
+en una versión conocida aplica solo las añadidas. Ejecuta las suites pgTAP; sus fixtures se revierten con rollback. El bootstrap de Auth es
 mínimo: no prueba el servidor Supabase Auth ni PostgREST.
 
 La ejecución fue autorizada porque las migraciones ejecutan DROP POLICY/DROP TRIGGER y las pruebas
 contienen DELETE de datos sintéticos. No resetea ni elimina bases/contenedores/archivos.
-Si encuentra tablas ajenas o una versión anterior, se detiene y conserva el destino.
+Si encuentra tablas ajenas o una versión divergente, se detiene y conserva el destino.
 
 0011 deja explícitos los grants de `espacio`, `espacio_miembro`, `perfil`, `deuda` y `pago`;
 evita depender de los privilegios por defecto de una instalación Supabase. No concede DELETE/TRUNCATE.

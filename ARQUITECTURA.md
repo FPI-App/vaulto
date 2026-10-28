@@ -33,7 +33,7 @@ Todas las tablas tienen `created_at` (`timestamptz`) para auditoría. La pertene
 ### Pila
 - **Local:** las instalaciones nativas nuevas configuran SQLCipher con una llave y un archivo separados por usuario. El arranque exige soporte SQLCipher; la verificación efectiva en dispositivo y la migración de `vaulto.sqlite` antiguo siguen pendientes.
 - **Sync:** **PowerSync** sobre Supabase. PowerSync mantiene la réplica local sincronizada con Postgres y gestiona la conectividad intermitente.
-- **Cola local:** las escrituras offline se encolan. El conector sube operaciones en orden y solo completa la transacción cuando todas devuelven una fila escrita. Los IDs estables permiten reintentos; las solicitudes individuales todavía no forman una transacción remota atómica.
+- **Cola local:** el conector envía la transacción completa a `aplicar_lote_sync` (0012) y solo la completa al recibir confirmación de ese lote. El servidor aplica todas sus operaciones o revierte todo; registra una identidad persistente por usuario para reconocer reintentos. Requiere desplegar el protocolo coordinadamente con el cliente; sin la RPC la cola se conserva.
 
 ### Resolución de conflictos
 Objetivo de diseño, pendiente del spike de dos dispositivos definido en el plan:
@@ -43,7 +43,7 @@ Objetivo de diseño, pendiente del spike de dos dispositivos definido en el plan
 
 > **Advertencia consciente:** LWW depende del reloj del dispositivo. Relojes desfasados pueden hacer "ganar" a la escritura equivocada. Por eso LWW es fallback, no estrategia por defecto, y el merge por campo cubre el escenario peligroso (edición concurrente del modo pareja).
 
-**Estado implementado:** PATCH envía los campos de la operación; no existe comparación de `updated_at` que implemente LWW ni resolución de conflictos financieros en servidor. No debe darse por validada ninguna estrategia de concurrencia. Si los pagos locales superan el principal, Deudas conserva el historial, muestra conflicto y bloquea edición/abonos; los selectores rechazan el agregado para que el dashboard muestre su estado de error. Falta resolver el conflicto y la atomicidad remota, sin descartar la cola.
+**Estado implementado en 0012, validado en PostgreSQL local:** los lotes se serializan por espacio y el servidor recalcula los saldos de las deudas afectadas desde todos los pagos activos. Un lote que supera el principal se rechaza completo y conserva su cola local. PATCH envía campos modificados, pero no compara `updated_at`: no implementa LWW por reloj. Si los pagos locales superan el principal, Deudas conserva el historial, muestra conflicto y bloquea edición/abonos; los selectores rechazan el agregado. Falta el flujo explícito para corregir/anular un lote rechazado y la prueba real entre dispositivos. Ver `docs/PROTOCOLO-SYNC-ATOMICO.md`.
 
 ### Identidad e idempotencia
 - **UUID en cliente** para todo `id`: sin esto, dos dispositivos offline generarían IDs en colisión.
