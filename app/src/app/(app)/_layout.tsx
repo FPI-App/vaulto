@@ -1,5 +1,5 @@
 import { Tabs, usePathname } from 'expo-router'
-import { ActivityIndicator, View } from 'react-native'
+import { ActivityIndicator, Text, View } from 'react-native'
 import { useQuery } from '@powersync/react-native'
 
 import { Screen } from '@/components/Screen'
@@ -31,9 +31,12 @@ function AuthenticatedTabs({ userId }: { userId: string }) {
   const pathname = usePathname()
 
   // Verificamos el estado del perfil en la base local (PowerSync)
-  const { data: perfilData, isLoading } = useQuery('SELECT * FROM perfil')
+  const { data: perfilData, isLoading, error } = useQuery<{ onboarding_completo: number | boolean }>(
+    'SELECT onboarding_completo FROM perfil WHERE id = ? AND deleted_at IS NULL LIMIT 1',
+    [userId],
+  )
 
-  const myProfile = perfilData?.find((profile: { id: string }) => profile.id === userId)
+  const myProfile = perfilData[0]
   const isCompleted = Boolean(
     myProfile && (myProfile.onboarding_completo === 1 || myProfile.onboarding_completo === true),
   )
@@ -41,11 +44,25 @@ function AuthenticatedTabs({ userId }: { userId: string }) {
   // Ocultamos la barra de navegación si estamos en el flujo de onboarding
   const isOnboardingRoute = pathname === '/onboarding'
 
+  if (isLoading || error) {
+    return (
+      <Screen>
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          {error ? (
+            <Text accessibilityRole="alert" style={{ color: theme.colors.text }}>
+              No pudimos consultar tu perfil. Cierra y vuelve a abrir la app para reintentar.
+            </Text>
+          ) : <ActivityIndicator accessibilityLabel="Cargando perfil" color={theme.colors.actionText} />}
+        </View>
+      </Screen>
+    )
+  }
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.colors.brand[600],
+        tabBarActiveTintColor: theme.colors.actionText,
         tabBarInactiveTintColor: theme.colors.textMuted,
         tabBarStyle: isOnboardingRoute
           ? { display: 'none' }
@@ -59,7 +76,7 @@ function AuthenticatedTabs({ userId }: { userId: string }) {
         },
       }}
     >
-      <Tabs.Protected guard={isLoading || isCompleted} redirectTo="/onboarding">
+      <Tabs.Protected guard={isCompleted} redirectTo="/onboarding">
         <Tabs.Screen name="index" options={{ title: 'Inicio' }} />
         <Tabs.Screen name="cuentas" options={{ title: 'Cuentas' }} />
         <Tabs.Screen name="movimientos" options={{ title: 'Movimientos' }} />
@@ -67,7 +84,7 @@ function AuthenticatedTabs({ userId }: { userId: string }) {
         <Tabs.Screen name="perfil" options={{ title: 'Perfil' }} />
         <Tabs.Screen name="categorias" options={{ href: null }} />
       </Tabs.Protected>
-      <Tabs.Protected guard={isLoading || !isCompleted} redirectTo="/(app)">
+      <Tabs.Protected guard={!isCompleted} redirectTo="/(app)">
         <Tabs.Screen name="onboarding" options={{ title: 'Configuración inicial' }} />
       </Tabs.Protected>
     </Tabs>
