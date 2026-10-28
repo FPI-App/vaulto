@@ -5,7 +5,7 @@
 // PowerSync abre/cifra la SQLite local: solo se monta con sesión (no en login).
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
@@ -19,17 +19,27 @@ function useRouteGuard() {
   const { session, initializing } = useAuth()
   const segments = useSegments()
   const router = useRouter()
+  const pendingRedirect = useRef<string | null>(null)
 
   useEffect(() => {
     if (initializing) return
 
     const inAuthGroup = segments[0] === '(auth)'
+    const target = !session && !inAuthGroup
+      ? '/(auth)/login'
+      : session && inAuthGroup
+        ? '/(app)'
+        : null
 
-    if (!session && !inAuthGroup) {
-      router.replace('/(auth)/login')
-    } else if (session && inAuthGroup) {
-      router.replace('/(app)')
+    if (!target) {
+      pendingRedirect.current = null
+      return
     }
+
+    if (pendingRedirect.current === target) return
+
+    pendingRedirect.current = target
+    router.replace(target)
   }, [session, initializing, segments, router])
 }
 

@@ -20,9 +20,9 @@ export default function AppTabsLayout() {
 
   // Ref y no estado: el latch solo lo lee este efecto, no necesita re-render
   const completedRef = useRef(false)
+  const pendingRedirect = useRef<string | null>(null)
 
   useEffect(() => {
-    console.log('[Layout] useEffect disparado. isLoading:', isLoading, 'session:', !!session)
     if (isLoading || !session) return
 
     const isOnboarding = pathname === '/onboarding'
@@ -37,15 +37,21 @@ export default function AppTabsLayout() {
 
     const effectivelyCompleted = completedRef.current
 
-    console.log('[Layout] Estado actual -> isOnboarding:', isOnboarding, '| isCompleted (real):', isCompleted, '| effectivelyCompleted:', effectivelyCompleted)
+    const target = !effectivelyCompleted && !isOnboarding
+      ? '/onboarding'
+      : effectivelyCompleted && isOnboarding
+        ? '/(app)'
+        : null
 
-    if (!effectivelyCompleted && !isOnboarding) {
-      console.log('[Layout] Redirigiendo a onboarding porque no está completado.')
-      router.replace('/onboarding')
-    } else if (effectivelyCompleted && isOnboarding) {
-      console.log('[Layout] Redirigiendo al dashboard porque ya está completado.')
-      router.replace('/(app)')
+    if (!target) {
+      pendingRedirect.current = null
+      return
     }
+
+    if (pendingRedirect.current === target) return
+
+    pendingRedirect.current = target
+    router.replace(target)
   }, [isLoading, perfilData, pathname, router, session])
 
   // Ocultamos la barra de navegación si estamos en el flujo de onboarding
