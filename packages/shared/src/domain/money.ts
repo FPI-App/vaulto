@@ -6,7 +6,7 @@
 //
 // 14,2 => hasta 999.999.999.999,99. En centavos eso son ~1e14, dentro del rango
 // seguro de los enteros de JS (Number.MAX_SAFE_INTEGER ≈ 9e15). No se necesita
-// BigInt para el MVP, pero las operaciones se mantienen en enteros igualmente.
+// BigInt para acumular: solo se usa al leer strings decimales sin pasar por float.
 
 /** Cantidad de decimales de las monedas que maneja el MVP. COP en la práctica
  *  no usa centavos, pero el esquema es numeric(14,2): trabajamos a 2 decimales. */
@@ -20,6 +20,14 @@ const MAX_MONTO_CENTAVOS = 10 ** 14 - 1
  * Lanza si el valor no es un número finito.
  */
 export function aCentavos(monto: string | number): number {
+  if (typeof monto === 'string' && /^-?\d+(\.\d{1,2})?$/.test(monto)) {
+    const negativo = monto.startsWith('-')
+    const [entero, decimal = ''] = monto.replace(/^-/, '').split('.')
+    const exacto = BigInt(entero!) * 100n + BigInt(decimal.padEnd(2, '0'))
+    const centavos = Number(negativo ? -exacto : exacto)
+    if (!Number.isSafeInteger(centavos)) throw new RangeError('Monto fuera del rango de centavos seguros')
+    return centavos
+  }
   const n = typeof monto === 'number' ? monto : Number.parseFloat(monto)
   if (!Number.isFinite(n)) {
     throw new TypeError(`Monto inválido: ${JSON.stringify(monto)}`)
@@ -124,6 +132,7 @@ export function normalizarMontoInput(texto: string): string | null {
   if (!/^\d+(\.\d+)?$/.test(normal)) return null
   const n = Number.parseFloat(normal)
   if (!Number.isFinite(n) || n < 0) return null
+  if (n > MAX_MONTO_CENTAVOS / FACTOR) return null
   const centavos = aCentavos(normal)
   if (!Number.isSafeInteger(centavos) || centavos > MAX_MONTO_CENTAVOS) return null
   return desdeCentavos(centavos)

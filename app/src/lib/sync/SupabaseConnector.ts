@@ -3,6 +3,7 @@ import { type CrudEntry, type PowerSyncBackendConnector } from '@powersync/react
 
 import { supabase } from '../supabase'
 import { SyncUploadError } from './SyncUploadError'
+import { SyncRecoveryStore, type SyncOperation } from './SyncRecoveryStore'
 
 interface UploadSource {
   getClientId(): Promise<string>
@@ -13,7 +14,7 @@ interface UploadSource {
 }
 
 export class SupabaseConnector implements PowerSyncBackendConnector {
-  constructor(private readonly userId: string) {}
+  constructor(private readonly userId: string, private readonly recovery?: SyncRecoveryStore, private readonly seedIntent?: (operation: SyncOperation) => Promise<boolean>) {}
 
   private async requireSession(): Promise<Session> {
     const { data: { session }, error } = await supabase.auth.getSession()
@@ -46,6 +47,15 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
       }
       // Identidad persistente de esta base + rango de operaciones, estable en reintentos.
       const batchId = `${clientId}:${first.clientId}:${last.clientId}`
+      const operations: SyncOperation[] = await Promise.all(entries.map(async (op) => {
+        const operation: SyncOperation = {
+          table: op.table, id: op.id, op: op.op,
+          data: Object.fromEntries(Object.entries(op.opData ?? {}).filter(([key]) => key !== 'id')),
+        }
+        return await this.seedIntent?.(operation) ? { ...operation, if_absent: true } : operation
+      }))
+      const recovery = await this.recovery?.get(batchId, operations)
+      const cancelling = recovery?.decision === 'requested' || recovery?.decision === 'cancelled'
       const uploadClient = createClient(
         process.env.EXPO_PUBLIC_SUPABASE_URL!,
         (process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY)!,
@@ -54,16 +64,23 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
           auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
         },
       )
-      const { data } = await uploadClient.rpc('aplicar_lote_sync', {
-        p_lote_id: batchId,
-        p_operaciones: entries.map((op) => ({
-          table: op.table, id: op.id, op: op.op,
-          data: Object.fromEntries(Object.entries(op.opData ?? {}).filter(([key]) => key !== 'id')),
-        })),
-      }).throwOnError()
-      if (!data || data.protocol !== 1 || data.batch_id !== batchId || !['applied', 'already_applied'].includes(data.status)) {
+      let data: { protocol?: number; batch_id?: string; status?: string } | null
+      try {
+        const result = await uploadClient.rpc(cancelling ? 'cancelar_lote_abono' : 'aplicar_lote_sync', {
+          p_lote_id: batchId, p_operaciones: operations,
+        }).throwOnError()
+        data = result.data
+      } catch (error) {
+        if (typeof error === 'object' && error !== null && 'code' in error && error.code === '23514') {
+          await this.recovery?.record(batchId, operations)
+        }
+        throw error
+      }
+      const allowed = cancelling ? ['cancelled', 'already_applied'] : ['applied', 'already_applied']
+      if (!data || data.protocol !== 1 || data.batch_id !== batchId || !allowed.includes(data.status ?? '')) {
         throw new SyncUploadError('protocol')
       }
+      await this.recovery?.confirm(batchId, data.status === 'cancelled' ? 'cancelled' : 'applied')
       await transaction.complete()
     } catch (error: unknown) {
       // No registrar tokens, filas ni errores del servidor que contengan datos personales.

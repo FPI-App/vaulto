@@ -1,0 +1,75 @@
+{
+  "project": "pqxvttkyevbkfdhmcmxu",
+  "expectedVersions": [
+    "0001",
+    "0002",
+    "0003",
+    "0004",
+    "0005"
+  ],
+  "finalVersions": [
+    "0001",
+    "0002",
+    "0003",
+    "0004",
+    "0005",
+    "0006",
+    "0007",
+    "0008",
+    "0009",
+    "0010",
+    "0011",
+    "0012",
+    "0013",
+    "0014",
+    "0015",
+    "0016"
+  ],
+  "sha256": "8aa2f82a922a9717f89252d685442d97b5934447283fdaa7c110e2c27269115a",
+  "migrations": [
+    {
+      "file": "0006_asegura_movimiento_mismo_espacio.sql",
+      "sha256": "79e02e323a1d1633042289f1ccd17188d04a60b657ef09e2a5742c0bc004a93d"
+    },
+    {
+      "file": "0007_otorga_permisos_tablas_track_a.sql",
+      "sha256": "ba8956575fc761063971a075b7e40049c33cb8c4521c5fb5eda1ec4b287eb6a4"
+    },
+    {
+      "file": "0008_restringe_membresias.sql",
+      "sha256": "9a7ba8f1aa8787cc8b58ba55d207430ed77c6edda520a9b21618e16dadb5b6f1"
+    },
+    {
+      "file": "0009_valida_integridad_deudas.sql",
+      "sha256": "71716b039ba6574a419f2ef9acb9629609f9709262499eba89d66c0e70f76116"
+    },
+    {
+      "file": "0010_restringe_propiedad_espacio.sql",
+      "sha256": "61dbb0d7d4b7e8dc52054af0f3bb2126345ae1adae609383273e60bc7f4f0bb5"
+    },
+    {
+      "file": "0011_otorga_permisos_tablas_track_b.sql",
+      "sha256": "7c5a04e88c5538ed79ca097da144bac328c8a8807f2677597bc24a1334e3eec6"
+    },
+    {
+      "file": "0012_aplica_lotes_sync_atomicos.sql",
+      "sha256": "9512f0fce58b06af6a0433fb67aa9bce0c5265fc3401b015727753f53ab6907f"
+    },
+    {
+      "file": "0013_refuerza_lotes_y_registra_cancelaciones.sql",
+      "sha256": "616a29628f8225d563cf2f10b6c859cd69aaecb78f7a19af83558002166d8e8f"
+    },
+    {
+      "file": "0014_alinea_puente_pago_movimiento.sql",
+      "sha256": "7e5b0332e449b0ebfc26b560ad93f8268afaeb637626de9d2a662fabf58dacf9"
+    },
+    {
+      "file": "0015_preserva_ediciones_de_categorias_sugeridas.sql",
+      "sha256": "b512d649dc480c4aa5e7505025e1aafe4e4dfa6d044ad2bfb17a6f450b0a8a60"
+    },
+    {
+      "file": "0016_restringe_borrado_fisico.sql",
+      "sha256": "2d1dca58e53869c7c81144ec6c8d4949e06fe4fba144bc12a9331b857ca438c8"
+    }
+  ]
+}

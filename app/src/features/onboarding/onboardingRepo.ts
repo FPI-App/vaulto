@@ -16,10 +16,13 @@ export async function completarOnboarding(db: DatabaseWriter, userId: string, da
 
     // Un reintento reutiliza el espacio vigente del perfil o un espacio propio.
     let espacio = existente ? await tx.getOptional<{ id: string }>(
-      `SELECT e.id FROM espacio e JOIN espacio_miembro m ON m.espacio_id = e.id
-       WHERE e.id = ? AND m.user_id = ? AND e.deleted_at IS NULL AND m.deleted_at IS NULL LIMIT 1`,
-      [existente.espacio_id, userId],
+      `SELECT e.id FROM espacio e WHERE e.id = ? AND e.deleted_at IS NULL
+       AND (e.owner_user_id = ? OR EXISTS (
+         SELECT 1 FROM espacio_miembro m WHERE m.espacio_id = e.id AND m.user_id = ? AND m.deleted_at IS NULL
+       )) LIMIT 1`,
+      [existente.espacio_id, userId, userId],
     ) : null
+    if (existente && !espacio) throw new Error('Tu perfil pertenece a un espacio no disponible. Conservamos tus datos; revisa el acceso antes de continuar.')
     espacio ??= await tx.getOptional<{ id: string }>(
       `SELECT id FROM espacio WHERE owner_user_id = ? AND deleted_at IS NULL
        ORDER BY created_at, id LIMIT 1`, [userId],

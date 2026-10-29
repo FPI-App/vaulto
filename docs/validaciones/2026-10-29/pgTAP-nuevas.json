@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-10-29T22:33:15.862Z",
+  "target": "vaulto-qa-pg-20261028/vaulto_qa",
+  "appliedForThisCheck": [
+    "0013",
+    "0015-function"
+  ],
+  "fullMigrationSequenceVerified": false,
+  "results": [
+    {
+      "file": "semillas_categorias.test.sql",
+      "assertions": 7,
+      "passed": true
+    },
+    {
+      "file": "recuperacion_abonos.test.sql",
+      "assertions": 8,
+      "passed": true
+    }
+  ]
+}

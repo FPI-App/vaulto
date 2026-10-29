@@ -1,8 +1,9 @@
 # Protocolo de sincronización atómica v1
 
-Implementación de infraestructura de edav para #6, #16 y #17. Rama de revisión independiente:
-`feat/edav-sync-atomico`, basada en `79cbb4c`. Afecta el transporte compartido de las ocho tablas;
-requiere revisión coordinada con Track A y despliegue conjunto de backend/cliente.
+Implementación de infraestructura de edav para #6, #16 y #17. La entrega original
+`feat/edav-sync-atomico`, basada en `79cbb4c`, continúa en `integracion/mvp1-prioridades`.
+Afecta el transporte compartido de las ocho tablas y requiere despliegue conjunto de backend/cliente.
+El estado actualizado está en [VALIDACION-PRIORIDADES-2026-10-29.md](VALIDACION-PRIORIDADES-2026-10-29.md).
 
 ## Contrato
 
@@ -34,7 +35,9 @@ la confirmación local, reenvía la misma identidad y contenido. Nunca vuelve a 
 - Los locks de transacción se toman por espacio en orden estable; las llamadas de miembros distintos
   del mismo espacio también se serializan. El saldo y estado final se recalculan sobre los pagos activos.
 - Si la suma supera el principal, se rechaza el lote completo. La UI conserva historial y cola;
-  **todavía falta la corrección/anulación explícita del lote rechazado**. No se recorta el saldo a cero.
+  la integración incorpora la anulación explícita mediante `cancelar_lote_abono` y un registro
+  local persistente. El recibo `cancelled` confirma solo el par rechazado pago/deuda;
+  un lote ya aplicado devuelve `already_applied` y conserva el pago. No se recorta el saldo a cero.
 - Un trigger exige el protocolo a `authenticated`: clientes antiguos no pueden eludir las invariantes
   con escrituras directas. El rol SQL de administración conserva mantenimiento autorizado.
 

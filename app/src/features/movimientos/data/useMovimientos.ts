@@ -6,6 +6,7 @@ import type { TipoMovimiento } from '@vaulto/shared'
 /** Fila de la lista con los nombres ya resueltos (cuentas/categoría pueden estar borradas). */
 export interface MovimientoListado {
   id: string
+  espacio_id: string
   tipo: TipoMovimiento
   monto: string
   currency: string
@@ -44,14 +45,14 @@ export function useMovimientos(
   // Fechas con julianday(): lo escrito en el dispositivo trae 'T' y lo que baja
   // del sync puede traer espacio; como texto no ordenan ni comparan igual.
   const { data, isLoading } = useQuery<MovimientoListado>(
-    `SELECT m.id, m.tipo, m.monto, m.currency, m.fecha, m.nota, m.pago_id,
+    `SELECT m.id, m.espacio_id, m.tipo, m.monto, m.currency, m.fecha, m.nota, m.pago_id,
             m.cuenta_id, c.nombre AS cuenta_nombre,
             m.cuenta_destino_id, cd.nombre AS cuenta_destino_nombre,
             m.categoria_id, cat.nombre AS categoria_nombre, cat.icono AS categoria_icono, cat.color AS categoria_color
      FROM movimiento m
-     LEFT JOIN cuenta c ON c.id = m.cuenta_id
-     LEFT JOIN cuenta cd ON cd.id = m.cuenta_destino_id
-     LEFT JOIN categoria cat ON cat.id = m.categoria_id
+     LEFT JOIN cuenta c ON c.id = m.cuenta_id AND c.espacio_id = m.espacio_id
+     LEFT JOIN cuenta cd ON cd.id = m.cuenta_destino_id AND cd.espacio_id = m.espacio_id
+     LEFT JOIN categoria cat ON cat.id = m.categoria_id AND cat.espacio_id = m.espacio_id
      WHERE m.espacio_id = ? AND m.deleted_at IS NULL
        AND (? IS NULL OR m.tipo = ?)
        AND (? IS NULL OR m.cuenta_id = ? OR m.cuenta_destino_id = ?)
@@ -69,11 +70,12 @@ export function useMovimientos(
       f.hasta, f.hasta,
     ],
   )
-  return { movimientos: data, cargando: isLoading }
+  return { movimientos: data.filter((row) => row.espacio_id === espacioId), cargando: isLoading }
 }
 
 export interface MovimientoRow {
   id: string
+  espacio_id: string
   tipo: TipoMovimiento
   monto: string
   cuenta_id: string
@@ -84,11 +86,11 @@ export interface MovimientoRow {
   pago_id: string | null
 }
 
-export function useMovimiento(id: string): { movimiento: MovimientoRow | null; cargando: boolean } {
+export function useMovimiento(espacioId: string | null, id: string): { movimiento: MovimientoRow | null; cargando: boolean } {
   const { data, isLoading } = useQuery<MovimientoRow>(
-    `SELECT id, tipo, monto, cuenta_id, cuenta_destino_id, categoria_id, fecha, nota, pago_id
-     FROM movimiento WHERE id = ? AND deleted_at IS NULL LIMIT 1`,
-    [id],
+    `SELECT id, espacio_id, tipo, monto, cuenta_id, cuenta_destino_id, categoria_id, fecha, nota, pago_id
+     FROM movimiento WHERE id = ? AND espacio_id = ? AND deleted_at IS NULL LIMIT 1`,
+    [id, espacioId ?? ''],
   )
-  return { movimiento: data[0] ?? null, cargando: isLoading }
+  return { movimiento: data.find((row) => row.id === id && row.espacio_id === espacioId) ?? null, cargando: isLoading }
 }

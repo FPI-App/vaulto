@@ -3,6 +3,8 @@ import { UpdateType } from '@powersync/react-native'
 
 import { SupabaseConnector } from './SupabaseConnector'
 import { SyncUploadError } from './SyncUploadError'
+import { SyncRecoveryStore } from './SyncRecoveryStore'
+import { testDatabase } from '@/test/sqlite'
 
 const mocks = vi.hoisted(() => ({ session: vi.fn(), createClient: vi.fn() }))
 vi.mock('../supabase', () => ({ supabase: { auth: { getSession: mocks.session } } }))
@@ -33,6 +35,50 @@ function fixture(op = UpdateType.PATCH) {
 }
 
 describe('Subida atómica ligada a la cuenta propietaria', () => {
+  it('mantiene la intención de semilla al reintentar sin marcar otras operaciones', async () => {
+    const f = fixture()
+    const crud = [
+      { clientId: 1, id: 'QA-semilla', table: 'categoria', op: UpdateType.PUT, opData: { nombre: 'Comida' } },
+      { clientId: 2, id: 'QA-deuda', table: 'deuda', op: UpdateType.PATCH, opData: { nota: 'QA' } },
+    ]
+    const source = { getClientId: async () => 'QA-device', getNextCrudTransaction: async () => ({ crud, complete: f.complete }) }
+    const seedIntent = vi.fn(async (operation: { id: string }) => operation.id === 'QA-semilla')
+    f.rpc.mockReturnValue({ throwOnError: async () => ({ data: { protocol: 1, batch_id: 'QA-device:1:2', status: 'applied' } }) })
+    f.complete.mockRejectedValueOnce(new Error('QA interrupción local'))
+    const connector = new SupabaseConnector('a', undefined, seedIntent)
+    await expect(connector.uploadData(source)).rejects.toMatchObject({ code: 'retry' })
+    await connector.uploadData(source)
+    expect(f.rpc.mock.calls[0]?.[1]).toEqual(f.rpc.mock.calls[1]?.[1])
+    expect(f.rpc.mock.calls[0]?.[1].p_operaciones).toEqual([
+      { table: 'categoria', id: 'QA-semilla', op: 'PUT', data: { nombre: 'Comida' }, if_absent: true },
+      { table: 'deuda', id: 'QA-deuda', op: 'PATCH', data: { nota: 'QA' } },
+    ])
+    expect(f.complete).toHaveBeenCalledTimes(2)
+  })
+  it.each(['cancelled', 'already_applied'])('recupera un abono solicitado con recibo %s, incluso tras perder complete', async (status) => {
+    const database = testDatabase()
+    try {
+      const store = new SyncRecoveryStore(database.queries)
+      await store.init()
+      const f = fixture()
+      const crud = [
+        { clientId: 1, id: 'QA-pago', table: 'pago', op: UpdateType.PUT, opData: { deuda_id: 'QA-deuda', monto: '60.00' } },
+        { clientId: 2, id: 'QA-deuda', table: 'deuda', op: UpdateType.PATCH, opData: { saldo_pendiente: '40.00' } },
+      ]
+      const operations = crud.map((op) => ({ table: op.table, id: op.id, op: op.op, data: op.opData }))
+      await store.record('QA-device:1:2', operations)
+      await store.requestCancellation('QA-device:1:2')
+      f.rpc.mockReturnValue({ throwOnError: async () => ({ data: { protocol: 1, batch_id: 'QA-device:1:2', status } }) })
+      const source = { getClientId: async () => 'QA-device', getNextCrudTransaction: async () => ({ crud, complete: f.complete }) }
+      f.complete.mockRejectedValueOnce(new Error('QA interrupción local'))
+      await expect(new SupabaseConnector('a', store).uploadData(source)).rejects.toMatchObject({ code: 'retry' })
+      await new SupabaseConnector('a', new SyncRecoveryStore(database.queries)).uploadData(source)
+      expect(f.rpc.mock.calls[0]?.[0]).toBe('cancelar_lote_abono')
+      expect(f.rpc.mock.calls[0]?.[1]).toEqual(f.rpc.mock.calls[1]?.[1])
+      expect((await store.get('QA-device:1:2', operations))?.decision).toBe(status === 'cancelled' ? 'cancelled' : 'applied')
+      expect(f.complete).toHaveBeenCalledTimes(2)
+    } finally { database.close() }
+  })
   it('no lee la cola ni crea un cliente cuando la sesión pertenece a otra cuenta', async () => {
     const f = fixture()
     mocks.createClient.mockClear()

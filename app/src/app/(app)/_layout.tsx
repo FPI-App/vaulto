@@ -1,6 +1,6 @@
 import { Tabs, usePathname } from 'expo-router'
 import { ActivityIndicator, Text, View } from 'react-native'
-import { useQuery } from '@powersync/react-native'
+import { useQuery, useStatus } from '@powersync/react-native'
 
 import { Screen } from '@/components/Screen'
 import { useTheme } from '@/theme'
@@ -29,6 +29,7 @@ export default function AppTabsLayout() {
 function AuthenticatedTabs({ userId }: { userId: string }) {
   const theme = useTheme()
   const pathname = usePathname()
+  const { hasSynced } = useStatus()
 
   // Verificamos el estado del perfil en la base local (PowerSync)
   const { data: perfilData, isLoading, error } = useQuery<{ onboarding_completo: number | boolean }>(
@@ -44,7 +45,7 @@ function AuthenticatedTabs({ userId }: { userId: string }) {
   // Ocultamos la barra de navegación si estamos en el flujo de onboarding
   const isOnboardingRoute = pathname === '/onboarding'
 
-  if (isLoading || error) {
+  if (isLoading || error || (!myProfile && !hasSynced)) {
     return (
       <Screen>
         <View style={{ flex: 1, justifyContent: 'center' }}>
@@ -52,7 +53,12 @@ function AuthenticatedTabs({ userId }: { userId: string }) {
             <Text accessibilityRole="alert" style={{ color: theme.colors.text }}>
               No pudimos consultar tu perfil. Cierra y vuelve a abrir la app para reintentar.
             </Text>
-          ) : <ActivityIndicator accessibilityLabel="Cargando perfil" color={theme.colors.actionText} />}
+          ) : (
+            <>
+              <ActivityIndicator accessibilityLabel="Cargando perfil" color={theme.colors.actionText} />
+              {!hasSynced && !myProfile ? <Text style={{ color: theme.colors.textMuted }}>Conecta a internet para recuperar tu perfil antes de configurar este dispositivo.</Text> : null}
+            </>
+          )}
         </View>
       </Screen>
     )

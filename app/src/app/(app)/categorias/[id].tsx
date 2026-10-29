@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { usePowerSync } from '@powersync/react-native'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native'
 import { esIconoCategoria } from '@vaulto/shared'
 
@@ -13,6 +13,7 @@ import {
 } from '@/features/categorias/data/categoriasRepo'
 import { useCategoria } from '@/features/categorias/data/useCategorias'
 import { FormularioCategoria } from '@/features/categorias/FormularioCategoria'
+import { useEspacioActual } from '@/lib/espacio/useEspacioActual'
 import { useTheme } from '@/theme'
 
 export default function EditarCategoriaScreen() {
@@ -20,20 +21,27 @@ export default function EditarCategoriaScreen() {
   const router = useRouter()
   const db = usePowerSync()
   const { id } = useLocalSearchParams<{ id: string }>()
-  const { categoria, cargando } = useCategoria(id)
+  const { espacioId } = useEspacioActual()
+  const { categoria, cargando } = useCategoria(espacioId, id)
   const [guardando, setGuardando] = useState(false)
+  const pendiente = useRef(false)
+
+  async function ejecutar(operacion: () => Promise<void>) {
+    if (!espacioId || !categoria || pendiente.current) return
+    pendiente.current = true
+    setGuardando(true)
+    try { await operacion(); router.back() } catch {
+      Alert.alert('No se pudo guardar', 'Revisa los datos e inténtalo de nuevo.')
+    } finally { pendiente.current = false; setGuardando(false) }
+  }
 
   function onSubmit(datos: DatosCategoria) {
-    setGuardando(true)
-    actualizarCategoria(db, id, datos)
-      .then(() => router.back())
-      .catch((e) => {
-        Alert.alert('No se pudo guardar', String(e))
-        setGuardando(false)
-      })
+    if (!espacioId) return
+    void ejecutar(() => actualizarCategoria(db, espacioId, id, datos))
   }
 
   function confirmarEliminar() {
+    if (!espacioId || pendiente.current) return
     Alert.alert(
       'Eliminar categoría',
       'Los movimientos que la usan se conservan, pero ya no podrás elegirla en movimientos nuevos.',
@@ -42,10 +50,7 @@ export default function EditarCategoriaScreen() {
         {
           text: 'Eliminar',
           style: 'destructive',
-          onPress: () =>
-            eliminarCategoria(db, id)
-              .then(() => router.back())
-              .catch((e) => Alert.alert('Error', String(e))),
+          onPress: () => { void ejecutar(() => eliminarCategoria(db, espacioId, id)) },
         },
       ],
     )
@@ -67,6 +72,7 @@ export default function EditarCategoriaScreen() {
       ) : (
         <>
           <FormularioCategoria
+            key={`${espacioId}:${id}`}
             tipo={categoria.tipo}
             guardando={guardando}
             ctaLabel="Guardar cambios"

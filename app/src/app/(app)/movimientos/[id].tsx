@@ -23,12 +23,13 @@ export default function EditarMovimientoScreen() {
   const db = usePowerSync()
   const { espacioId } = useEspacioActual()
   const { id } = useLocalSearchParams<{ id: string }>()
-  const { movimiento, cargando } = useMovimiento(id)
+  const { movimiento, cargando } = useMovimiento(espacioId, id)
   const [guardando, setGuardando] = useState(false)
 
   function onSubmit(datos: DatosMovimiento) {
+    if (!espacioId) return
     setGuardando(true)
-    actualizarMovimiento(db, id, datos)
+    actualizarMovimiento(db, espacioId, id, datos)
       .then(() => router.back())
       .catch((e) => {
         Alert.alert('No se pudo guardar', String(e))
@@ -37,13 +38,14 @@ export default function EditarMovimientoScreen() {
   }
 
   function confirmarEliminar() {
+    if (!espacioId) return
     Alert.alert('Eliminar movimiento', 'Los saldos de las cuentas se recalculan sin él.', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Eliminar',
         style: 'destructive',
         onPress: () =>
-          eliminarMovimiento(db, id)
+          eliminarMovimiento(db, espacioId, id)
             .then(() => router.back())
             .catch((e) => Alert.alert('Error', String(e))),
       },

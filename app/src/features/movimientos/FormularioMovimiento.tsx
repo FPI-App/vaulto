@@ -64,7 +64,7 @@ export function FormularioMovimiento({
   const { cuentas, cargando: cargandoCuentas } = useCuentas(espacioId)
   const { categorias: catIngreso } = useCategorias(espacioId, 'ingreso')
   const { categorias: catEgreso } = useCategorias(espacioId, 'egreso')
-  const categoriaOriginal = useCategoriaHistorica(inicial?.categoria_id ?? null)
+  const categoriaOriginal = useCategoriaHistorica(espacioId, inicial?.categoria_id ?? null)
 
   const [tipo, setTipo] = useState<TipoMovimiento>(inicial?.tipo ?? 'egreso')
   const [montoTexto, setMontoTexto] = useState(inicial?.montoTexto ?? '')

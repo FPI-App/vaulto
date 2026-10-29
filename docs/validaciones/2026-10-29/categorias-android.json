@@ -1,0 +1,1 @@
+{"status":"passed","native":"Android SQLCipher + PowerSync","seedCount":15,"seedIdempotent":true,"crud":true,"spaceIsolation":true,"softDelete":true,"historicalCategory":true,"pendingCrud":18}

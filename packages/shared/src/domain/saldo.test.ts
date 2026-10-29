@@ -119,6 +119,13 @@ describe('calcularSaldos', () => {
 })
 
 describe('sumarSaldos', () => {
+  it('no pierde un centavo al volver a sumar un saldo agregado grande', () => {
+    const movimientos = Array.from({ length: 80 }, () => ingreso('a', '999999999999.99'))
+    movimientos.push(ingreso('a', '0.81'))
+    const saldo = saldoCuenta('0', 'a', movimientos)
+    expect(saldo).toBe('80000000000000.01')
+    expect(sumarSaldos([saldo])).toBe(saldo)
+  })
   it('suma strings decimales en centavos', () => {
     expect(sumarSaldos(['0.10', '0.20', '-1.00'])).toBe('-0.70')
     expect(sumarSaldos([])).toBe('0.00')

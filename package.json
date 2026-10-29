@@ -24,7 +24,7 @@
     "test": "pnpm -r --if-present test",
     "db:test": "supabase test db",
     "infra:check": "node scripts/check-infra.mjs",
-    "infra:test": "node --test scripts/check-infra.test.mjs scripts/test-rls-local.test.mjs"
+    "infra:test": "node --test scripts/check-infra.test.mjs scripts/test-rls-local.test.mjs scripts/prepare-mvp1-deployment.test.mjs"
   },
   "devDependencies": {
     "typescript": "^6.0.3"

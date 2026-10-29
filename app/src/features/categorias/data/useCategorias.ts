@@ -4,16 +4,8 @@ import { usePowerSync, useQuery, useStatus } from '@powersync/react-native'
 import type { TipoCategoria } from '@vaulto/shared'
 
 import { sembrarCategoriasPorDefecto } from './categoriasRepo'
-
-export interface CategoriaRow {
-  id: string
-  nombre: string
-  tipo: TipoCategoria
-  icono: string | null
-  color: string | null
-}
-
-const COLUMNAS = 'id, nombre, tipo, icono, color'
+import { SELECT_CATEGORIAS, SELECT_CATEGORIA, SELECT_CATEGORIA_HISTORICA, type CategoriaRow } from './categoriasQueries'
+export type { CategoriaRow } from './categoriasQueries'
 
 /** Categorías activas del espacio de un tipo, ordenadas por nombre. */
 export function useCategorias(
@@ -21,30 +13,28 @@ export function useCategorias(
   tipo: TipoCategoria,
 ): { categorias: CategoriaRow[]; cargando: boolean } {
   const { data, isLoading } = useQuery<CategoriaRow>(
-    `SELECT ${COLUMNAS} FROM categoria
-     WHERE espacio_id = ? AND tipo = ? AND deleted_at IS NULL
-     ORDER BY nombre COLLATE NOCASE ASC`,
+    SELECT_CATEGORIAS,
     [espacioId ?? '', tipo],
   )
-  return { categorias: data, cargando: isLoading }
+  return { categorias: data.filter((row) => row.espacio_id === espacioId && row.tipo === tipo), cargando: isLoading }
 }
 
 /** Una categoría activa por id (pantalla de edición). */
-export function useCategoria(id: string): { categoria: CategoriaRow | null; cargando: boolean } {
+export function useCategoria(espacioId: string | null, id: string): { categoria: CategoriaRow | null; cargando: boolean } {
   const { data, isLoading } = useQuery<CategoriaRow>(
-    `SELECT ${COLUMNAS} FROM categoria WHERE id = ? AND deleted_at IS NULL LIMIT 1`,
-    [id],
+    SELECT_CATEGORIA,
+    [id, espacioId ?? ''],
   )
-  return { categoria: data[0] ?? null, cargando: isLoading }
+  return { categoria: data.find((row) => row.id === id && row.espacio_id === espacioId) ?? null, cargando: isLoading }
 }
 
 /**
  * Categoría por id aunque esté borrada: al editar un movimiento viejo hay que
  * seguir mostrando la que tenía. null si no hay id o no existe.
  */
-export function useCategoriaHistorica(id: string | null): CategoriaRow | null {
-  const { data } = useQuery<CategoriaRow>(`SELECT ${COLUMNAS} FROM categoria WHERE id = ? LIMIT 1`, [id ?? ''])
-  return id ? (data[0] ?? null) : null
+export function useCategoriaHistorica(espacioId: string | null, id: string | null): CategoriaRow | null {
+  const { data } = useQuery<CategoriaRow>(SELECT_CATEGORIA_HISTORICA, [id ?? '', espacioId ?? ''])
+  return id ? (data.find((row) => row.id === id && row.espacio_id === espacioId) ?? null) : null
 }
 
 /**
@@ -59,8 +49,8 @@ export function useSembrarCategoriasAlSincronizar(espacioId: string | null): voi
 
   useEffect(() => {
     if (!espacioId || !hasSynced) return
-    sembrarCategoriasPorDefecto(db, espacioId).catch((e) =>
-      console.warn('[categorias] no se pudieron sembrar las sugeridas', e),
+    sembrarCategoriasPorDefecto(db, espacioId).catch(() =>
+      console.warn('[categorias] no se pudieron sembrar las sugeridas'),
     )
   }, [db, espacioId, hasSynced])
 }

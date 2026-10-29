@@ -35,13 +35,12 @@ describe('Registro inicial transaccional', () => {
     expect(await completarOnboarding(fixture.db, 'ana', identidad)).toBe('previo')
     expect(await counts()).toEqual({ espacios: 1, miembros: 1, perfiles: 1 })
   })
-  it('no se reinscribe a un espacio ajeno con membresía revocada', async () => {
+  it('no se reinscribe ni mueve el perfil de un espacio con membresía revocada', async () => {
     await fixture.db.execute("INSERT INTO espacio (id, owner_user_id) VALUES ('ajeno', 'otro')")
     await fixture.db.execute("INSERT INTO espacio_miembro (id, espacio_id, user_id, deleted_at) VALUES ('revocado', 'ajeno', 'ana', '2026-01-01')")
     await fixture.db.execute("INSERT INTO perfil (id, espacio_id, username) VALUES ('ana', 'ajeno', 'ana_p')")
-    const espacio = await completarOnboarding(fixture.db, 'ana', identidad)
-    expect(espacio).not.toBe('ajeno')
-    expect(await fixture.queries.getOptional('SELECT owner_user_id FROM espacio WHERE id = ?', [espacio])).toEqual({ owner_user_id: 'ana' })
+    await expect(completarOnboarding(fixture.db, 'ana', identidad)).rejects.toThrow('espacio no disponible')
+    expect(await counts()).toEqual({ espacios: 1, miembros: 1, perfiles: 1 })
     expect(await fixture.queries.getOptional('SELECT deleted_at FROM espacio_miembro WHERE id = ?', ['revocado'])).toEqual({ deleted_at: '2026-01-01' })
   })
   it('revierte toda la transacción si falla el perfil, sin dejar huérfanos', async () => {
