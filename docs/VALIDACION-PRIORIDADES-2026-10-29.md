@@ -13,7 +13,7 @@ La interfaz `packages/shared/src/domain/selectors.ts` no cambia.
 | #24 | Preflight remoto y protocolo revisados; despliegue transaccional preparado | Autorizar y aplicar SQL; probar RPC autenticada, concurrencia y replicación remotas |
 | #25 | Anulación explícita, recibo idempotente y registro local cifrado; pruebas SQL y de reinicio del conector correctas | Rechazo, recuperación y operación posterior en dos development builds |
 | #21 | Copia íntegra y cifrada verificada nativamente en Android, incluida reapertura tras terminar el proceso | iOS, cambio de cuenta nativo y envío exactamente una vez después de migrar |
-| #6 | Endpoints accesibles desde Windows con TLS verificado; emuladores y APK de desarrollo preparados | Autenticación sintética, convergencia offline, aislamiento y revocación entre dispositivos |
+| #6 | Endpoints accesibles desde Windows con TLS verificado y desde Android mediante pasarela QA loopback; emuladores y APK preparados | Autenticación sintética, convergencia offline, aislamiento y revocación entre dispositivos |
 | #8 | Repositorio, formularios y consultas aislados por espacio; CRUD nativo Android y semillas idempotentes comprobados | Interacción de formularios con sesión y convergencia remota de dos dispositivos |
 
 Ninguna de estas issues se da por cerrada únicamente por tener implementación en una rama.
@@ -67,7 +67,9 @@ Las rutas `qa-storage`, `qa-categorias` y `qa-network` solo ejecutan sus fixture
 
 El preflight remoto encontró migraciones 0001–0005, RPC ausente, ocho tablas, cero inconsistencias en los conteos revisados y 32 concesiones DELETE/TRUNCATE entre los dos roles cliente. El manifiesto registra los hashes exactos del despliegue preparado.
 
-La CLI necesita `NODE_USE_SYSTEM_CA=1` en el proceso para que sus procesos hijos confíen en los certificados del sistema. No se deshabilitó TLS ni se modificó la configuración global. La sonda nativa de red no ha confirmado conectividad de Vaulto; los errores TLS observados en servicios del emulador no prueban por sí solos su causa.
+La CLI necesita `NODE_USE_SYSTEM_CA=1` en el proceso para que sus procesos hijos confíen en los certificados del sistema. No se deshabilitó TLS ni se modificó la configuración global. La conexión directa de la sonda nativa falló; los errores TLS observados en servicios del emulador no prueban por sí solos su causa.
+
+**Confirmado después:** la sonda nativa obtiene HTTP 200 de Supabase Auth y PowerSync mediante una pasarela QA limitada a 127.0.0.1, ADB reverse y HTTPS verificado en el host. No registra cabeceras ni datos. Metro también queda limitado a localhost con resolución IPv4 (`NODE_OPTIONS=--dns-result-order=ipv4first`). Las URLs loopback solo se pasan al proceso Metro; no cambian archivos `.env`, EAS ni producción. Esta evidencia de salud no demuestra autenticación ni convergencia. La revisión automática rechazó usar `--lan` por exposición del código a la red; la alternativa localhost funcionó.
 
 La revisión automática rechazó recuperar claves administrativas con `projects api-keys --reveal`: la autorización previa de comprobar credenciales no autorizaba revelar secretos. No se recuperaron esas claves ni se intentó otra vía. La preparación de usuarios sintéticos autenticados requiere autorización específica o credenciales de prueba configuradas por el usuario en un archivo local ignorado; nunca por chat ni en el repositorio.
 

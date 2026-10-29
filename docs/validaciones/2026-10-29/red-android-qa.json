@@ -1,0 +1,9 @@
+{
+  "checkedAt": "2026-10-29T22:40:16.155Z",
+  "native": "Android development build",
+  "supabase": 200,
+  "powersync": 200,
+  "transport": "ADB reverse to host-only HTTP loopback; verified HTTPS upstream",
+  "productionEnvironmentChanged": false,
+  "credentialsLogged": false
+}
