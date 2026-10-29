@@ -1,0 +1,18 @@
+{
+  "target": "vaulto-qa-pg-20261028/vaulto_qa_race_1793314974542",
+  "checkedAt": "2026-10-29T23:04:56.8875400Z",
+  "results": [
+    {
+      "passed": true,
+      "outcome": "un lote aplicado, sobrepago rechazado sin residuos; reintento idempotente",
+      "case": "60+60 sobre deuda 100"
+    },
+    {
+      "passed": true,
+      "outcome": "saldo final correcto; reintento idempotente",
+      "case": "40+60 sobre deuda 100"
+    }
+  ],
+  "command": "node scripts/test-sync-concurrency.mjs",
+  "note": "Dos conexiones PostgreSQL simultaneas; no valida PowerSync ni dispositivos. Copia conservada; limpieza requiere autorizacion."
+}

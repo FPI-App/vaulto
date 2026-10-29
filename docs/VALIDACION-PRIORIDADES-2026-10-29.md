@@ -74,3 +74,15 @@ La CLI necesita `NODE_USE_SYSTEM_CA=1` en el proceso para que sus procesos hijos
 La revisión automática rechazó recuperar claves administrativas con `projects api-keys --reveal`: la autorización previa de comprobar credenciales no autorizaba revelar secretos. No se recuperaron esas claves ni se intentó otra vía. La preparación de usuarios sintéticos autenticados requiere autorización específica o credenciales de prueba configuradas por el usuario en un archivo local ignorado; nunca por chat ni en el repositorio.
 
 No se repitieron aún las 60 aserciones históricas ni las carreras SQL de la entrega anterior. Tampoco se han ejecutado el despliegue remoto, CI final, las pruebas E2E autenticadas ni iOS. Las evidencias de esta sesión no sustituyen esas verificaciones.
+
+## Despliegue y suites completas (actualización del 29 de octubre)
+
+Con autorización explícita del usuario para el comando y destino exactos:
+
+- **Confirmado:** `node scripts/test-rls-local.mjs --apply-migrations` aplicó 0014–0016 solo en `vaulto-qa-pg-20261028/vaulto_qa`; seis suites y 75 aserciones pgTAP correctas, fixtures revertidos (`sql-qa-completa.json`).
+- **Confirmado:** `node scripts/test-sync-concurrency.mjs` con dos conexiones simultáneas: 60+60 rechaza el sobrepago sin residuos y 40+60 deja el saldo correcto; ambos reintentos son idempotentes (`carreras-sql-qa.json`). No valida PowerSync ni dispositivos.
+- **Confirmado:** el SQL con SHA-256 `8aa2f82a…115a` se aplicó en `pqxvttkyevbkfdhmcmxu` con código 0. El historial remoto es 0001–0016; `aplicar_lote_sync` y `cancelar_lote_abono` son ejecutables por `authenticated` y no por `anon`; no hay tablas `public` sin RLS ni concesiones DELETE/TRUNCATE a roles cliente (`despliegue-remoto.json`).
+- **Supuesto:** los clientes anteriores a 0012 ya no pueden escribir directamente; falta comprobarlo con una sesión sintética.
+- **Propuesto:** la publicación `powersync`, creada `FOR ALL TABLES` en 0003, envía también `auth`, `vault` y `private` al servicio PowerSync. `sync_rules.yaml` solo entrega tablas `public` filtradas por usuario y espacio. Restringir la publicación a las ocho tablas del dominio necesita una migración revisada y una autorización aparte.
+- **Desconocido:** no se ha comprobado que las reglas desplegadas en PowerSync coincidan con `sync_rules.yaml`.
+- iOS queda fuera del alcance por decisión del usuario; no se realizará validación Apple.
