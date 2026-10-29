@@ -14,6 +14,14 @@
 import { aCentavos, desdeCentavos } from './money'
 import type { TipoMovimiento } from '../types'
 
+function verificarCentavos(centavos: number): number {
+  // Varios numeric(14,2) válidos pueden acumular más de MAX_SAFE_INTEGER.
+  if (!Number.isSafeInteger(centavos)) {
+    throw new RangeError('El saldo supera el rango de centavos seguros')
+  }
+  return centavos
+}
+
 /**
  * Proyección mínima de un movimiento necesaria para calcular saldos. Se pide
  * solo lo que el cálculo usa, para no acoplar el dominio a la fila completa ni a
@@ -35,25 +43,26 @@ export interface CuentaParaSaldo {
 /**
  * Saldo de una cuenta en centavos (entero). Recorre los movimientos una sola vez
  * aplicando el signo según el rol de la cuenta en cada movimiento.
+ * Lanza RangeError si el saldo inicial o cualquier acumulación pierde precisión.
  */
 export function saldoCuentaCentavos(
   saldoInicial: string,
   cuentaId: string,
   movimientos: readonly MovimientoParaSaldo[],
 ): number {
-  let total = aCentavos(saldoInicial)
+  let total = verificarCentavos(aCentavos(saldoInicial))
   for (const m of movimientos) {
-    const monto = aCentavos(m.monto)
+    const monto = verificarCentavos(aCentavos(m.monto))
     switch (m.tipo) {
       case 'ingreso':
-        if (m.cuenta_id === cuentaId) total += monto
+        if (m.cuenta_id === cuentaId) total = verificarCentavos(total + monto)
         break
       case 'egreso':
-        if (m.cuenta_id === cuentaId) total -= monto
+        if (m.cuenta_id === cuentaId) total = verificarCentavos(total - monto)
         break
       case 'transferencia':
-        if (m.cuenta_id === cuentaId) total -= monto
-        if (m.cuenta_destino_id === cuentaId) total += monto
+        if (m.cuenta_id === cuentaId) total = verificarCentavos(total - monto)
+        if (m.cuenta_destino_id === cuentaId) total = verificarCentavos(total + monto)
         break
     }
   }
@@ -73,22 +82,23 @@ export function saldoCuenta(
  * Saldos de varias cuentas en una pasada: agrupa los montos por cuenta y evita
  * recorrer todos los movimientos una vez por cuenta (O(cuentas·movimientos)).
  * Devuelve un mapa id_cuenta -> saldo (string decimal).
+ * Aplica el mismo límite de enteros seguros que saldoCuentaCentavos.
  */
 export function calcularSaldos(
   cuentas: readonly CuentaParaSaldo[],
   movimientos: readonly MovimientoParaSaldo[],
 ): Record<string, string> {
   const centavos = new Map<string, number>()
-  for (const c of cuentas) centavos.set(c.id, aCentavos(c.saldo_inicial))
+  for (const c of cuentas) centavos.set(c.id, verificarCentavos(aCentavos(c.saldo_inicial)))
 
   const aplicar = (cuentaId: string | null, delta: number) => {
     if (cuentaId === null) return
     const actual = centavos.get(cuentaId)
-    if (actual !== undefined) centavos.set(cuentaId, actual + delta)
+    if (actual !== undefined) centavos.set(cuentaId, verificarCentavos(actual + delta))
   }
 
   for (const m of movimientos) {
-    const monto = aCentavos(m.monto)
+    const monto = verificarCentavos(aCentavos(m.monto))
     if (m.tipo === 'transferencia') {
       aplicar(m.cuenta_id, -monto)
       aplicar(m.cuenta_destino_id, monto)
@@ -102,7 +112,12 @@ export function calcularSaldos(
   return saldos
 }
 
-/** Suma total de una lista de saldos (string) -> string decimal. Para KPIs. */
+/** Suma saldos para KPIs; rechaza acumulaciones fuera del rango de enteros seguros. */
 export function sumarSaldos(saldos: readonly string[]): string {
-  return desdeCentavos(saldos.reduce((acc, s) => acc + aCentavos(s), 0))
+  let total = 0
+  for (const saldo of saldos) {
+    const centavos = verificarCentavos(aCentavos(saldo))
+    total = verificarCentavos(total + centavos)
+  }
+  return desdeCentavos(total)
 }
