@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { usePowerSync } from '@powersync/react-native'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native'
 import { formatMontoInput } from '@vaulto/shared'
 
@@ -14,6 +14,7 @@ import {
 } from '@/features/cuentas/data/cuentasRepo'
 import { useCuenta } from '@/features/cuentas/data/useCuentas'
 import { FormularioCuenta } from '@/features/cuentas/FormularioCuenta'
+import { useEspacioActual } from '@/lib/espacio/useEspacioActual'
 import { useTheme } from '@/theme'
 
 export default function EditarCuentaScreen() {
@@ -21,34 +22,44 @@ export default function EditarCuentaScreen() {
   const router = useRouter()
   const db = usePowerSync()
   const { id } = useLocalSearchParams<{ id: string }>()
-  const { cuenta, cargando } = useCuenta(id)
+  const { espacioId } = useEspacioActual()
+  const { cuenta, cargando, error } = useCuenta(espacioId, id)
   const [guardando, setGuardando] = useState(false)
+  const operacionPendiente = useRef(false)
+
+  async function ejecutarOperacion(operacion: () => Promise<void>, cerrar = false) {
+    if (!espacioId || !cuenta || operacionPendiente.current) return
+    operacionPendiente.current = true
+    setGuardando(true)
+    try {
+      await operacion()
+      if (cerrar) router.back()
+    } catch {
+      Alert.alert('No se pudo guardar', 'Revisa los datos de la cuenta e inténtalo de nuevo.')
+    } finally {
+      operacionPendiente.current = false
+      setGuardando(false)
+    }
+  }
 
   function onSubmit(datos: DatosCuenta) {
-    setGuardando(true)
-    actualizarCuenta(db, id, datos)
-      .then(() => router.back())
-      .catch((e) => {
-        Alert.alert('No se pudo guardar', String(e))
-        setGuardando(false)
-      })
+    if (!espacioId) return
+    void ejecutarOperacion(() => actualizarCuenta(db, espacioId, id, datos), true)
   }
 
   function toggleArchivar() {
-    if (!cuenta) return
-    archivarCuenta(db, id, cuenta.archivada !== 1).catch((e) => Alert.alert('Error', String(e)))
+    if (!cuenta || !espacioId) return
+    void ejecutarOperacion(() => archivarCuenta(db, espacioId, id, cuenta.archivada !== 1))
   }
 
   function confirmarEliminar() {
+    if (!cuenta || !espacioId || operacionPendiente.current) return
     Alert.alert('Eliminar cuenta', '¿Seguro? Dejará de aparecer en tus movimientos.', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Eliminar',
         style: 'destructive',
-        onPress: () =>
-          eliminarCuenta(db, id)
-            .then(() => router.back())
-            .catch((e) => Alert.alert('Error', String(e))),
+        onPress: () => { void ejecutarOperacion(() => eliminarCuenta(db, espacioId, id), true) },
       },
     ])
   }
@@ -62,13 +73,14 @@ export default function EditarCuentaScreen() {
             <ActivityIndicator color={theme.colors.brand[600]} />
           ) : (
             <Text style={{ ...theme.typography.scale.body, color: theme.colors.textMuted }}>
-              Cuenta no encontrada.
+              {error ? 'No se pudo cargar la cuenta. Inténtalo de nuevo.' : 'Cuenta no encontrada en este espacio.'}
             </Text>
           )}
         </View>
       ) : (
         <>
           <FormularioCuenta
+            key={`${espacioId}:${id}`}
             guardando={guardando}
             ctaLabel="Guardar cambios"
             onSubmit={onSubmit}
@@ -80,19 +92,19 @@ export default function EditarCuentaScreen() {
             }}
           />
           <View style={styles.acciones}>
-            <Pressable accessibilityRole="button" onPress={toggleArchivar} hitSlop={8}>
+            <Pressable accessibilityRole="button" accessibilityState={{ disabled: guardando }} disabled={guardando} onPress={toggleArchivar} hitSlop={8}>
               <Text
                 style={{
                   ...theme.typography.scale.label,
                   fontFamily: theme.typography.fontFamily,
-                  color: theme.colors.brand[600],
+                  color: theme.colors.actionText,
                   textAlign: 'center',
                 }}
               >
                 {cuenta.archivada === 1 ? 'Desarchivar cuenta' : 'Archivar cuenta'}
               </Text>
             </Pressable>
-            <Pressable accessibilityRole="button" onPress={confirmarEliminar} hitSlop={8}>
+            <Pressable accessibilityRole="button" accessibilityState={{ disabled: guardando }} disabled={guardando} onPress={confirmarEliminar} hitSlop={8}>
               <Text
                 style={{
                   ...theme.typography.scale.label,

@@ -17,7 +17,15 @@ export function CuentasScreen() {
   const theme = useTheme()
   const router = useRouter()
   const { espacioId, cargando: cargandoEspacio } = useEspacioActual()
-  const { cuentas, cargando } = useCuentas(espacioId)
+  const { cuentas, cargando, error } = useCuentas(espacioId)
+
+  if (error) {
+    return (
+      <Screen>
+        <EmptyState title="No se pudieron cargar las cuentas" hint="Tus datos se conservan. Vuelve a abrir esta pantalla para reintentar." />
+      </Screen>
+    )
+  }
 
   // El onboarding (Track B) crea el espacio; el layout redirige ahí si falta.
   // Este estado solo se ve el instante en que la réplica local aún no lo trae.
@@ -53,7 +61,7 @@ export function CuentasScreen() {
             style={{
               ...theme.typography.scale.label,
               fontFamily: theme.typography.fontFamily,
-              color: theme.colors.brand[600],
+              color: theme.colors.actionText,
             }}
           >
             + Nueva
