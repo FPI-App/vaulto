@@ -82,3 +82,6 @@ ehthumbs.db
 .turbo/
 coverage/
 *.pem
+
+# Runbook local de la skill napkin, no compartir
+.claude/napkin.md
