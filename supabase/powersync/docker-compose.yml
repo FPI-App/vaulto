@@ -1,0 +1,42 @@
+# PowerSync self-hosted para desarrollo local, contra el Supabase de `pnpm supabase:start`.
+# Requiere el stack de Supabase arriba (red supabase_network_vaulto) y supabase/powersync/.env.
+name: vaulto-powersync
+
+services:
+  powersync:
+    image: journeyapps/powersync-service:1.27.0
+    command: ['start', '-r', 'unified']
+    env_file: .env
+    environment:
+      POWERSYNC_CONFIG_PATH: /config/powersync.yaml
+    volumes:
+      - ./powersync.yaml:/config/powersync.yaml:ro
+      - ../sync_rules.yaml:/config/sync_rules.yaml:ro
+    ports:
+      - '8085:8080'
+    depends_on:
+      storage:
+        condition: service_healthy
+    networks: [default, supabase]
+
+  # Bucket storage aparte para no escribir en la base de Supabase
+  storage:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: powersync
+      POSTGRES_PASSWORD: ${PS_STORAGE_PASSWORD}
+      POSTGRES_DB: powersync_storage
+    volumes:
+      - storage:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U powersync -d powersync_storage']
+      interval: 2s
+      retries: 15
+
+networks:
+  supabase:
+    external: true
+    name: supabase_network_vaulto
+
+volumes:
+  storage:

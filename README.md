@@ -63,7 +63,7 @@ La decisión de usar un solo repo (no separar frontend/backend) y su justificaci
 
 ## Requisitos previos
 
-- **Node** 20 LTS o superior (gestionado con [mise](https://mise.jdx.dev/))
+- **Node** 22.13+, 24.3+ o 26+ (requisitos de Expo SDK 58; gestionado con [mise](https://mise.jdx.dev/))
 - **pnpm** 9+ (`corepack enable && corepack prepare pnpm@latest --activate`)
 - **Supabase CLI** ([instalación](https://supabase.com/docs/guides/cli))
 - **Expo / EAS**: la app corre con `expo` (incluido como dependencia). Para builds nativas, [EAS CLI](https://docs.expo.dev/eas/).

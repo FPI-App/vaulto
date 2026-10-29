@@ -1,0 +1,12 @@
+{
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "node": "26.8.1",
+      "android": {
+        "buildType": "apk"
+      }
+    }
+  }
+}

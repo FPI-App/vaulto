@@ -372,9 +372,8 @@ select public._create_policy(
 
 -- --- espacio_miembro -------------------------------------------------------
 -- Visible si la fila es del propio usuario O del espacio donde es miembro.
--- INSERT: el usuario puede agregarse a sí mismo (autoalta del owner) o, siendo
--- ya miembro del espacio, agregar a otra persona (modo pareja).
--- UPDATE: misma regla.
+-- INSERT/UPDATE: restringidos al owner en la migración 0008 para impedir
+-- autoinscripciones a espacios ajenos y cambios de rol por miembros.
 select public._create_policy(
   'espacio_miembro_select', 'public.espacio_miembro', 'select',
   'user_id = auth.uid() or public.is_espacio_member(espacio_id)', null

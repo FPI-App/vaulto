@@ -4,7 +4,6 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@vaulto/shared": ["../packages/shared/src/index.ts"],

@@ -6,12 +6,13 @@
 //
 // 14,2 => hasta 999.999.999.999,99. En centavos eso son ~1e14, dentro del rango
 // seguro de los enteros de JS (Number.MAX_SAFE_INTEGER ≈ 9e15). No se necesita
-// BigInt para el MVP, pero las operaciones se mantienen en enteros igualmente.
+// BigInt para acumular: solo se usa al leer strings decimales sin pasar por float.
 
 /** Cantidad de decimales de las monedas que maneja el MVP. COP en la práctica
  *  no usa centavos, pero el esquema es numeric(14,2): trabajamos a 2 decimales. */
 const DECIMALES = 2
 const FACTOR = 10 ** DECIMALES
+const MAX_MONTO_CENTAVOS = 10 ** 14 - 1
 
 /**
  * Convierte un monto string/number a centavos (entero).
@@ -19,6 +20,14 @@ const FACTOR = 10 ** DECIMALES
  * Lanza si el valor no es un número finito.
  */
 export function aCentavos(monto: string | number): number {
+  if (typeof monto === 'string' && /^-?\d+(\.\d{1,2})?$/.test(monto)) {
+    const negativo = monto.startsWith('-')
+    const [entero, decimal = ''] = monto.replace(/^-/, '').split('.')
+    const exacto = BigInt(entero!) * 100n + BigInt(decimal.padEnd(2, '0'))
+    const centavos = Number(negativo ? -exacto : exacto)
+    if (!Number.isSafeInteger(centavos)) throw new RangeError('Monto fuera del rango de centavos seguros')
+    return centavos
+  }
   const n = typeof monto === 'number' ? monto : Number.parseFloat(monto)
   if (!Number.isFinite(n)) {
     throw new TypeError(`Monto inválido: ${JSON.stringify(monto)}`)
@@ -104,4 +113,41 @@ export function formatNumero(monto: string | number, currency = 'COP'): string {
     minimumFractionDigits: sinDecimales ? 0 : 2,
     maximumFractionDigits: sinDecimales ? 0 : 2,
   }).format(valor)
+}
+
+/**
+ * Normaliza lo que el usuario teclea en un input de monto a un string decimal
+ * con punto, apto para guardar en una columna numeric(14,2). Devuelve `null` si
+ * no es un monto válido, no-negativo y representable como numeric(14,2).
+ *
+ * Convención es-CO: '.' es separador de miles y ',' el decimal
+ * ("1.250.000" -> "1250000.00", "1.250,50" -> "1250.50"). Pensado para reusarse
+ * en cuentas, movimientos y deudas.
+ */
+export function normalizarMontoInput(texto: string): string | null {
+  const limpio = texto.trim().replace(/\s/g, '')
+  if (!limpio) return null
+  // Quita los puntos de miles y convierte la coma decimal en punto.
+  const normal = limpio.replace(/\./g, '').replace(',', '.')
+  if (!/^\d+(\.\d+)?$/.test(normal)) return null
+  const n = Number.parseFloat(normal)
+  if (!Number.isFinite(n) || n < 0) return null
+  if (n > MAX_MONTO_CENTAVOS / FACTOR) return null
+  const centavos = aCentavos(normal)
+  if (!Number.isSafeInteger(centavos) || centavos > MAX_MONTO_CENTAVOS) return null
+  return desdeCentavos(centavos)
+}
+
+/**
+ * Monto de la DB → texto para precargar un input al editar, en convención es-CO.
+ * A diferencia de `formatNumero`, NO redondea: si hay centavos los conserva, para
+ * que abrir y guardar sin tocar nada no cambie el valor ("25000.50" -> "25.000,50").
+ */
+export function formatMontoInput(monto: string | number): string {
+  const centavos = aCentavos(monto)
+  const decimales = centavos % FACTOR === 0 ? 0 : DECIMALES
+  return new Intl.NumberFormat('es-CO', {
+    minimumFractionDigits: decimales,
+    maximumFractionDigits: decimales,
+  }).format(centavos / FACTOR)
 }

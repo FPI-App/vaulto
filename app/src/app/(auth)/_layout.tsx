@@ -1,7 +1,27 @@
 import { Stack } from 'expo-router'
+import { useAuth } from '@/lib/auth/AuthProvider'
 
-// Grupo público de autenticación. El guard del root layout redirige aquí
-// cuando no hay sesión, y a (app) cuando sí la hay.
+// Protege las pantallas del grupo Auth sin bloquear el callback nativo.
 export default function AuthLayout() {
-  return <Stack screenOptions={{ headerShown: false }} />
+  const { session, initializing, isRecoveringPassword } = useAuth()
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected
+        guard={!session || initializing}
+        redirectTo={isRecoveringPassword ? '/(auth)/set-password' : '/(app)'}
+      >
+        <Stack.Screen name="login" />
+        <Stack.Screen name="register" />
+        <Stack.Screen name="reset" />
+      </Stack.Protected>
+      <Stack.Protected
+        guard={Boolean(session && isRecoveringPassword)}
+        redirectTo={session ? '/(app)' : '/(auth)/login'}
+      >
+        <Stack.Screen name="set-password" />
+      </Stack.Protected>
+      <Stack.Screen name="auth/callback" />
+    </Stack>
+  )
 }

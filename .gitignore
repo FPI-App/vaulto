@@ -10,6 +10,9 @@ node_modules/
 
 # ===== Entorno / secretos =====
 .env
+powersync/cli.yaml
+powersync/service.yaml
+powersync/service-fetched.yaml
 .env.*
 !.env.example
 *.local
@@ -28,14 +31,13 @@ web-build/
 # Metro
 .metro-health-check*
 
-# EAS
-.easignore
+# EAS: .easignore se versiona para que el archivo subido sea reproducible.
 
 # ===== TypeScript / build =====
 *.tsbuildinfo
 build/
-lib/
-!app/src/lib/
+# Salida compilada de paquetes (NO el código fuente app/src/lib).
+packages/*/lib/
 
 # ===== Supabase =====
 supabase/.branches

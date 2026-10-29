@@ -1,0 +1,22 @@
+{
+  "appliedForThisCheck": [
+    "0014",
+    "0015",
+    "0016"
+  ],
+  "command": "node scripts/test-rls-local.mjs --apply-migrations",
+  "fullMigrationSequenceVerified": true,
+  "suites": [
+    "integridad_deudas",
+    "recuperacion_abonos",
+    "rls_membresias",
+    "rls_track_a",
+    "semillas_categorias",
+    "sync_atomico"
+  ],
+  "fixturesRolledBack": true,
+  "passed": true,
+  "target": "vaulto-qa-pg-20261028/vaulto_qa",
+  "checkedAt": "2026-10-29T23:04:56.8875400Z",
+  "assertions": 75
+}

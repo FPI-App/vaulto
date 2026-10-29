@@ -138,6 +138,7 @@ export interface Theme {
     border: string
     text: string
     textMuted: string
+    actionText: string
     /** Color semántico financiero del modo activo. */
     financial: typeof financialLight | typeof financialDark
   }
@@ -159,6 +160,7 @@ export const lightTheme: Theme = {
     border: neutral[200],
     text: neutral[900],
     textMuted: neutral[600],
+    actionText: brand[600],
     financial: financialLight,
   },
   radius,
@@ -179,6 +181,7 @@ export const darkTheme: Theme = {
     border: darkPalette.border,
     text: darkPalette.text,
     textMuted: darkPalette.textMuted,
+    actionText: '#60A5FA',
     financial: financialDark,
   },
   radius,

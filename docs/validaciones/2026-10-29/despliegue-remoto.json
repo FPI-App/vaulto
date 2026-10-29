@@ -1,0 +1,41 @@
+{
+  "rpc": {
+    "cancelar_lote_abono": "authenticated=execute, anon=no",
+    "aplicar_lote_sync": "authenticated=execute, anon=no"
+  },
+  "sqlSha256": "8aa2f82a922a9717f89252d685442d97b5934447283fdaa7c110e2c27269115a",
+  "tablesWithoutRls": [],
+  "exitCode": 0,
+  "observation": "Publicacion powersync FOR ALL TABLES (0003, previa) incluye auth/vault/private en el WAL hacia PowerSync; sync_rules.yaml solo expone public por usuario/espacio. Endurecimiento propuesto, no aplicado.",
+  "migrations": [
+    "0001",
+    "0002",
+    "0003",
+    "0004",
+    "0005",
+    "0006",
+    "0007",
+    "0008",
+    "0009",
+    "0010",
+    "0011",
+    "0012",
+    "0013",
+    "0014",
+    "0015",
+    "0016"
+  ],
+  "counts": {
+    "espacio": 57,
+    "cuenta": 0,
+    "deuda": 1,
+    "categoria": "no medido",
+    "movimiento": 0,
+    "pago": 0
+  },
+  "checkedAt": "2026-10-29T23:04:56.8875400Z",
+  "deleteTruncateGrantsAnonAuthenticated": 0,
+  "executed": true,
+  "directWritesGuard": "INSERT/UPDATE conservan grant; trigger 0012 exige vaulto.sync_protocol=1 (solo dentro de la RPC)",
+  "project": "pqxvttkyevbkfdhmcmxu"
+}

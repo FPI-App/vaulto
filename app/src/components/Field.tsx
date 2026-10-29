@@ -20,6 +20,7 @@ export function Field({
         {label}
       </Text>
       <TextInput
+        accessibilityLabel={label}
         placeholderTextColor={theme.colors.textMuted}
         style={[
           styles.input,

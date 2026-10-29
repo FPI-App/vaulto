@@ -23,8 +23,7 @@ export default function RegisterScreen() {
     setLoading(true)
     try {
       await signUpWithPassword(email.trim(), password)
-      // Si el proyecto exige confirmación por correo, no hay sesión inmediata.
-      setInfo('Revisa tu correo para confirmar la cuenta y luego inicia sesión.')
+      setInfo('Abre el enlace que enviamos a tu correo desde este teléfono para confirmar la cuenta y continuar en Vaulto.')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No pudimos crear la cuenta.')
     } finally {

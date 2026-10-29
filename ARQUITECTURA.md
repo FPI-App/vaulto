@@ -4,43 +4,46 @@ Documento corto y vinculante. Fija las decisiones de datos y sincronización que
 
 ---
 
-## 1. Campos transversales del esquema (obligatorios en TODAS las tablas)
+## 1. Modelo canónico del esquema
 
-Desde la primera migración, cada tabla de dominio incluye estos campos. No son opcionales, no son "para después":
+La fuente canónica es `docs/PLAN-MVP1.md`. `id`, `created_at`, `updated_at` y `deleted_at` son transversales; los demás campos tienen el alcance indicado:
 
 | Campo | Tipo | Por qué |
 |---|---|---|
 | `id` | `uuid` | **Generado en el cliente** (no autoincremental). Indispensable para offline-first: la app crea registros sin internet y sin colisiones. |
 | `updated_at` | `timestamptz` | Marca de última escritura. Base del LWW de fallback y de la detección de cambios para sync. |
 | `deleted_at` | `timestamptz` nullable | **Soft delete.** Nunca se borran filas físicamente en el flujo normal: borrar es escribir `deleted_at`. Un DELETE físico no se puede sincronizar de forma fiable. |
-| `espacio_id` | `uuid` nullable | Identificador del espacio de datos (multiusuario / modo pareja). Nullable en MVP = espacio personal. Permite el modo pareja futuro sin migración disruptiva. |
-| `currency` | `text` | Moneda del registro. Multimoneda-ready. **MVP fija `COP`.** |
-| `country` | `text` | País del registro (ISO, ej. `CO`). Multimoneda/locale-ready. |
+| `espacio_id` | `uuid` NOT NULL | Identificador del espacio de datos y frontera de aislamiento. Solo la tabla raíz `espacio` carece de esta columna. |
+| `currency` | `text` | Moneda de `cuenta`, `movimiento`, `deuda` y `pago`. **MVP fija `COP`.** En `espacio` se llama `base_currency`. |
+| `country` | `text` | País de `espacio` y `perfil` (ISO, ej. `CO`). |
 
-Además, las tablas con dueño llevan `user_id` (`uuid`, FK a `auth.users`) para RLS. `created_at` (`timestamptz`) es recomendado para auditoría.
+Todas las tablas tienen `created_at` (`timestamptz`) para auditoría. La pertenencia y la autorización se resuelven mediante `espacio_miembro`, no con un `user_id` suelto en cada tabla.
 
-> **Regla dura:** una migración que cree una tabla de dominio sin estos campos no se mergea. Esto se revisa en cada PR.
+`perfil.id` es también FK a `auth.users.id`; las demás entidades usan UUID propio. El modelo prepara compartir espacios, pero el modo pareja activo está fuera del MVP.
 
-### Por qué nullable y por qué desde el día 1
-- `espacio_id` nullable evita construir el modo pareja hoy (YAGNI) pero garantiza que cuando llegue, los datos existentes ya tienen la columna y el sync ya la transporta. Añadir la columna después es trivial; reconciliar millones de filas históricas y reescribir las reglas de sync, no.
-- `currency` y `country` se llenan con `COP` / `CO` en MVP. No hay selector de moneda todavía. Pero el esquema ya distingue el monto de su moneda, así que activar multimoneda es trabajo de UI + lógica, no una migración de datos de alto riesgo.
+### Por qué `espacio_id` es obligatorio
+- Todo registro de dominio pertenece a un único espacio desde su creación. El espacio personal también usa `espacio` y `espacio_miembro`; no existe un caso de negocio para filas huérfanas.
+- La misma frontera se aplica en PostgreSQL/RLS, PowerSync y las consultas SQLite locales.
+- `currency` se conserva en entidades monetarias; el MVP opera en COP.
 
 ---
 
 ## 2. Estrategia de sincronización (PowerSync)
 
 ### Pila
-- **Local:** SQLite cifrada con **SQLCipher**. Los datos en reposo en el dispositivo van cifrados (RLS protege el servidor, no el teléfono perdido — son garantías distintas).
+- **Local:** las instalaciones nativas nuevas configuran SQLCipher con una llave y un archivo separados por usuario. El arranque exige soporte SQLCipher; la verificación efectiva en dispositivo y la migración de `vaulto.sqlite` antiguo siguen pendientes.
 - **Sync:** **PowerSync** sobre Supabase. PowerSync mantiene la réplica local sincronizada con Postgres y gestiona la conectividad intermitente.
-- **Cola local:** las escrituras offline se encolan y se reenvían al recuperar conexión, con idempotencia y respeto al orden de dependencias (no se sincroniza un `movimiento` antes que su `cuenta`).
+- **Cola local:** el conector envía la transacción completa a `aplicar_lote_sync` (0012) y solo la completa al recibir confirmación de ese lote. El servidor aplica todas sus operaciones o revierte todo; registra una identidad persistente por usuario para reconocer reintentos. Requiere desplegar el protocolo coordinadamente con el cliente; sin la RPC la cola se conserva.
 
 ### Resolución de conflictos
-No se aplica una sola estrategia ciega. Se elige por el dominio del dato:
+Objetivo de diseño, pendiente del spike de dos dispositivos definido en el plan:
 
 1. **Merge por campo (field-level)** — donde el dominio lo justifique. Caso típico: el modo pareja, donde dos personas editan campos distintos del mismo registro compartido. Mezclar por campo evita que la edición de uno pise la del otro.
 2. **LWW (last-write-wins) por `updated_at`** — **solo como fallback**, para campos donde un conflicto real es improbable o donde la última escritura es semánticamente correcta.
 
 > **Advertencia consciente:** LWW depende del reloj del dispositivo. Relojes desfasados pueden hacer "ganar" a la escritura equivocada. Por eso LWW es fallback, no estrategia por defecto, y el merge por campo cubre el escenario peligroso (edición concurrente del modo pareja).
+
+**Estado implementado en 0012, validado en PostgreSQL local:** los lotes se serializan por espacio y el servidor recalcula los saldos de las deudas afectadas desde todos los pagos activos. Un lote que supera el principal se rechaza completo y conserva su cola local. PATCH envía campos modificados, pero no compara `updated_at`: no implementa LWW por reloj. Si los pagos locales superan el principal, Deudas conserva el historial, muestra conflicto y bloquea edición/abonos; los selectores rechazan el agregado. Falta el flujo explícito para corregir/anular un lote rechazado y la prueba real entre dispositivos. Ver `docs/PROTOCOLO-SYNC-ATOMICO.md`.
 
 ### Identidad e idempotencia
 - **UUID en cliente** para todo `id`: sin esto, dos dispositivos offline generarían IDs en colisión.
@@ -52,8 +55,9 @@ No se aplica una sola estrategia ciega. Se elige por el dominio del dato:
 ## 3. Seguridad
 
 - **RLS obligatorio** en todas las tablas de Supabase. Sin política = sin acceso. Las políticas se documentan en `supabase/policies/`.
+- `espacio` solo puede actualizarlo su propietario, conservando `owner_user_id` (0010). Solo el propietario administra membresías (0008). Los permisos de tabla se conceden explícitamente en 0007 (Track A) y 0011 (Track B); no se concede borrado físico ni TRUNCATE.
 - **RLS ≠ cifrado local.** RLS protege el servidor. El cifrado en reposo del dispositivo lo da SQLCipher. Ambos son necesarios; ninguno sustituye al otro.
-- La llave de SQLCipher se deriva por usuario y se guarda en el secure storage del dispositivo (`expo-secure-store`), nunca en el repo ni en `.env` de producción.
+- La llave SQLCipher se genera con 32 bytes aleatorios y se persiste por usuario en `expo-secure-store`, con un servicio separado al de la sesión. No se reemplaza si ya existe una base y falta su llave. Los archivos antiguos se detectan y bloquean sin borrarlos: su migración sigue pendiente. Ver `docs/VALIDACION-SYNC-CIFRADO-2026-10-27.md`.
 
 ---
 
@@ -61,5 +65,5 @@ No se aplica una sola estrategia ciega. Se elige por el dominio del dato:
 
 - **Esquema del lado servidor:** `supabase/migrations/` (SQL) + `supabase/policies/` (RLS documentado).
 - **Esquema del lado cliente (PowerSync):** `packages/shared/src/powersync/` — definición compartida del esquema de sincronización.
-- **Tipos del esquema:** `packages/shared/src/types/` — generados con `pnpm db:types`.
+- **Tipos del esquema:** `packages/shared/src/types/index.ts` contiene los tipos de dominio actuales. `pnpm db:types` prepara la generación desde Supabase local; el archivo `database.ts` aún no está versionado y no se declara como verificado.
 - **Reglas de dominio puras** (cálculo de saldos, dirección de deuda, puente Pago↔Movimiento): `packages/shared/src/domain/` — testeable sin app ni red.
