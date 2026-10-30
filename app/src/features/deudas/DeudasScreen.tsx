@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router'
 import { useMemo, useState } from 'react'
 import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native'
-import { diasHastaVencimiento, etiquetaVencimiento, formatCOP } from '@vaulto/shared'
+import { diasHastaVencimiento, etiquetaVencimiento, formatCOP, sumarANumero } from '@vaulto/shared'
 import ArrowDownLeft from 'lucide-react-native/icons/arrow-down-left'
 import ArrowUpRight from 'lucide-react-native/icons/arrow-up-right'
 import CircleCheck from 'lucide-react-native/icons/circle-check'
@@ -32,12 +32,11 @@ export function DeudasScreen() {
     () => (direccion ? todas.filter((d) => d.direccion === direccion) : todas),
     [todas, direccion],
   )
+  // Totales en centavos enteros (money.ts); solo deudas activas con saldo conocido.
   const totales = useMemo(() => {
-    const suma = { me_deben: 0, yo_debo: 0 }
-    for (const d of todas) {
-      if (d.estado === 'activa' && d.saldo_pendiente !== null) suma[d.direccion] += Number(d.saldo_pendiente)
-    }
-    return suma
+    const saldos = (dir: 'me_deben' | 'yo_debo') =>
+      todas.flatMap((d) => (d.estado === 'activa' && d.direccion === dir && d.saldo_pendiente !== null ? [d.saldo_pendiente] : []))
+    return { me_deben: sumarANumero(saldos('me_deben')), yo_debo: sumarANumero(saldos('yo_debo')) }
   }, [todas])
 
   return (
