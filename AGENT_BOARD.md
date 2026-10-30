@@ -22,7 +22,15 @@ Confirmado al incorporar estas reglas: workers asentados, bandeja sin mensajes p
 - Gate: `gate_b5fb7c349737`, estado `resolved`, resolución `yes` por respuesta explícita del usuario; verificado en Orca.
 - Pregunta: **¿Revisaste el diff y apruebas abrir el PR?** Opciones: `yes` / `no`.
 - Diff a revisar: `git diff main..orchestration/issue-25`; head preparado `a2d8f24`.
-- Apertura autorizada por el usuario; pendiente confirmación explícita del comando y destino de `git push` antes de publicar. #25 mantiene el bloqueo nativo y no se cerrará con estas regresiones. Merge y cierre conservan gates separados.
+- Apertura y comandos exactos de push autorizados explícitamente por el usuario. Ambas ramas publicadas. PR #33 abierto: https://github.com/FPI-App/vaulto/pull/33, head `a2d8f24d1752d33ee97814c2906ffd2dc90352c4`. CI remoto en ejecución al abrirlo. #25 mantiene el bloqueo nativo y no se cerrará con estas regresiones. Merge y cierre conservan gates separados.
+- CI del PR #33 confirmado correcto: `gh pr checks 33 --watch --interval 10`, exit 0; job «Lint, typecheck y pruebas» pass (39 s), run `41137831998`.
+- Gate de MERGE del PR #33: `gate_ba3a42da4d3b`, Task `task_cb810cc3f311`, estado `pending`. Pregunta literal solicitada: `¿Revisaste el diff y apruebas abrir el PR?`, opciones `["yes","no"]`; la acción identificada en la Task es MERGE, no apertura. Esperar `yes` del usuario. Issue #25 permanece abierto incluso si se aprueba este merge.
+
+### Resumen de entrega #25 — publicación realizada, merge pendiente
+
+- Archivos: `app/src/lib/sync/SupabaseConnector.test.ts`, `app/src/lib/sync/recuperacionAbonosRechazados.test.ts`, `docs/qa/issue-25-antigravity.md`, `AGENT_BOARD.md`.
+- Comandos/resultados: 31/31 pruebas afectadas correctas; exportación Android Hermes correcta (2.102 módulos); `git push -u origin orchestration/issue-25` exit 0; `gh pr create --base main --head orchestration/issue-25 --title ... --body-file .cache/orchestration/pr-issue-25.md` creó PR #33; CI remoto correcto.
+- NO verificado: reconexión automática, pérdida de respuesta contra servidor real, SQLCipher tras reinicio y sincronización entre dos dispositivos para los pendientes del Issue. Los mocks no cubren esas garantías. No se ha ejecutado merge ni cierre.
 
 ## Ciclo activo — Issue #26
 
@@ -67,7 +75,7 @@ Confirmado al incorporar estas reglas: workers asentados, bandeja sin mensajes p
 - Confirmado por el orquestador en conjunto final: `pnpm test` correcto, 79 shared + 114 app = 193 pruebas. Los 12 tests de infraestructura ya pasaron y no hubo cambios posteriores en scripts/infra. No quedan terminales supervisados pendientes de liberar; las sesiones preexistentes se conservan por Orca.
 - Confirmado en el mismo conjunto final: `pnpm lint` y `pnpm typecheck` correctos después de integrar ambas entregas y resolver el tablero.
 - QA aceptado: commit `7af5e29`, solo reporte independiente; worktree QA limpio. Integrado por cherry-pick sin arrastrar #25.
-- Pendiente: confirmación de publicación, PR y CI remoto antes de cerrar #26. Comando de publicación previsto: `git push -u origin orchestration/issue-26` hacia `https://github.com/FPI-App/vaulto`.
+- Confirmado: el usuario autorizó ambos comandos exactos de push; `git push -u origin orchestration/issue-25` y `git push -u origin orchestration/issue-26` terminaron con exit 0 hacia `https://github.com/FPI-App/vaulto`. PR #26 todavía sin abrir: requiere gate humano propio y respeta el orden de integración después del PR #33. CI y cierre remoto pendientes.
 - Último escaneo confirmado: no hay ítems Todo; #25 y #26 figuran In Progress. Los otros Issues ya In Progress no se reasignan automáticamente.
 - Cuerpos de PR preparados en `.cache/orchestration/pr-issue-25.md` y `pr-issue-26.md` (ignorados). Publicar, abrir PR, mergear y cerrar requieren los puntos de parada vigentes de la cabecera; CI correcto por sí solo no autoriza merge ni cierre. Solo #26 puede cerrarse tras cumplir todos los checks y gates; #25 conserva el bloqueo nativo.
 
