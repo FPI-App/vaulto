@@ -10,14 +10,18 @@
     "prebuild": "expo prebuild",
     "lint": "expo lint",
     "typecheck": "pnpm -w exec tsc --noEmit -p app/tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "web:assets": "powersync-web copy-assets -o public",
+    "web": "pnpm web:assets && expo start --web"
   },
   "dependencies": {
     "@expo/dom-webview": "~58.0.2",
     "@expo/metro-runtime": "~58.0.15",
     "@op-engineering/op-sqlite": "^17.1.1",
     "@powersync/common": "^2.4.0",
+    "@powersync/react": "2.1.0",
     "@powersync/react-native": "^2.3.3",
+    "@powersync/web": "2.5.0",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "9.2.1",
     "@react-native-community/netinfo": "12.0.1",
