@@ -21,4 +21,18 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ]
 
+// 3. Web: @powersync/react-native arrastra op-sqlite (solo nativo). Se cambia
+//    por un shim sobre @powersync/web, forzando su build para React Native Web,
+//    que acepta la URL del worker copiado a public/ en vez de import.meta.url.
+const webAliases = {
+  '@powersync/react-native': path.resolve(projectRoot, 'src/lib/powersync/web.ts'),
+  '@powersync/web': path.resolve(workspaceRoot, 'node_modules/@powersync/web/dist/index.react_native_web.js'),
+}
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (platform === 'web' && webAliases[moduleName]) {
+    return { type: 'sourceFile', filePath: webAliases[moduleName] }
+  }
+  return context.resolveRequest(context, moduleName, platform)
+}
+
 module.exports = config

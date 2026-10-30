@@ -86,3 +86,14 @@ Con autorización explícita del usuario para el comando y destino exactos:
 - **Propuesto:** la publicación `powersync`, creada `FOR ALL TABLES` en 0003, envía también `auth`, `vault` y `private` al servicio PowerSync. `sync_rules.yaml` solo entrega tablas `public` filtradas por usuario y espacio. Restringir la publicación a las ocho tablas del dominio necesita una migración revisada y una autorización aparte.
 - **Desconocido:** no se ha comprobado que las reglas desplegadas en PowerSync coincidan con `sync_rules.yaml`.
 - iOS queda fuera del alcance por decisión del usuario; no se realizará validación Apple.
+
+## E2E autenticado en Android (29–30 de octubre)
+
+Detalle completo en `validaciones/2026-10-29/e2e-android-autenticado.json` y guion reproducible en `DEMO-MVP1.md`.
+
+- **Confirmado:** login, onboarding, cuentas, ingreso, egreso, transferencia, deuda y dashboard probados con los formularios reales y tres usuarios sintéticos confirmados. Los conteos del servidor no muestran duplicados.
+- **Confirmado:** 60+60 offline en dos dispositivos: uno aplica y el otro se rechaza con 23514. Se anula desde «Revisar abono pendiente» y una operación posterior sincroniza. 40+60 deja la deuda saldada. El reinicio sin conexión conserva la cola.
+- **Confirmado:** cambio de cuenta A → B → C → A en el mismo dispositivo, membresía sintética y revocación visibles en vivo, y convergencia de una categoría editada y otra eliminada sin que la siembra posterior las revierta.
+- **Corregido:** `fe6b25a` (Categorías redirigía a Inicio) y `cd4e9d1` (KPIs de deudas no se refrescaban tras un sync).
+- **Desconocido:** el retraso del reintento tras reconectar y la parada del stream después de un Fast Refresh. Ambos se resolvieron reiniciando la app.
+- **Bloqueo de entorno:** Avast Web/Mail Shield re-firma TLS en este PC, por eso el APK standalone no puede autenticarse dentro del emulador. Hace falta validarlo en un teléfono real.

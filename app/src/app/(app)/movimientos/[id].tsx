@@ -1,11 +1,16 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { usePowerSync } from '@powersync/react-native'
 import { useState } from 'react'
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native'
-import { formatCOP, formatMontoInput } from '@vaulto/shared'
+import Trash from 'lucide-react-native/icons/trash'
+import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { formatMontoInput } from '@vaulto/shared'
 
+import { Amount } from '@/components/Amount'
+import { Button } from '@/components/Button'
+import { Card } from '@/components/Card'
 import { ModalHeader } from '@/components/ModalHeader'
 import { Screen } from '@/components/Screen'
+import { Text } from '@/components/Text'
 import {
   actualizarMovimiento,
   eliminarMovimiento,
@@ -16,6 +21,7 @@ import { etiquetaDia, parseFecha } from '@/features/movimientos/fechas'
 import { FormularioMovimiento } from '@/features/movimientos/FormularioMovimiento'
 import { useEspacioActual } from '@/lib/espacio/useEspacioActual'
 import { useTheme } from '@/theme'
+import { showAlert } from '@/lib/ui/alert'
 
 export default function EditarMovimientoScreen() {
   const theme = useTheme()
@@ -32,14 +38,14 @@ export default function EditarMovimientoScreen() {
     actualizarMovimiento(db, espacioId, id, datos)
       .then(() => router.back())
       .catch((e) => {
-        Alert.alert('No se pudo guardar', String(e))
+        showAlert('No se pudo guardar', String(e))
         setGuardando(false)
       })
   }
 
   function confirmarEliminar() {
     if (!espacioId) return
-    Alert.alert('Eliminar movimiento', 'Los saldos de las cuentas se recalculan sin él.', [
+    showAlert('Eliminar movimiento', 'Los saldos de las cuentas se recalculan sin él.', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Eliminar',
@@ -47,12 +53,10 @@ export default function EditarMovimientoScreen() {
         onPress: () =>
           eliminarMovimiento(db, espacioId, id)
             .then(() => router.back())
-            .catch((e) => Alert.alert('Error', String(e))),
+            .catch((e) => showAlert('Error', String(e))),
       },
     ])
   }
-
-  const texto = { fontFamily: theme.typography.fontFamily, color: theme.colors.text }
 
   return (
     <Screen>
@@ -65,25 +69,26 @@ export default function EditarMovimientoScreen() {
           {cargando ? (
             <ActivityIndicator color={theme.colors.brand[600]} />
           ) : (
-            <Text style={{ ...theme.typography.scale.body, color: theme.colors.textMuted }}>
+            <Text tone="muted">
               Movimiento no encontrado.
             </Text>
           )}
         </View>
       ) : movimiento.pago_id ? (
         // Lo creó Deudas al registrar un abono: se edita desde la deuda, no aquí.
-        <View style={{ gap: theme.space.sm, paddingVertical: theme.space.lg }}>
-          <Text style={{ ...theme.typography.scale.display, ...texto, fontVariant: ['tabular-nums'] }}>
-            {formatCOP(movimiento.monto)}
+        <Card style={{ gap: theme.space.sm, marginTop: theme.space.lg }}>
+          <Text variant="label" tone="muted">
+            Abono de deuda
           </Text>
-          <Text style={{ ...theme.typography.scale.body, color: theme.colors.textMuted }}>
+          <Amount value={movimiento.monto} kind="debt" variant="display" adjustsFontSizeToFit />
+          <Text tone="muted">
             {etiquetaDia(parseFecha(movimiento.fecha))}
             {movimiento.nota ? ` · ${movimiento.nota}` : ''}
           </Text>
-          <Text style={{ ...theme.typography.scale.body, ...texto, marginTop: theme.space.md }}>
+          <Text style={{ marginTop: theme.space.md }}>
             Este movimiento se generó al registrar un abono. Para cambiarlo o anularlo, hazlo desde la deuda.
           </Text>
-        </View>
+        </Card>
       ) : (
         <>
           <FormularioMovimiento
@@ -101,22 +106,9 @@ export default function EditarMovimientoScreen() {
               nota: movimiento.nota,
             }}
           />
-          <Pressable
-            accessibilityRole="button"
-            onPress={confirmarEliminar}
-            hitSlop={8}
-            style={[styles.eliminar, { minHeight: theme.layout.minTouchTarget }]}
-          >
-            <Text
-              style={{
-                ...theme.typography.scale.label,
-                fontFamily: theme.typography.fontFamily,
-                color: theme.colors.financial.expense,
-              }}
-            >
-              Eliminar movimiento
-            </Text>
-          </Pressable>
+          <View style={styles.eliminar}>
+            <Button label="Eliminar movimiento" variant="danger" icon={Trash} onPress={confirmarEliminar} />
+          </View>
         </>
       )}
     </Screen>
@@ -125,5 +117,5 @@ export default function EditarMovimientoScreen() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  eliminar: { alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
+  eliminar: { marginTop: 8, marginBottom: 24 },
 })

@@ -1,42 +1,23 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import X from 'lucide-react-native/icons/x'
+import { StyleSheet, View } from 'react-native'
 
 import { useTheme } from '@/theme'
+import { IconButton } from './IconButton'
+import { Text } from './Text'
 
 /** Cabecera de pantalla presentada como modal: título + acción de cerrar. */
 export function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
   const theme = useTheme()
   return (
-    <View style={styles.row}>
-      <Text
-        style={{
-          ...theme.typography.scale.h2,
-          fontFamily: theme.typography.fontFamily,
-          color: theme.colors.text,
-        }}
-      >
+    <View style={[styles.row, { marginBottom: theme.space.lg }]}>
+      <Text variant="h2" heading={1} style={{ flex: 1 }} numberOfLines={1}>
         {title}
       </Text>
-      <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8}>
-        <Text
-          style={{
-            ...theme.typography.scale.label,
-            fontFamily: theme.typography.fontFamily,
-            color: theme.colors.brand[600],
-          }}
-        >
-          Cerrar
-        </Text>
-      </Pressable>
+      <IconButton icon={X} label="Cerrar" onPress={onClose} />
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 8,
-    marginBottom: 4,
-  },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 },
 })

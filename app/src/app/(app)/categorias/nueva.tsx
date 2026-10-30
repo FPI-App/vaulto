@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { usePowerSync } from '@powersync/react-native'
 import { useRef, useState } from 'react'
-import { Alert } from 'react-native'
+
 import type { TipoCategoria } from '@vaulto/shared'
 
 import { ModalHeader } from '@/components/ModalHeader'
@@ -9,6 +9,7 @@ import { Screen } from '@/components/Screen'
 import { crearCategoria, type DatosCategoria } from '@/features/categorias/data/categoriasRepo'
 import { FormularioCategoria } from '@/features/categorias/FormularioCategoria'
 import { useEspacioActual } from '@/lib/espacio/useEspacioActual'
+import { showAlert } from '@/lib/ui/alert'
 
 export default function NuevaCategoriaScreen() {
   const router = useRouter()
@@ -22,14 +23,14 @@ export default function NuevaCategoriaScreen() {
   function onSubmit(datos: DatosCategoria) {
     if (pendiente.current) return
     if (!espacioId) {
-      Alert.alert('Sin espacio', 'No hay un espacio activo todavía.')
+      showAlert('Sin espacio', 'No hay un espacio activo todavía.')
       return
     }
     pendiente.current = true
     setGuardando(true)
     crearCategoria(db, espacioId, tipo, datos)
       .then(() => router.back())
-      .catch(() => Alert.alert('No se pudo guardar', 'Revisa los datos e inténtalo de nuevo.'))
+      .catch(() => showAlert('No se pudo guardar', 'Revisa los datos e inténtalo de nuevo.'))
       .finally(() => {
         pendiente.current = false
         setGuardando(false)
