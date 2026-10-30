@@ -2,7 +2,56 @@
 
 Actualizado: 2026-10-30. Run Orca: `run_7292d436ace4`.
 
-## Ciclo activo
+## Ciclo activo — Issue #26
+
+- Issue: [#26 — Sustituir el lint ficticio de packages/shared por una verificación real](https://github.com/FPI-App/vaulto/issues/26).
+- Estado: DEV y QA entregados e integrados localmente; pendiente confirmación de publicación y CI remoto. P2; sin más Todo en el último escaneo; #25 sigue abierto/bloqueado por evidencia nativa.
+- Base de integración: `main` inicial `2ba0875`. Rama PR aislada `orchestration/issue-26`; integrar únicamente commits de #26, sin arrastrar las pruebas de #25.
+
+### [DEV] Claude — #26
+
+- Rama existente `feature/dev-features`; crear commits exclusivos de #26 sin mezclar cambios de #25. No reescribas historia.
+- Configura lint real en `packages/shared`, compatible con TS estricto, comillas simples y sin punto y coma. Respeta pnpm 9.12.0 y ESLint 9 de la app; reutiliza versiones resueltas cuando sea viable. Declara dependencias directas requeridas; no dependas accidentalmente de hoisting/transitivas.
+- Propiedad: `packages/shared/package.json`, configuración ESLint de shared, lockfile y ajustes mínimos de lint en shared si son necesarios. No modifiques la interfaz DeudasSelectors, app/ ni dominio de negocio ni reformatees masivamente. Comunica antes cualquier cambio que salga de este alcance.
+- Lee #26, plan y manifiestos; usa Context7. Referencia ya verificada por el coordinador: ESLint 9.39.3, flat config `languageOptions.parser`; CLI `--stdin --stdin-filename` para demostrar fallo sin crear/borrar archivos temporales.
+- Aceptación: lint analiza fuentes TS y falla con infracción real mediante stdin; pnpm lint, typecheck y test correctos; lockfile compatible con instalación frozen. Entrega commits exclusivos de #26, comandos y resultados reales. Sin push, PR, merge remoto ni cierre.
+- Estado: completado localmente; Task `task_e16999b133a6`, Dispatch `ctx_7d75ff5125ff`. SHA exclusivo de #26: `4c33de8` (sobre `290e01d` de #25; cherry-pick aislado de ese único commit). Sin push/PR/merge.
+  - Archivos: `packages/shared/package.json` (lint `eslint src` + devDependencies directas `eslint`/`@eslint/js` ^9.39.5, `@typescript-eslint/parser`/`eslint-plugin` ^8.71.2), `packages/shared/eslint.config.js` (nuevo, flat config), `pnpm-lock.yaml` (+12 líneas, solo el importer de shared; mismas versiones ya resueltas). Sin cambios en `app/`, `selectors.ts` ni dominio.
+  - Confirmado (ejecutado): `pnpm install --frozen-lockfile --offline` correcto; `pnpm lint` (shared con ESLint real + app) sin errores; `pnpm typecheck` correcto; `pnpm test` 79 shared + 105 app (esta rama incluye las de #25; sobre main serían 101 app). Stdin negativo (`const x = "a";` en `src/domain/…ts`): exit 1 con reglas `quotes` y `semi`; `any` explícito: exit 1 con `@typescript-eslint/no-explicit-any`; positivo (`export const x = 'a'`): exit 0. Sin archivos temporales.
+  - Reglas: `@eslint/js` recommended, `typescript-eslint/eslint-recommended`, `no-explicit-any`, `no-unused-vars` TS con `argsIgnorePattern: '^_'` (necesario por parámetros `_direccion/_limite` en `selectors.ts`; evita tocar el contrato), `quotes` single y `semi` never (reglas núcleo, obsoletas en ESLint 9 pero activas; no se añadió `@stylistic`).
+  - Limitaciones: lint sin información de tipos (no `recommended-type-checked`); alcance `src/**/*.ts`; Context7 no disponible entre mis herramientas, la API se verificó contra la instalación local (`configs['flat/eslint-recommended']` existe en 8.71.2) y la ejecución real. CI remoto: Desconocido, no verificado.
+
+### [QA] Antigravity — #26
+
+- Rama existente `feature/qa-tests`; #25 ya entregado, no seguir ampliándolo.
+- Propiedad: reporte nuevo `docs/qa/issue-26-antigravity.md`; no modificar configuración, lockfile, código de producción ni escribir tests que reproduzcan la configuración.
+- Valida independientemente los commits de #26 de Claude: lint shared analiza `src/**/*.ts`, una infracción real produce exit 1 y un ejemplo válido exit 0; usa stdin/filename y registra regla activada. No crear archivos temporales que requieran borrados.
+- Verifica cobertura de domain/types/powersync y que DeudasSelectors no cambió. Ejecuta calidad del conjunto cuando exista el SHA final; no dupliques suites completas sin cambio nuevo. CI remoto es pendiente hasta PR, no se presume por pasar localmente.
+- Alcance de #26 no requiere Expo Go ni dispositivos. No publiques ramas ni PR ni cierres Issues. Entrega SHA local, reporte preciso y estado en esta sección; termina el turno, no entres en bucle.
+- Estado: completado localmente; Task `task_da652ecb1b63`, Dispatch `ctx_2c68f7cdffd2`. SHA de validación `7af5e29` (reporte sobre `0b3e3d1`, cherry-pick local de DEV `4c33de8`). Sin push remoto, PR ni merge.
+  - Confirmado (ejecutado): `pnpm install --frozen-lockfile` correcto; cobertura confirmada de 19 archivos (15 domain, 1 types, 2 powersync, 1 index raíz) vía `eslint src --format json` con 0 errores y 0 advertencias.
+  - Pruebas stdin sin archivos temporales: fallo con exit 1 en `src/domain/prueba.ts` por reglas `quotes`, `semi` y `@typescript-eslint/no-unused-vars`; fallo con exit 1 en `src/types/prueba.ts` por `@typescript-eslint/no-explicit-any`; caso positivo en `src/powersync/prueba.ts` con exit 0.
+  - Contrato de integración: `git diff 2ba0875..HEAD -- packages/shared/src/domain/selectors.ts` sin cambios (DeudasSelectors intacto).
+  - Calidad: `pnpm typecheck` correcto (0 errores); `pnpm lint` correcto (shared `eslint src` + app `expo lint`); `pnpm test` 193/193 pasados (79 shared + 114 app en esta rama).
+  - Reporte entregado: `docs/qa/issue-26-antigravity.md`. CI remoto: Pendiente hasta publicación de PR.
+
+### Reglas de ejecución del ciclo #26
+
+- Orquestador: DEV `4c33de8` verificado e integrado como `63d271b` en rama aislada `orchestration/issue-26`.
+- Confirmado por ejecución propia: `pnpm install --frozen-lockfile --ignore-scripts`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (79 shared + 101 app) y `pnpm infra:test` (12) correctos.
+- Confirmado por ejecución propia: ESLint analiza 19 archivos (15 domain, 1 types, 2 powersync, 1 index); 0 errores y 0 advertencias. stdin con `export const lintProbe: any = 1` bajo `src/domain/lint-probe.ts` falla con exit 1 por `@typescript-eslint/no-explicit-any`; el mismo ejemplo con `number` da exit 0. No se añadió `--rule` ni se crearon archivos temporales.
+- Diferencia de conteos esperada: ramas DEV/QA contienen pruebas #25; la integración aislada #26 conserva las 101 pruebas app de main. No se arrastran pruebas de sincronización al PR de lint.
+- QA aceptado: commit `7af5e29`, solo reporte independiente; worktree QA limpio. Integrado por cherry-pick sin arrastrar #25.
+- Pendiente: confirmación de publicación, PR y CI remoto antes de cerrar #26. Comando de publicación previsto: `git push -u origin orchestration/issue-26` hacia `https://github.com/FPI-App/vaulto`.
+- Último escaneo confirmado: no hay ítems Todo; #25 y #26 figuran In Progress. Los otros Issues ya In Progress no se reasignan automáticamente.
+- Cuerpos de PR preparados en `.cache/orchestration/pr-issue-25.md` y `pr-issue-26.md` (ignorados). Al autorizar pushes exactos, crear cada PR hacia main con `gh pr create --body-file`; esperar CI correcto; `gh pr merge --merge` sin borrar ramas. Solo #26 puede cerrarse tras cumplir esos checks; #25 conserva el bloqueo nativo.
+
+PROHIBIDO BORRAR ARCHIVOS O CARPETAS, INCLUIDOS TUS TEMPORALES (REMOVE-ITEM, RM, DEL, ERASE, RD, RMDIR O EQUIVALENTES). PROHIBIDO IMPRIMIR SECRETOS. ENMASCARA PASSWORD, TOKEN, COOKIE, AUTHORIZATION Y CADENAS DE CONEXIÓN EN LOGS Y REPORTES.
+
+- NO hacer push. NO escrituras DB. NO git add -f, reset --hard ni clean. El orquestador recibe commits locales y solicita confirmación del comando exacto de publicación cuando el resultado esté listo.
+- Las secciones inferiores son HISTORIAL de #25; no son la tarea activa ni autorizan nuevas acciones sobre #25.
+
+## Historial — Issue #25
 
 - Issue: [#25 — Resolver abonos rechazados sin bloquear la cola de sincronización](https://github.com/FPI-App/vaulto/issues/25)
 - Prioridad: P0. Selección: único P0 abierto en Todo; los demás P0 ya están In Progress.
