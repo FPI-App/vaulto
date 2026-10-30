@@ -28,7 +28,6 @@ export function DashboardScreen() {
   }
   const etiqueta = {
     ...theme.typography.scale.label,
-    fontFamily: theme.typography.fontFamily,
     color: theme.colors.textMuted,
   }
 
@@ -41,7 +40,6 @@ export function DashboardScreen() {
         <Text
           style={{
             ...theme.typography.scale.h1,
-            fontFamily: theme.typography.fontFamily,
             color: theme.colors.text,
             marginTop: theme.space.lg,
             marginBottom: theme.space.lg,
@@ -62,7 +60,6 @@ export function DashboardScreen() {
             adjustsFontSizeToFit
             style={{
               ...theme.typography.scale.display,
-              fontFamily: theme.typography.fontFamily,
               color: negativo ? theme.colors.financial.expense : theme.colors.text,
               fontVariant: ['tabular-nums'],
             }}
@@ -134,7 +131,6 @@ function Kpi({ titulo, valor, error }: { titulo: string; valor: number | undefin
         adjustsFontSizeToFit
         style={{
           ...theme.typography.scale.h2,
-          fontFamily: theme.typography.fontFamily,
           color: theme.colors.financial.debt,
           fontVariant: ['tabular-nums'],
         }}
@@ -175,8 +171,7 @@ function FilaVencimiento({ v, conSeparador }: { v: VencimientoResumen; conSepara
       <Text
         style={{
           ...theme.typography.scale.bodyLg,
-          fontWeight: theme.typography.weights.semibold,
-          fontFamily: theme.typography.fontFamily,
+          fontFamily: theme.typography.fonts.semibold,
           color: theme.colors.text,
           fontVariant: ['tabular-nums'],
         }}

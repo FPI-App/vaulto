@@ -92,7 +92,6 @@ export default function EditarCategoriaScreen() {
             <Text
               style={{
                 ...theme.typography.scale.label,
-                fontFamily: theme.typography.fontFamily,
                 color: theme.colors.financial.expense,
               }}
             >

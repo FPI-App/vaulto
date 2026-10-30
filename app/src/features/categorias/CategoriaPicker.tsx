@@ -58,7 +58,6 @@ export function CategoriaPicker({
                 numberOfLines={1}
                 style={{
                   ...theme.typography.scale.caption,
-                  fontFamily: theme.typography.fontFamily,
                   color: activa ? theme.colors.text : theme.colors.textMuted,
                   marginTop: 4,
                 }}
@@ -78,7 +77,6 @@ export function CategoriaPicker({
         <Text
           style={{
             ...theme.typography.scale.label,
-            fontFamily: theme.typography.fontFamily,
             color: theme.colors.brand[600],
           }}
         >

@@ -67,7 +67,6 @@ export function FormularioCuenta({
         <Text
           style={{
             ...theme.typography.scale.label,
-            fontFamily: theme.typography.fontFamily,
             color: theme.colors.textMuted,
             marginBottom: theme.space.xs,
           }}

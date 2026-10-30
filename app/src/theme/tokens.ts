@@ -97,24 +97,38 @@ export const layout = {
  * Tipografía. Familia única en MVP: Inter. Montos con tabular-nums y formato
  * COP (`$ 1.250.000`). Máx. 3 pesos por pantalla. Nada crítico < 12px.
  */
+// Una familia por peso: Android no sintetiza pesos de fuentes cargadas, así
+// que el peso va en el nombre de la familia y no en fontWeight.
+export const fonts = {
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semibold: 'Inter_600SemiBold',
+  bold: 'Inter_700Bold',
+} as const
+
 export const typography = {
-  fontFamily: 'Inter',
-  weights: {
-    regular: '400',
-    medium: '500',
-    semibold: '600',
-    bold: '700',
-  },
+  fontFamily: fonts.regular,
+  fonts,
   scale: {
-    display: { fontSize: 34, fontWeight: '700' },
-    h1: { fontSize: 28, fontWeight: '600' },
-    h2: { fontSize: 22, fontWeight: '600' },
-    h3: { fontSize: 18, fontWeight: '600' },
-    bodyLg: { fontSize: 16, fontWeight: '400' },
-    body: { fontSize: 14, fontWeight: '400' },
-    label: { fontSize: 13, fontWeight: '500' },
-    caption: { fontSize: 12, fontWeight: '400' },
+    display: { fontSize: 34, lineHeight: 40, fontFamily: fonts.bold, letterSpacing: -0.6 },
+    h1: { fontSize: 28, lineHeight: 34, fontFamily: fonts.semibold, letterSpacing: -0.4 },
+    h2: { fontSize: 22, lineHeight: 28, fontFamily: fonts.semibold, letterSpacing: -0.2 },
+    h3: { fontSize: 18, lineHeight: 24, fontFamily: fonts.semibold },
+    bodyLg: { fontSize: 16, lineHeight: 24, fontFamily: fonts.regular },
+    body: { fontSize: 14, lineHeight: 20, fontFamily: fonts.regular },
+    label: { fontSize: 13, lineHeight: 16, fontFamily: fonts.medium },
+    caption: { fontSize: 12, lineHeight: 16, fontFamily: fonts.regular },
   },
+} as const
+
+/** Montos: siempre dígitos tabulares para que las columnas alineen. */
+export const tabularNums = { fontVariant: ['tabular-nums' as const] }
+
+/** Elevación (§6.3): sombras suaves y frías, nunca negras duras. */
+export const shadow = {
+  sm: { shadowColor: '#0B1730', shadowOpacity: 0.06, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
+  md: { shadowColor: '#0B1730', shadowOpacity: 0.1, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 4 },
+  lg: { shadowColor: '#0B1730', shadowOpacity: 0.16, shadowRadius: 28, shadowOffset: { width: 0, height: 12 }, elevation: 8 },
 } as const
 
 /** Movimiento. 150–250ms, curva cubic-bezier(0.22, 1, 0.36, 1). Respetar reduce-motion. */
@@ -139,6 +153,13 @@ export interface Theme {
     text: string
     textMuted: string
     actionText: string
+    /** Fondo suave de marca: chips seleccionados, íconos activos. */
+    brandSoft: string
+    /** Glass (§6.1): solo tab bar, modales y tarjeta de saldo. */
+    glassFill: string
+    glassBorder: string
+    /** Fondo exterior en web, alrededor de la columna móvil. */
+    backdrop: string
     /** Color semántico financiero del modo activo. */
     financial: typeof financialLight | typeof financialDark
   }
@@ -146,6 +167,7 @@ export interface Theme {
   space: typeof space
   layout: typeof layout
   typography: typeof typography
+  shadow: typeof shadow
   motion: typeof motion
 }
 
@@ -161,12 +183,17 @@ export const lightTheme: Theme = {
     text: neutral[900],
     textMuted: neutral[600],
     actionText: brand[600],
+    brandSoft: brand[100],
+    glassFill: 'rgba(255,255,255,0.72)',
+    glassBorder: 'rgba(255,255,255,0.6)',
+    backdrop: '#E9EDF3',
     financial: financialLight,
   },
   radius,
   space,
   layout,
   typography,
+  shadow,
   motion,
 }
 
@@ -182,11 +209,16 @@ export const darkTheme: Theme = {
     text: darkPalette.text,
     textMuted: darkPalette.textMuted,
     actionText: '#60A5FA',
+    brandSoft: 'rgba(59,130,246,0.16)',
+    glassFill: 'rgba(20,26,36,0.72)',
+    glassBorder: 'rgba(255,255,255,0.08)',
+    backdrop: '#06090F',
     financial: financialDark,
   },
   radius,
   space,
   layout,
   typography,
+  shadow,
   motion,
 }

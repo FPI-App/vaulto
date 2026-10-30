@@ -86,7 +86,6 @@ export function FormularioCategoria({
 
   const etiqueta = {
     ...theme.typography.scale.label,
-    fontFamily: theme.typography.fontFamily,
     color: theme.colors.textMuted,
     marginBottom: theme.space.xs,
   }
@@ -112,7 +111,6 @@ export function FormularioCategoria({
           numberOfLines={1}
           style={{
             ...theme.typography.scale.h3,
-            fontFamily: theme.typography.fontFamily,
             color: nombre.trim() ? theme.colors.text : theme.colors.textMuted,
             marginTop: theme.space.sm,
           }}

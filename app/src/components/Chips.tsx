@@ -1,6 +1,8 @@
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native'
+import { ScrollView, StyleSheet } from 'react-native'
 
 import { useTheme } from '@/theme'
+import { PressableScale } from './PressableScale'
+import { Text } from './Text'
 
 export interface OpcionChip<T extends string> {
   value: T
@@ -34,35 +36,32 @@ export function Chips<T extends string>({
       {options.map((opt) => {
         const activo = opt.value === value
         return (
-          <Pressable
+          <PressableScale
             key={opt.value}
             accessibilityRole="button"
             accessibilityState={{ selected: activo }}
             onPress={() => onChange(opt.value)}
             // 36 px visibles + 4 px arriba/abajo = objetivo táctil de 44 px.
             hitSlop={{ top: 4, bottom: 4 }}
-            style={({ pressed }) => [
+            style={[
               styles.chip,
               {
                 minHeight: 36,
                 borderRadius: theme.radius.full,
-                borderColor: activo ? theme.colors.brand[600] : theme.colors.border,
-                backgroundColor: activo ? theme.colors.brand[600] : theme.colors.surface,
-                opacity: pressed && !activo ? 0.7 : 1,
+                borderColor: activo ? 'transparent' : theme.colors.border,
+                backgroundColor: activo ? theme.colors.brandSoft : 'transparent',
               },
             ]}
           >
             <Text
+              variant="label"
               numberOfLines={1}
-              style={{
-                ...theme.typography.scale.label,
-                fontFamily: theme.typography.fontFamily,
-                color: activo ? '#FFFFFF' : theme.colors.text,
-              }}
+              tone={activo ? 'brand' : 'muted'}
+              style={activo && { fontFamily: theme.typography.fonts.semibold }}
             >
               {opt.label}
             </Text>
-          </Pressable>
+          </PressableScale>
         )
       })}
     </ScrollView>
@@ -70,6 +69,6 @@ export function Chips<T extends string>({
 }
 
 const styles = StyleSheet.create({
-  row: { gap: 8, paddingVertical: 2 },
+  row: { gap: 8, paddingVertical: 4 },
   chip: { borderWidth: 1, paddingHorizontal: 14, justifyContent: 'center' },
 })

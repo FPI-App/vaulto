@@ -46,7 +46,6 @@ export function CuentasScreen() {
         <Text
           style={{
             ...theme.typography.scale.h1,
-            fontFamily: theme.typography.fontFamily,
             color: theme.colors.text,
           }}
         >
@@ -60,7 +59,6 @@ export function CuentasScreen() {
           <Text
             style={{
               ...theme.typography.scale.label,
-              fontFamily: theme.typography.fontFamily,
               color: theme.colors.actionText,
             }}
           >
@@ -88,7 +86,6 @@ export function CuentasScreen() {
               <Text
                 style={{
                   ...theme.typography.scale.display,
-                  fontFamily: theme.typography.fontFamily,
                   color: theme.colors.text,
                   fontVariant: ['tabular-nums'],
                 }}
@@ -142,8 +139,7 @@ function FilaCuenta({ cuenta, onPress }: { cuenta: CuentaConSaldo; onPress: () =
           numberOfLines={1}
           style={{
             ...theme.typography.scale.bodyLg,
-            fontWeight: theme.typography.weights.semibold,
-            fontFamily: theme.typography.fontFamily,
+            fontFamily: theme.typography.fonts.semibold,
             color: theme.colors.text,
           }}
         >
@@ -156,7 +152,6 @@ function FilaCuenta({ cuenta, onPress }: { cuenta: CuentaConSaldo; onPress: () =
       <Text
         style={{
           ...theme.typography.scale.h3,
-          fontFamily: theme.typography.fontFamily,
           color: negativo ? theme.colors.financial.expense : theme.colors.text,
           fontVariant: ['tabular-nums'],
         }}

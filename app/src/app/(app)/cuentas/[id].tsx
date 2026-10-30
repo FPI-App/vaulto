@@ -96,7 +96,6 @@ export default function EditarCuentaScreen() {
               <Text
                 style={{
                   ...theme.typography.scale.label,
-                  fontFamily: theme.typography.fontFamily,
                   color: theme.colors.actionText,
                   textAlign: 'center',
                 }}
@@ -108,7 +107,6 @@ export default function EditarCuentaScreen() {
               <Text
                 style={{
                   ...theme.typography.scale.label,
-                  fontFamily: theme.typography.fontFamily,
                   color: theme.colors.financial.expense,
                   textAlign: 'center',
                 }}

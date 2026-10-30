@@ -40,7 +40,6 @@ export default function ResetScreen() {
           <Text
             style={{
               ...theme.typography.scale.h1,
-              fontFamily: theme.typography.fontFamily,
               color: theme.colors.text,
               marginTop: 48,
               marginBottom: 8,

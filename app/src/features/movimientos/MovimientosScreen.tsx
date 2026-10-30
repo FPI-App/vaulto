@@ -66,7 +66,6 @@ export function MovimientosScreen() {
         <Text
           style={{
             ...theme.typography.scale.h1,
-            fontFamily: theme.typography.fontFamily,
             color: theme.colors.text,
           }}
         >
@@ -159,7 +158,6 @@ export function MovimientosScreen() {
           <Text
             style={{
               ...theme.typography.scale.label,
-              fontFamily: theme.typography.fontFamily,
               color: theme.colors.textMuted,
               marginTop: theme.space.md,
               marginBottom: theme.space.xs,
@@ -205,8 +203,7 @@ function Total({ etiqueta, valor, color }: { etiqueta: string; valor: string; co
         adjustsFontSizeToFit
         style={{
           ...theme.typography.scale.bodyLg,
-          fontWeight: theme.typography.weights.semibold,
-          fontFamily: theme.typography.fontFamily,
+          fontFamily: theme.typography.fonts.semibold,
           color,
           fontVariant: ['tabular-nums'],
         }}
@@ -264,7 +261,6 @@ function FilaMovimiento({
           numberOfLines={1}
           style={{
             ...theme.typography.scale.bodyLg,
-            fontFamily: theme.typography.fontFamily,
             color: theme.colors.text,
           }}
         >
@@ -277,8 +273,7 @@ function FilaMovimiento({
       <Text
         style={{
           ...theme.typography.scale.bodyLg,
-          fontWeight: theme.typography.weights.semibold,
-          fontFamily: theme.typography.fontFamily,
+          fontFamily: theme.typography.fonts.semibold,
           color,
           fontVariant: ['tabular-nums'],
         }}

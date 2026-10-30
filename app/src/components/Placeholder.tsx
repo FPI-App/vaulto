@@ -25,7 +25,6 @@ export function Placeholder({
           style={{
             ...theme.typography.scale.h1,
             color: theme.colors.text,
-            fontFamily: theme.typography.fontFamily,
           }}
         >
           {title}

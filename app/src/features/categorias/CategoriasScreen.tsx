@@ -55,7 +55,6 @@ export function CategoriasScreen() {
           <Text
             style={{
               ...theme.typography.scale.label,
-              fontFamily: theme.typography.fontFamily,
               color: theme.colors.brand[600],
             }}
           >
@@ -109,7 +108,6 @@ function FilaCategoria({ categoria, onPress }: { categoria: CategoriaRow; onPres
         numberOfLines={1}
         style={{
           ...theme.typography.scale.bodyLg,
-          fontFamily: theme.typography.fontFamily,
           color: theme.colors.text,
           flex: 1,
         }}

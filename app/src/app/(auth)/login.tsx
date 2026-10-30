@@ -40,7 +40,6 @@ export default function LoginScreen() {
             <Text
               style={{
                 ...theme.typography.scale.display,
-                fontFamily: theme.typography.fontFamily,
                 color: theme.colors.text,
               }}
             >

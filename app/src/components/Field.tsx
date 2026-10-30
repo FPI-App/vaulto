@@ -1,48 +1,73 @@
-import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native'
+import { useState } from 'react'
+import { Platform, StyleSheet, TextInput, View, type TextInputProps } from 'react-native'
 
 import { useTheme } from '@/theme'
+import { Text } from './Text'
 
 export function Field({
   label,
+  hint,
+  error,
+  onFocus,
+  onBlur,
+  style,
   ...inputProps
-}: { label: string } & TextInputProps) {
+}: { label: string; hint?: string; error?: string | null } & TextInputProps) {
   const theme = useTheme()
+  const [focused, setFocused] = useState(false)
+  const borderColor = error
+    ? theme.colors.financial.expense
+    : focused
+      ? theme.colors.brand[600]
+      : theme.colors.border
+
   return (
     <View style={styles.wrapper}>
-      <Text
-        style={{
-          ...theme.typography.scale.label,
-          fontFamily: theme.typography.fontFamily,
-          color: theme.colors.textMuted,
-          marginBottom: theme.space.xs,
-        }}
-      >
+      <Text variant="label" tone="muted" style={{ marginBottom: theme.space.sm }}>
         {label}
       </Text>
       <TextInput
         accessibilityLabel={label}
-        placeholderTextColor={theme.colors.textMuted}
+        placeholderTextColor={theme.mode === 'dark' ? '#5F6B7B' : theme.colors.textMuted}
+        onFocus={(e) => {
+          setFocused(true)
+          onFocus?.(e)
+        }}
+        onBlur={(e) => {
+          setFocused(false)
+          onBlur?.(e)
+        }}
         style={[
           styles.input,
+          theme.typography.scale.bodyLg,
           {
-            minHeight: theme.layout.minTouchTarget,
+            minHeight: 52,
             borderRadius: theme.radius.sm,
-            borderColor: theme.colors.border,
+            borderColor,
+            borderWidth: focused || error ? 1.5 : 1,
             backgroundColor: theme.colors.surface,
             color: theme.colors.text,
-            ...theme.typography.scale.bodyLg,
           },
+          // El anillo de foco lo dibuja el borde; en web se quita el outline nativo.
+          Platform.OS === 'web' && ({ outlineStyle: 'none' } as object),
+          style,
         ]}
         {...inputProps}
       />
+      {error ? (
+        <Text accessibilityRole="alert" variant="caption" tone="expense" style={{ marginTop: 6 }}>
+          {error}
+        </Text>
+      ) : hint ? (
+        <Text variant="caption" tone="muted" style={{ marginTop: 6 }}>
+          {hint}
+        </Text>
+      ) : null}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  wrapper: { marginBottom: 16 },
-  input: {
-    borderWidth: 1,
-    paddingHorizontal: 14,
-  },
+  wrapper: { marginBottom: 18 },
+  input: { paddingHorizontal: 16 },
 })

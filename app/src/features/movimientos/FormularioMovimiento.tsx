@@ -97,7 +97,6 @@ export function FormularioMovimiento({
 
   const etiqueta = {
     ...theme.typography.scale.label,
-    fontFamily: theme.typography.fontFamily,
     color: theme.colors.textMuted,
     marginBottom: theme.space.xs,
   }
@@ -195,7 +194,6 @@ export function FormularioMovimiento({
           <Text
             style={{
               ...theme.typography.scale.display,
-              fontFamily: theme.typography.fontFamily,
               color: colorMonto,
             }}
           >
@@ -215,7 +213,6 @@ export function FormularioMovimiento({
               styles.montoInput,
               {
                 ...theme.typography.scale.display,
-                fontFamily: theme.typography.fontFamily,
                 color: colorMonto,
                 fontVariant: ['tabular-nums'],
               },
