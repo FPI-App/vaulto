@@ -45,7 +45,7 @@ export function DeudasScreen() {
       title="Deudas"
       tabBar
       headerRight={
-        <Button label="Nueva" icon={Plus} size="md" onPress={() => router.push('/deudas/nueva')} />
+        <Button label="Nueva" variant="ghost" icon={Plus} size="md" onPress={() => router.push('/deudas/nueva')} />
       }
     >
       <View style={[styles.fila, { gap: theme.space.md, marginBottom: theme.space.lg }]}>
