@@ -88,7 +88,8 @@ function AuthenticatedTabs({ userId }: { userId: string }) {
         <Tabs.Screen name="movimientos" options={{ title: 'Movimientos' }} />
         <Tabs.Screen name="deudas" options={{ title: 'Deudas' }} />
         <Tabs.Screen name="perfil" options={{ title: 'Perfil' }} />
-        <Tabs.Screen name="categorias" options={{ href: null }} />
+        {/* Ruta accesible sin botón propio: `href: null` la marca hidden y expo-router redirige al ancla. */}
+        <Tabs.Screen name="categorias" options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }} />
       </Tabs.Protected>
       <Tabs.Protected guard={!isCompleted} redirectTo="/(app)">
         <Tabs.Screen name="onboarding" options={{ title: 'Configuración inicial' }} />
