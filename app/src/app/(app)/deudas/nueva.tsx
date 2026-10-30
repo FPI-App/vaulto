@@ -1,13 +1,13 @@
 import { useRouter } from 'expo-router'
 import { usePowerSync } from '@powersync/react-native'
 import { useState } from 'react'
-import { Alert } from 'react-native'
 
 import { ModalHeader } from '@/components/ModalHeader'
 import { Screen } from '@/components/Screen'
 import { FormularioDeuda } from '@/features/deudas/FormularioDeuda'
 import { crearDeuda, type DatosDeuda } from '@/features/deudas/data/deudasRepo'
 import { useEspacioActual } from '@/lib/espacio/useEspacioActual'
+import { showAlert } from '@/lib/ui/alert'
 
 export default function NuevaDeudaScreen() {
   const router = useRouter()
@@ -17,7 +17,7 @@ export default function NuevaDeudaScreen() {
 
   async function guardar(datos: DatosDeuda) {
     if (!espacioId) {
-      Alert.alert('Sin espacio', 'No hay un espacio activo todavía.')
+      showAlert('Sin espacio', 'No hay un espacio activo todavía.')
       return
     }
     setGuardando(true)
@@ -25,7 +25,7 @@ export default function NuevaDeudaScreen() {
       await crearDeuda(db, espacioId, datos)
       router.back()
     } catch (error) {
-      Alert.alert('No se pudo guardar', String(error))
+      showAlert('No se pudo guardar', String(error))
       setGuardando(false)
     }
   }

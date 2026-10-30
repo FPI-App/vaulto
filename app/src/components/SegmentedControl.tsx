@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
 
 import { useTheme } from '@/theme'
+import { Text } from './Text'
 
 export interface OpcionSegmento<T extends string> {
   value: T
@@ -20,34 +21,30 @@ export function SegmentedControl<T extends string>({
   const theme = useTheme()
   return (
     <View
-      style={[
-        styles.row,
-        { backgroundColor: theme.colors.surface2, borderRadius: theme.radius.sm },
-      ]}
+      accessibilityRole="tablist"
+      style={[styles.row, { backgroundColor: theme.colors.surface2, borderRadius: theme.radius.md }]}
     >
       {options.map((opt) => {
         const active = opt.value === value
         return (
           <Pressable
             key={opt.value}
-            accessibilityRole="button"
+            accessibilityRole="tab"
             accessibilityState={{ selected: active }}
             onPress={() => onChange(opt.value)}
-            style={({ pressed }) => [
+            style={[
               styles.seg,
               {
-                borderRadius: theme.radius.xs,
+                borderRadius: theme.radius.sm,
                 backgroundColor: active ? theme.colors.surface : 'transparent',
-                opacity: pressed && !active ? 0.7 : 1,
               },
+              active && theme.shadow.sm,
             ]}
           >
             <Text
-              style={{
-                ...theme.typography.scale.label,
-                fontFamily: theme.typography.fontFamily,
-                color: active ? theme.colors.brand[600] : theme.colors.textMuted,
-              }}
+              variant="label"
+              tone={active ? 'default' : 'muted'}
+              style={active && { fontFamily: theme.typography.fonts.semibold }}
             >
               {opt.label}
             </Text>
@@ -60,5 +57,5 @@ export function SegmentedControl<T extends string>({
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 4, padding: 4 },
-  seg: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 10 },
+  seg: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 40 },
 })

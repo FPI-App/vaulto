@@ -1,11 +1,12 @@
 import { usePowerSync, useQuery, useStatus } from '@powersync/react-native'
-import { Alert, Text, View } from 'react-native'
+import { Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { SyncUploadError } from '@/lib/sync/SyncUploadError'
 import { useTheme } from '@/theme'
 import { Button } from '@/components/Button'
 import { SyncRecoveryStore, esLoteAbono, type RecoveryRow, type SyncOperation } from '@/lib/sync/SyncRecoveryStore'
+import { showAlert } from '@/lib/ui/alert'
 
 function resumir(row: RecoveryRow | undefined): { deudaId: string; monto: string; currency: string } | null {
   try {
@@ -41,12 +42,12 @@ export function SyncUploadNotice() {
       {pending && summary ? (
         <View style={{ paddingHorizontal: theme.layout.screenPadding, paddingBottom: theme.space.sm }}>
           {pending.decision === 'requested' ? <Text style={{ color: theme.colors.textMuted }}>Anulación pendiente de conexión. Conservamos el registro del abono.</Text> : (
-            <Button label="Revisar abono pendiente" variant="ghost" onPress={() => Alert.alert(
+            <Button label="Revisar abono pendiente" variant="ghost" onPress={() => showAlert(
               'Anular abono pendiente',
               `Abono de ${summary.monto} ${summary.currency}${deudas[0]?.contraparte ? ` a ${deudas[0].contraparte}` : ''}. Se anulará este abono rechazado y su ajuste de saldo asociado. Conservaremos un registro en este dispositivo. Los pagos ya sincronizados no se eliminan.`,
               [
                 { text: 'Volver', style: 'cancel' },
-                { text: 'Anular abono', onPress: () => { void new SyncRecoveryStore(db).requestCancellation(pending.batch_id).catch(() => Alert.alert('No se pudo solicitar la anulación', 'Tus datos siguen guardados. Inténtalo de nuevo.')) } },
+                { text: 'Anular abono', onPress: () => { void new SyncRecoveryStore(db).requestCancellation(pending.batch_id).catch(() => showAlert('No se pudo solicitar la anulación', 'Tus datos siguen guardados. Inténtalo de nuevo.')) } },
               ],
             )} />
           )}

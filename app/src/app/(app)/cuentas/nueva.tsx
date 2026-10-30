@@ -1,13 +1,13 @@
 import { useRouter } from 'expo-router'
 import { usePowerSync } from '@powersync/react-native'
 import { useRef, useState } from 'react'
-import { Alert } from 'react-native'
 
 import { ModalHeader } from '@/components/ModalHeader'
 import { Screen } from '@/components/Screen'
 import { crearCuenta, type DatosCuenta } from '@/features/cuentas/data/cuentasRepo'
 import { FormularioCuenta } from '@/features/cuentas/FormularioCuenta'
 import { useEspacioActual } from '@/lib/espacio/useEspacioActual'
+import { showAlert } from '@/lib/ui/alert'
 
 export default function NuevaCuentaScreen() {
   const router = useRouter()
@@ -19,14 +19,14 @@ export default function NuevaCuentaScreen() {
   function onSubmit(datos: DatosCuenta) {
     if (operacionPendiente.current) return
     if (!espacioId) {
-      Alert.alert('Sin espacio', 'No hay un espacio activo todavía.')
+      showAlert('Sin espacio', 'No hay un espacio activo todavía.')
       return
     }
     operacionPendiente.current = true
     setGuardando(true)
     crearCuenta(db, espacioId, datos)
       .then(() => router.back())
-      .catch(() => Alert.alert('No se pudo guardar', 'Revisa los datos de la cuenta e inténtalo de nuevo.'))
+      .catch(() => showAlert('No se pudo guardar', 'Revisa los datos de la cuenta e inténtalo de nuevo.'))
       .finally(() => {
         operacionPendiente.current = false
         setGuardando(false)
