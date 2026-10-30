@@ -107,6 +107,7 @@ export function DeudasScreen() {
                     <>
                       <Amount
                         value={item.saldo_pendiente}
+                        currency={item.currency}
                         variant="bodyLg"
                         tone={saldada ? 'success' : 'debt'}
                         style={{ fontFamily: theme.typography.fonts.semibold }}

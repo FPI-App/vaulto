@@ -142,6 +142,7 @@ export default function DeudaDetalleScreen() {
               ) : (
                 <Amount
                   value={deuda.saldo_pendiente}
+                  currency={deuda.currency}
                   variant="display"
                   tone={deuda.estado === 'saldada' ? 'success' : 'debt'}
                   adjustsFontSizeToFit
@@ -176,7 +177,7 @@ export default function DeudaDetalleScreen() {
                   <Text variant="caption" tone="muted">
                     Pagado {Math.round(progreso * 100)} %
                   </Text>
-                  <Amount value={deuda.monto_inicial} variant="caption" tone="muted" accessibilityLabel={`de ${formatCOP(deuda.monto_inicial, deuda.currency)}`} />
+                  <Amount value={deuda.monto_inicial} currency={deuda.currency} variant="caption" tone="muted" accessibilityLabel={`de ${formatCOP(deuda.monto_inicial, deuda.currency)}`} />
                 </View>
               </View>
             ) : null}
@@ -216,7 +217,7 @@ export default function DeudaDetalleScreen() {
                   divider={i < abonos.length - 1}
                   title={new Date(pago.fecha).toLocaleDateString('es-CO')}
                   subtitle={pago.nota ?? undefined}
-                  trailing={<Amount value={pago.monto} variant="bodyLg" />}
+                  trailing={<Amount value={pago.monto} currency={pago.currency} variant="bodyLg" />}
                 />
               ))
             )}

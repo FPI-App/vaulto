@@ -2,9 +2,10 @@
 import { useRouter } from 'expo-router'
 import ArrowLeftRight from 'lucide-react-native/icons/arrow-left-right'
 import ReceiptText from 'lucide-react-native/icons/receipt-text'
+import SlidersHorizontal from 'lucide-react-native/icons/sliders-horizontal'
 import Tags from 'lucide-react-native/icons/tags'
 import { useMemo, useState } from 'react'
-import { FlatList, StyleSheet, View } from 'react-native'
+import { FlatList, Pressable, StyleSheet, View } from 'react-native'
 import {
   formatCOP,
   rangoDeMes,
@@ -45,6 +46,10 @@ export function MovimientosScreen() {
   const [tipo, setTipo] = useState<FiltroTipo>('todos')
   const [cuentaId, setCuentaId] = useState<string>(TODAS)
   const [categoriaId, setCategoriaId] = useState<string>(TODAS)
+  // Cuenta y categoría van plegadas: con periodo y tipo ya hay dos filas de chips.
+  const [masFiltros, setMasFiltros] = useState(false)
+  const filtroExtra = cuentaId !== TODAS || categoriaId !== TODAS
+  const verMasFiltros = masFiltros || filtroExtra
   // El filtro de categoría solo aplica a gastos o ingresos (las transferencias no tienen).
   const tipoConCategoria = tipo === 'ingreso' || tipo === 'egreso' ? tipo : null
   const { categorias } = useCategorias(espacioId, tipoConCategoria ?? 'egreso')
@@ -115,21 +120,49 @@ export function MovimientosScreen() {
                   { value: 'transferencia', label: 'Transferencias' },
                 ]}
               />
-              {cuentas.length > 1 ? (
-                <Chips
-                  accessibilityLabel="Cuenta"
-                  value={cuentaId}
-                  onChange={setCuentaId}
-                  options={[{ value: TODAS, label: 'Todas las cuentas' }, ...cuentas.map((c) => ({ value: c.id, label: c.nombre }))]}
-                />
+              {verMasFiltros ? (
+                <>
+                {cuentas.length > 1 ? (
+                  <Chips
+                    accessibilityLabel="Cuenta"
+                    value={cuentaId}
+                    onChange={setCuentaId}
+                    options={[{ value: TODAS, label: 'Todas las cuentas' }, ...cuentas.map((c) => ({ value: c.id, label: c.nombre }))]}
+                  />
+                ) : null}
+                {tipoConCategoria && categorias.length > 0 ? (
+                  <Chips
+                    accessibilityLabel="Categoría"
+                    value={categoriaId}
+                    onChange={setCategoriaId}
+                    options={[{ value: TODAS, label: 'Todas las categorías' }, ...categorias.map((c) => ({ value: c.id, label: c.nombre }))]}
+                  />
+                ) : null}
+                </>
               ) : null}
-              {tipoConCategoria && categorias.length > 0 ? (
-                <Chips
-                  accessibilityLabel="Categoría"
-                  value={categoriaId}
-                  onChange={setCategoriaId}
-                  options={[{ value: TODAS, label: 'Todas las categorías' }, ...categorias.map((c) => ({ value: c.id, label: c.nombre }))]}
-                />
+              {cuentas.length > 1 || (tipoConCategoria && categorias.length > 0) ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: verMasFiltros }}
+                  onPress={() => {
+                    // Plegar también limpia: no deben quedar filtros activos ocultos.
+                    if (verMasFiltros) {
+                      setCuentaId(TODAS)
+                      setCategoriaId(TODAS)
+                    }
+                    setMasFiltros(!verMasFiltros)
+                  }}
+                  style={styles.masFiltros}
+                >
+                  <SlidersHorizontal size={16} color={theme.colors.actionText} strokeWidth={2} />
+                  <Text variant="label" tone="brand">
+                    {verMasFiltros
+                      ? filtroExtra
+                        ? 'Quitar filtro de cuenta o categoría'
+                        : 'Menos filtros'
+                      : 'Filtrar por cuenta o categoría'}
+                  </Text>
+                </Pressable>
               ) : null}
             </View>
 
@@ -234,6 +267,7 @@ function FilaMovimiento({
       trailing={
         <Amount
           value={mov.monto}
+          currency={mov.currency}
           kind={kind}
           variant="bodyLg"
           style={{ fontFamily: theme.typography.fonts.semibold }}
@@ -282,6 +316,7 @@ function agruparPorDia(movs: MovimientoListado[]): SeccionDia[] {
 }
 
 const styles = StyleSheet.create({
+  masFiltros: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, alignSelf: 'flex-start' },
   resumen: { flexDirection: 'row', gap: 12 },
   total: { flex: 1, gap: 2 },
   emptyWrap: { minHeight: 320, flexDirection: 'row' },

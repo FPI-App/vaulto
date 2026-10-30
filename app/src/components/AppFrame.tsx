@@ -58,6 +58,8 @@ const styles = StyleSheet.create({
  * Ajustes del documento en web que React Native no expresa:
  * - `lang`: el contenido es español; sin esto el lector de pantalla lo lee en inglés (WCAG 3.1.1).
  * - Foco visible solo con teclado (WCAG 2.4.7): react-native-web quita el outline de los pulsables.
+ * - Pestañas inactivas: quedan montadas con aria-hidden pero seguían recibiendo
+ *   foco con Tab. Se les pone `inert` mientras estén ocultas.
  */
 function useWebDocument(focusColor: string) {
   useEffect(() => {
@@ -73,6 +75,24 @@ function useWebDocument(focusColor: string) {
       }
     `
     document.head.appendChild(style)
-    return () => style.remove()
+
+    const syncInert = () => {
+      document.querySelectorAll<HTMLElement>('[aria-hidden="true"]:not([inert])').forEach((el) => {
+        el.inert = true
+        el.dataset.vaultoInert = '1'
+      })
+      document.querySelectorAll<HTMLElement>('[data-vaulto-inert]:not([aria-hidden="true"])').forEach((el) => {
+        el.inert = false
+        delete el.dataset.vaultoInert
+      })
+    }
+    syncInert()
+    const observer = new MutationObserver(syncInert)
+    observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['aria-hidden'] })
+
+    return () => {
+      observer.disconnect()
+      style.remove()
+    }
   }, [focusColor])
 }

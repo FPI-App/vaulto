@@ -179,7 +179,13 @@ function FilaVencimiento({ v, divider }: { v: VencimientoResumen; divider: boole
       subtitle={etiquetaVencimiento(v.fecha_limite)}
       trailing={
         <>
-          <Amount value={v.saldo_pendiente} variant="bodyLg" style={{ fontFamily: theme.typography.fonts.semibold }} />
+          <Amount
+            value={v.saldo_pendiente}
+            currency={v.currency}
+            variant="bodyLg"
+            tone="debt"
+            style={{ fontFamily: theme.typography.fonts.semibold }}
+          />
           {urgente ? (
             <Text variant="caption" tone="warning" style={{ marginTop: 2 }}>
               Pronto

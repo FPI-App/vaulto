@@ -3,14 +3,8 @@
 //   GestureHandlerRootView → SafeAreaProvider → ThemeProvider → AuthProvider →
 //   [SyncProviders cuando hay sesión] → Stack
 // PowerSync abre/cifra la SQLite local: solo se monta con sesión (no en login).
-import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-  useFonts,
-} from '@expo-google-fonts/inter'
-import { Stack } from 'expo-router'
+import { useFonts } from 'expo-font'
+import { Stack, usePathname } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { type ReactNode } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -20,8 +14,10 @@ import { AppFrame } from '@/components/AppFrame'
 import { AuthProvider, useAuth } from '@/lib/auth/AuthProvider'
 import { DeudasSelectorsProvider } from '@/lib/deudas/DeudasSelectorsProvider'
 import { PowerSyncProvider } from '@/lib/powersync/PowerSyncProvider'
+import { rememberInitialPath } from '@/lib/navigation/initialPath'
 import { AlertHost } from '@/lib/ui/alert'
 import { ThemeProvider, useTheme } from '@/theme'
+import { fontSources } from '@/theme/fontSources'
 
 /**
  * Monta los providers de sincronización solo cuando hay sesión. Sin ella
@@ -44,6 +40,7 @@ function SyncProviders({ children }: { children: ReactNode }) {
 
 function Navigation() {
   const { session, initializing, isRecoveringPassword } = useAuth()
+  rememberInitialPath(usePathname())
 
   return (
     <SyncProviders>
@@ -66,7 +63,7 @@ function ThemedStatusBar() {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold })
+  const [fontsLoaded, fontError] = useFonts(fontSources)
   // Si la fuente falla se sigue con la del sistema: no bloquear la app por tipografía.
   if (!fontsLoaded && !fontError) return null
 

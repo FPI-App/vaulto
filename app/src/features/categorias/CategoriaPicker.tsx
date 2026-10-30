@@ -58,8 +58,8 @@ export function CategoriaPicker({
               <Text
                 variant="caption"
                 tone={activa ? 'default' : 'muted'}
-                numberOfLines={1}
-                style={{ marginTop: 4, ...(activa && { fontFamily: theme.typography.fonts.semibold }) }}
+                numberOfLines={2}
+                style={{ marginTop: 6, textAlign: 'center', ...(activa && { fontFamily: theme.typography.fonts.semibold }) }}
               >
                 {c.nombre}
               </Text>
@@ -82,6 +82,7 @@ export function CategoriaPicker({
 }
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  celda: { width: 76, minHeight: 72, alignItems: 'center', paddingVertical: 8, paddingHorizontal: 2, borderWidth: 2 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 4 },
+  // Tres columnas: con cinco, «Entretenimiento» y «Restaurantes» quedaban cortados.
+  celda: { width: '33.333%', minHeight: 84, alignItems: 'center', paddingVertical: 10, paddingHorizontal: 4, borderWidth: 2 },
 })

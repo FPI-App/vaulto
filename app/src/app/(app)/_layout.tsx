@@ -1,10 +1,12 @@
-import { Tabs } from 'expo-router'
+import { router, Tabs, type Href } from 'expo-router'
+import { useEffect } from 'react'
 import { ActivityIndicator, View } from 'react-native'
 import { useQuery, useStatus } from '@powersync/react-native'
 
 import { Screen } from '@/components/Screen'
 import { Text } from '@/components/Text'
 import { TabBar } from '@/components/TabBar'
+import { takeInitialPath } from '@/lib/navigation/initialPath'
 import { useTheme } from '@/theme'
 import { useAuth } from '@/lib/auth/AuthProvider'
 
@@ -41,7 +43,14 @@ function AuthenticatedTabs({ userId }: { userId: string }) {
     myProfile && (myProfile.onboarding_completo === 1 || myProfile.onboarding_completo === true),
   )
 
-  if (isLoading || error || (!myProfile && !hasSynced)) {
+  const ready = !(isLoading || error || (!myProfile && !hasSynced))
+  useEffect(() => {
+    if (!ready || !isCompleted) return
+    const path = takeInitialPath()
+    if (path) router.replace(path as Href)
+  }, [ready, isCompleted])
+
+  if (!ready) {
     return (
       <Screen>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16 }}>
