@@ -1,11 +1,14 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { usePowerSync } from '@powersync/react-native'
 import { useRef, useState } from 'react'
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native'
+import Trash from 'lucide-react-native/icons/trash'
+import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native'
 import { esIconoCategoria } from '@vaulto/shared'
 
+import { Button } from '@/components/Button'
 import { ModalHeader } from '@/components/ModalHeader'
 import { Screen } from '@/components/Screen'
+import { Text } from '@/components/Text'
 import {
   actualizarCategoria,
   eliminarCategoria,
@@ -64,7 +67,7 @@ export default function EditarCategoriaScreen() {
           {cargando ? (
             <ActivityIndicator color={theme.colors.brand[600]} />
           ) : (
-            <Text style={{ ...theme.typography.scale.body, color: theme.colors.textMuted }}>
+            <Text tone="muted">
               Categoría no encontrada.
             </Text>
           )}
@@ -83,21 +86,9 @@ export default function EditarCategoriaScreen() {
               color: categoria.color ?? undefined,
             }}
           />
-          <Pressable
-            accessibilityRole="button"
-            onPress={confirmarEliminar}
-            hitSlop={8}
-            style={[styles.eliminar, { minHeight: theme.layout.minTouchTarget }]}
-          >
-            <Text
-              style={{
-                ...theme.typography.scale.label,
-                color: theme.colors.financial.expense,
-              }}
-            >
-              Eliminar categoría
-            </Text>
-          </Pressable>
+          <View style={styles.eliminar}>
+            <Button label="Eliminar categoría" variant="danger" icon={Trash} onPress={confirmarEliminar} />
+          </View>
         </>
       )}
     </Screen>
@@ -106,5 +97,5 @@ export default function EditarCategoriaScreen() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  eliminar: { alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
+  eliminar: { marginTop: 8, marginBottom: 24 },
 })

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Text, Alert } from 'react-native'
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Alert } from 'react-native'
 import { completarOnboarding } from '@/features/onboarding/onboardingRepo'
 import { usePowerSync } from '@powersync/react-native'
 
@@ -7,6 +7,9 @@ import { useTheme } from '@/theme'
 import { Screen } from '@/components/Screen'
 import { Field } from '@/components/Field'
 import { Button } from '@/components/Button'
+import { Card } from '@/components/Card'
+import { LogoMark } from '@/components/Logo'
+import { Text } from '@/components/Text'
 import { useAuth } from '@/lib/auth/AuthProvider'
 
 export default function OnboardingScreen() {
@@ -41,17 +44,22 @@ export default function OnboardingScreen() {
   return (
     <Screen padded edges={['top', 'bottom']}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1 }}>
-          <View style={styles.header}>
-            <Text style={{ ...theme.typography.scale.h1, fontFamily: theme.typography.fontFamily, color: theme.colors.text }}>
-              Te damos la bienvenida a Vaulto
-            </Text>
-            <Text style={{ ...theme.typography.scale.bodyLg, fontFamily: theme.typography.fontFamily, color: theme.colors.textMuted, marginTop: theme.space.xs }}>
-              Para comenzar, configuremos tu perfil y tu espacio personal.
-            </Text>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.scroll, { paddingVertical: theme.space['3xl'] }]}
+        >
+          <View style={{ marginBottom: theme.space['3xl'] }}>
+            <LogoMark size={56} />
           </View>
+          <Text variant="h1" accessibilityRole="header">
+            Empecemos por lo básico
+          </Text>
+          <Text variant="bodyLg" tone="muted" style={{ marginTop: theme.space.sm, marginBottom: theme.space['3xl'] }}>
+            Cuéntanos cómo te llamas y configuramos tu espacio personal. Podrás cambiarlo cuando quieras.
+          </Text>
 
-          <View style={styles.form}>
+          <Card>
             <Field
               label="Nombre"
               placeholder="Ej: Juan"
@@ -75,9 +83,9 @@ export default function OnboardingScreen() {
               autoCorrect={false}
               editable={!loading}
             />
-          </View>
+          </Card>
 
-          <View style={styles.footer}>
+          <View style={{ marginTop: theme.space['2xl'] }}>
             <Button
               label="Comenzar"
               onPress={handleComenzar}
@@ -92,14 +100,5 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    marginTop: 32,
-    marginBottom: 32,
-  },
-  form: {
-    flex: 1,
-  },
-  footer: {
-    paddingVertical: 24,
-  },
+  scroll: { flexGrow: 1, justifyContent: 'center', maxWidth: 440, width: '100%', alignSelf: 'center' },
 })

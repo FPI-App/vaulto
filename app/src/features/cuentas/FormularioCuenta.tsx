@@ -2,12 +2,13 @@
 // recibe datos iniciales y entrega `DatosCuenta` validados vía onSubmit. Así lo
 // reutilizan la pantalla "nueva" y la de edición sin duplicar validación.
 import { useState } from 'react'
-import { Alert, ScrollView, Text, View } from 'react-native'
+import { Alert, ScrollView, View } from 'react-native'
 import { normalizarMontoInput, type TipoCuenta } from '@vaulto/shared'
 
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
 import { SegmentedControl } from '@/components/SegmentedControl'
+import { Text } from '@/components/Text'
 import { useTheme } from '@/theme'
 
 import type { DatosCuenta } from './data/cuentasRepo'
@@ -60,17 +61,11 @@ export function FormularioCuenta({
   return (
     <ScrollView
       keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{ paddingVertical: theme.space.lg }}
+      contentContainerStyle={{ paddingVertical: theme.space.lg, paddingBottom: theme.space['2xl'] }}
       showsVerticalScrollIndicator={false}
     >
       <View style={{ marginBottom: theme.space.lg }}>
-        <Text
-          style={{
-            ...theme.typography.scale.label,
-            color: theme.colors.textMuted,
-            marginBottom: theme.space.xs,
-          }}
-        >
+        <Text variant="label" tone="muted" style={{ marginBottom: theme.space.sm }}>
           Tipo
         </Text>
         <SegmentedControl<TipoCuenta>
@@ -109,6 +104,7 @@ export function FormularioCuenta({
         placeholder="0"
         keyboardType="numeric"
         inputMode="numeric"
+        hint="Lo que hay en la cuenta hoy. Puedes dejarlo vacío para empezar en cero."
       />
 
       <Button label={ctaLabel} onPress={submit} loading={guardando} />

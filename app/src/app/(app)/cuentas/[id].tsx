@@ -1,11 +1,16 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { usePowerSync } from '@powersync/react-native'
 import { useRef, useState } from 'react'
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native'
+import Archive from 'lucide-react-native/icons/archive'
+import ArchiveRestore from 'lucide-react-native/icons/archive-restore'
+import Trash from 'lucide-react-native/icons/trash'
+import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native'
 import { formatMontoInput } from '@vaulto/shared'
 
+import { Button } from '@/components/Button'
 import { ModalHeader } from '@/components/ModalHeader'
 import { Screen } from '@/components/Screen'
+import { Text } from '@/components/Text'
 import {
   actualizarCuenta,
   archivarCuenta,
@@ -72,7 +77,7 @@ export default function EditarCuentaScreen() {
           {cargando ? (
             <ActivityIndicator color={theme.colors.brand[600]} />
           ) : (
-            <Text style={{ ...theme.typography.scale.body, color: theme.colors.textMuted }}>
+            <Text tone="muted" style={{ textAlign: 'center' }}>
               {error ? 'No se pudo cargar la cuenta. Inténtalo de nuevo.' : 'Cuenta no encontrada en este espacio.'}
             </Text>
           )}
@@ -92,28 +97,20 @@ export default function EditarCuentaScreen() {
             }}
           />
           <View style={styles.acciones}>
-            <Pressable accessibilityRole="button" accessibilityState={{ disabled: guardando }} disabled={guardando} onPress={toggleArchivar} hitSlop={8}>
-              <Text
-                style={{
-                  ...theme.typography.scale.label,
-                  color: theme.colors.actionText,
-                  textAlign: 'center',
-                }}
-              >
-                {cuenta.archivada === 1 ? 'Desarchivar cuenta' : 'Archivar cuenta'}
-              </Text>
-            </Pressable>
-            <Pressable accessibilityRole="button" accessibilityState={{ disabled: guardando }} disabled={guardando} onPress={confirmarEliminar} hitSlop={8}>
-              <Text
-                style={{
-                  ...theme.typography.scale.label,
-                  color: theme.colors.financial.expense,
-                  textAlign: 'center',
-                }}
-              >
-                Eliminar cuenta
-              </Text>
-            </Pressable>
+            <Button
+              label={cuenta.archivada === 1 ? 'Desarchivar cuenta' : 'Archivar cuenta'}
+              variant="secondary"
+              icon={cuenta.archivada === 1 ? ArchiveRestore : Archive}
+              disabled={guardando}
+              onPress={toggleArchivar}
+            />
+            <Button
+              label="Eliminar cuenta"
+              variant="danger"
+              icon={Trash}
+              disabled={guardando}
+              onPress={confirmarEliminar}
+            />
           </View>
         </>
       )}
@@ -123,5 +120,5 @@ export default function EditarCuentaScreen() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  acciones: { gap: 16, marginTop: 8, marginBottom: 24 },
+  acciones: { gap: 12, marginTop: 8, marginBottom: 24 },
 })

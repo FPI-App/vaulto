@@ -1,8 +1,11 @@
 import { useQuery, usePowerSync } from '@powersync/react-native'
 import { useRef, useState } from 'react'
-import { Alert, Image, ScrollView, Text, View } from 'react-native'
+import { Alert, Image, View } from 'react-native'
+import LogOut from 'lucide-react-native/icons/log-out'
 
 import { Button } from '@/components/Button'
+import { Card } from '@/components/Card'
+import { Text } from '@/components/Text'
 import { Field } from '@/components/Field'
 import { Screen } from '@/components/Screen'
 import { useAuth } from '@/lib/auth/AuthProvider'
@@ -31,18 +34,20 @@ export function PerfilScreen() {
   const perfil = data[0]
 
   return (
-    <Screen>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingVertical: theme.space.lg, flexGrow: 1 }}>
-        <Text style={{ ...theme.typography.scale.h1, color: theme.colors.text, fontFamily: theme.typography.fontFamily, marginBottom: theme.space.lg }}>
-          Perfil
-        </Text>
-        {isLoading ? <Text style={{ color: theme.colors.textMuted }}>Cargando perfil…</Text> : null}
-        {!isLoading && !perfil ? <Text style={{ ...theme.typography.scale.body, color: theme.colors.textMuted }}>Aún no encontramos tu perfil. Completa el registro inicial.</Text> : null}
-        {perfil ? <PerfilEditor key={perfil.id} perfil={perfil} /> : null}
-        <View style={{ marginTop: theme.space.lg }}>
-          <Button label="Cerrar sesión" variant="ghost" onPress={() => signOut().catch(() => Alert.alert('No se pudo cerrar sesión', 'Intenta de nuevo.'))} />
-        </View>
-      </ScrollView>
+    <Screen title="Perfil" scroll tabBar>
+      {isLoading ? <Text tone="muted">Cargando perfil…</Text> : null}
+      {!isLoading && !perfil ? (
+        <Text tone="muted">Aún no encontramos tu perfil. Completa el registro inicial.</Text>
+      ) : null}
+      {perfil ? <PerfilEditor key={perfil.id} perfil={perfil} /> : null}
+      <View style={{ marginTop: theme.space.xl }}>
+        <Button
+          label="Cerrar sesión"
+          variant="secondary"
+          icon={LogOut}
+          onPress={() => signOut().catch(() => Alert.alert('No se pudo cerrar sesión', 'Intenta de nuevo.'))}
+        />
+      </View>
     </Screen>
   )
 }
@@ -83,25 +88,54 @@ function PerfilEditor({ perfil }: { perfil: PerfilRow }) {
     }
   }
 
+  const iniciales = `${perfil.nombre.slice(0, 1)}${perfil.apellido.slice(0, 1)}`.toUpperCase()
+
   return (
     <>
-      <View style={{ alignItems: 'center', marginBottom: theme.space.lg }}>
+      <View style={{ alignItems: 'center', marginBottom: theme.space['2xl'] }}>
         {foto && foto !== fotoFallida ? (
-          <Image source={{ uri: foto }} accessibilityLabel="Tu foto de perfil" style={{ width: 96, height: 96, borderRadius: 48 }} onError={() => setFotoFallida(foto)} />
+          <Image
+            source={{ uri: foto }}
+            accessibilityLabel="Tu foto de perfil"
+            style={{ width: 96, height: 96, borderRadius: 48 }}
+            onError={() => setFotoFallida(foto)}
+          />
         ) : (
-          <View accessibilityLabel="Perfil sin foto disponible" style={{ width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.surface }}>
-            <Text style={{ ...theme.typography.scale.h1, color: theme.colors.text }}>{perfil.nombre.slice(0, 1)}{perfil.apellido.slice(0, 1)}</Text>
+          <View
+            accessibilityLabel="Perfil sin foto disponible"
+            style={{
+              width: 96,
+              height: 96,
+              borderRadius: 48,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: theme.colors.brandSoft,
+            }}
+          >
+            <Text variant="h1" tone="brand">
+              {iniciales}
+            </Text>
           </View>
         )}
+        <Text variant="h2" style={{ marginTop: theme.space.lg }} numberOfLines={1}>
+          {`${perfil.nombre} ${perfil.apellido}`.trim()}
+        </Text>
+        <Text tone="muted" style={{ marginTop: 2 }} numberOfLines={1}>
+          @{perfil.username}
+        </Text>
       </View>
-      <Field label="Nombre" value={nombre ?? perfil.nombre} onChangeText={setNombre} autoCapitalize="words" maxLength={80} editable={!guardando} />
-      <Field label="Apellido" value={apellido ?? perfil.apellido} onChangeText={setApellido} autoCapitalize="words" maxLength={80} editable={!guardando} />
-      <Field label="Nombre de usuario" value={username ?? perfil.username} onChangeText={setUsername} autoCapitalize="none" autoCorrect={false} maxLength={24} editable={!guardando} />
-      <Field label="URL de foto (opcional)" value={fotoUrl ?? perfil.foto_url ?? ''} onChangeText={setFotoUrl} autoCapitalize="none" autoCorrect={false} keyboardType="url" placeholder="https://…" maxLength={2048} editable={!guardando} />
-      <Text style={{ ...theme.typography.scale.caption, color: theme.colors.textMuted, marginBottom: theme.space.lg }}>Usa un enlace HTTPS a una imagen. Deja el campo vacío para quitar la foto.</Text>
-      <Field label="Ocupación (opcional)" value={ocupacion ?? perfil.ocupacion ?? ''} onChangeText={setOcupacion} maxLength={100} editable={!guardando} />
-      <Field label="Descripción (opcional)" value={descripcion ?? perfil.descripcion ?? ''} onChangeText={setDescripcion} multiline maxLength={500} editable={!guardando} />
-      <Button label="Guardar cambios" onPress={guardar} loading={guardando} />
+      <Card>
+        <Field label="Nombre" value={nombre ?? perfil.nombre} onChangeText={setNombre} autoCapitalize="words" maxLength={80} editable={!guardando} />
+        <Field label="Apellido" value={apellido ?? perfil.apellido} onChangeText={setApellido} autoCapitalize="words" maxLength={80} editable={!guardando} />
+        <Field label="Nombre de usuario" value={username ?? perfil.username} onChangeText={setUsername} autoCapitalize="none" autoCorrect={false} maxLength={24} editable={!guardando} />
+        <Field label="URL de foto (opcional)" value={fotoUrl ?? perfil.foto_url ?? ''} onChangeText={setFotoUrl} autoCapitalize="none" autoCorrect={false} keyboardType="url" placeholder="https://…" maxLength={2048} editable={!guardando} />
+        <Text variant="caption" tone="muted" style={{ marginBottom: theme.space.lg }}>
+          Usa un enlace HTTPS a una imagen. Deja el campo vacío para quitar la foto.
+        </Text>
+        <Field label="Ocupación (opcional)" value={ocupacion ?? perfil.ocupacion ?? ''} onChangeText={setOcupacion} maxLength={100} editable={!guardando} />
+        <Field label="Descripción (opcional)" value={descripcion ?? perfil.descripcion ?? ''} onChangeText={setDescripcion} multiline maxLength={500} editable={!guardando} />
+        <Button label="Guardar cambios" onPress={guardar} loading={guardando} />
+      </Card>
     </>
   )
 }

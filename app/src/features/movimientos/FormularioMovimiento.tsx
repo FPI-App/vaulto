@@ -3,10 +3,10 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker'
 import { useRouter } from 'expo-router'
 import { useMemo, useState } from 'react'
-import { Alert, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import Wallet from 'lucide-react-native/icons/wallet'
+import { Alert, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import {
   MENSAJE_ERROR_MOVIMIENTO,
-  formatCOP,
   normalizarBorrador,
   normalizarMontoInput,
   validarMovimiento,
@@ -14,15 +14,18 @@ import {
   type TipoMovimiento,
 } from '@vaulto/shared'
 
+import { Amount } from '@/components/Amount'
 import { Button } from '@/components/Button'
+import { Card } from '@/components/Card'
 import { Chips } from '@/components/Chips'
 import { EmptyState } from '@/components/EmptyState'
 import { Field } from '@/components/Field'
 import { SegmentedControl } from '@/components/SegmentedControl'
+import { Text } from '@/components/Text'
 import { CategoriaPicker } from '@/features/categorias/CategoriaPicker'
 import { useCategoriaHistorica, useCategorias } from '@/features/categorias/data/useCategorias'
 import { useCuentas } from '@/features/cuentas/data/useCuentas'
-import { useTheme } from '@/theme'
+import { tabularNums, useTheme } from '@/theme'
 
 import type { DatosMovimiento } from './data/movimientosRepo'
 import { claveDia, etiquetaDia } from './fechas'
@@ -95,15 +98,10 @@ export function FormularioMovimiento({
   const cuentaSeleccionada = cuentasElegibles.find((c) => c.id === cuentaEfectiva) ?? null
   const montoNormalizado = montoTexto.trim() ? normalizarMontoInput(montoTexto) : null
 
-  const etiqueta = {
-    ...theme.typography.scale.label,
-    color: theme.colors.textMuted,
-    marginBottom: theme.space.xs,
-  }
-
   if (!cargandoCuentas && cuentasElegibles.length === 0) {
     return (
       <EmptyState
+        icon={Wallet}
         title="Primero crea una cuenta"
         hint="Los movimientos salen de o entran a una cuenta (banco o efectivo)."
         action={<Button label="Crear cuenta" onPress={() => router.push('/cuentas/nueva')} />}
@@ -173,7 +171,7 @@ export function FormularioMovimiento({
   return (
     <ScrollView
       keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{ paddingVertical: theme.space.lg }}
+      contentContainerStyle={{ paddingTop: theme.space.sm, paddingBottom: theme.space['2xl'] }}
       showsVerticalScrollIndicator={false}
     >
       <SegmentedControl<TipoMovimiento>
@@ -186,19 +184,12 @@ export function FormularioMovimiento({
         ]}
       />
 
-      <View style={[styles.montoWrap, { marginVertical: theme.space.xl }]}>
-        <Text style={etiqueta} nativeID="etiqueta-monto">
+      <View style={[styles.montoWrap, { marginVertical: theme.space['3xl'] }]}>
+        <Text variant="label" tone="muted" nativeID="etiqueta-monto">
           Monto
         </Text>
         <View style={styles.montoFila}>
-          <Text
-            style={{
-              ...theme.typography.scale.display,
-              color: colorMonto,
-            }}
-          >
-            $
-          </Text>
+          <Text style={[theme.typography.scale.display, { color: colorMonto }]}>$</Text>
           <TextInput
             accessibilityLabelledBy="etiqueta-monto"
             accessibilityLabel="Monto"
@@ -209,116 +200,120 @@ export function FormularioMovimiento({
             keyboardType="decimal-pad"
             inputMode="decimal"
             autoFocus={!inicial}
-            style={[
-              styles.montoInput,
-              {
-                ...theme.typography.scale.display,
-                color: colorMonto,
-                fontVariant: ['tabular-nums'],
-              },
-            ]}
+            style={[styles.montoInput, theme.typography.scale.display, tabularNums, { color: colorMonto }]}
           />
         </View>
         {montoTexto.trim() ? (
-          <Text
-            style={{
-              ...theme.typography.scale.caption,
-              color: montoNormalizado ? theme.colors.textMuted : theme.colors.financial.expense,
-              fontVariant: ['tabular-nums'],
-            }}
-          >
-            {montoNormalizado ? formatCOP(montoNormalizado) : 'Usa solo números: 25.000 o 25000,50'}
-          </Text>
+          montoNormalizado ? (
+            <Amount value={montoNormalizado} variant="caption" tone="muted" />
+          ) : (
+            <Text variant="caption" tone="expense">
+              Usa solo números: 25.000 o 25000,50
+            </Text>
+          )
         ) : null}
       </View>
 
-      <View style={{ marginBottom: theme.space.lg }}>
-        <Text style={etiqueta}>{tipo === 'transferencia' ? 'Desde' : 'Cuenta'}</Text>
-        <Chips
-          accessibilityLabel={tipo === 'transferencia' ? 'Cuenta de origen' : 'Cuenta'}
-          options={opcionesCuenta}
-          value={cuentaEfectiva}
-          onChange={(id) => {
-            setCuentaId(id)
-            if (id === destinoId) setDestinoId(null)
-          }}
-        />
-        {cuentaSeleccionada ? (
-          <Text
-            style={{
-              ...theme.typography.scale.caption,
-              color: theme.colors.textMuted,
-              marginTop: theme.space.xs,
-              fontVariant: ['tabular-nums'],
-            }}
-          >
-            Saldo actual: {formatCOP(cuentaSeleccionada.saldo, cuentaSeleccionada.currency)}
+      <Card style={{ gap: theme.space.xl }}>
+        <View>
+          <Text variant="label" tone="muted" style={styles.etiqueta}>
+            {tipo === 'transferencia' ? 'Desde' : 'Cuenta'}
           </Text>
-        ) : null}
-      </View>
-
-      {tipo === 'transferencia' ? (
-        <View style={{ marginBottom: theme.space.lg }}>
-          <Text style={etiqueta}>Hacia</Text>
           <Chips
-            accessibilityLabel="Cuenta de destino"
-            options={opcionesCuenta.filter((o) => o.value !== cuentaEfectiva)}
-            value={destinoId}
-            onChange={setDestinoId}
-          />
-        </View>
-      ) : (
-        <View style={{ marginBottom: theme.space.md }}>
-          <Text style={etiqueta}>Categoría (opcional)</Text>
-          <CategoriaPicker
-            espacioId={espacioId}
-            tipo={tipo}
-            value={categoriaId}
-            onChange={setCategoriaId}
-            extra={categoriaOriginal?.tipo === tipo ? categoriaOriginal : null}
-          />
-        </View>
-      )}
-
-      <View style={{ marginBottom: theme.space.lg }}>
-        <Text style={etiqueta}>Fecha</Text>
-        <Chips<OpcionFecha>
-          accessibilityLabel="Fecha"
-          value={opcionDeFecha(fecha)}
-          onChange={elegirFecha}
-          options={[
-            { value: 'hoy', label: 'Hoy' },
-            { value: 'ayer', label: 'Ayer' },
-            {
-              value: 'otra',
-              label: opcionDeFecha(fecha) === 'otra' ? etiquetaDia(fecha) : 'Otra fecha',
-            },
-          ]}
-        />
-        {verCalendarioIOS ? (
-          <DateTimePicker
-            value={fecha}
-            mode="date"
-            display="inline"
-            locale="es-CO"
-            onChange={(evento, elegida) => {
-              if (evento.type === 'set' && elegida) setFecha(alMediodia(elegida))
-              setVerCalendarioIOS(false)
+            accessibilityLabel={tipo === 'transferencia' ? 'Cuenta de origen' : 'Cuenta'}
+            options={opcionesCuenta}
+            value={cuentaEfectiva}
+            onChange={(id) => {
+              setCuentaId(id)
+              if (id === destinoId) setDestinoId(null)
             }}
           />
-        ) : null}
+          {cuentaSeleccionada ? (
+            <View style={[styles.saldo, { marginTop: theme.space.sm }]}>
+              <Text variant="caption" tone="muted">
+                Saldo actual:
+              </Text>
+              <Amount
+                value={cuentaSeleccionada.saldo}
+                variant="caption"
+                tone="muted"
+                style={{ fontFamily: theme.typography.fonts.medium }}
+              />
+            </View>
+          ) : null}
+        </View>
+
+        {tipo === 'transferencia' ? (
+          <View>
+            <Text variant="label" tone="muted" style={styles.etiqueta}>
+              Hacia
+            </Text>
+            <Chips
+              accessibilityLabel="Cuenta de destino"
+              options={opcionesCuenta.filter((o) => o.value !== cuentaEfectiva)}
+              value={destinoId}
+              onChange={setDestinoId}
+            />
+          </View>
+        ) : (
+          <View>
+            <Text variant="label" tone="muted" style={styles.etiqueta}>
+              Categoría (opcional)
+            </Text>
+            <CategoriaPicker
+              espacioId={espacioId}
+              tipo={tipo}
+              value={categoriaId}
+              onChange={setCategoriaId}
+              extra={categoriaOriginal?.tipo === tipo ? categoriaOriginal : null}
+            />
+          </View>
+        )}
+
+        <View>
+          <Text variant="label" tone="muted" style={styles.etiqueta}>
+            Fecha
+          </Text>
+          <Chips<OpcionFecha>
+            accessibilityLabel="Fecha"
+            value={opcionDeFecha(fecha)}
+            onChange={elegirFecha}
+            options={[
+              { value: 'hoy', label: 'Hoy' },
+              { value: 'ayer', label: 'Ayer' },
+              {
+                value: 'otra',
+                label: opcionDeFecha(fecha) === 'otra' ? etiquetaDia(fecha) : 'Otra fecha',
+              },
+            ]}
+          />
+          {verCalendarioIOS ? (
+            <DateTimePicker
+              value={fecha}
+              mode="date"
+              display="inline"
+              locale="es-CO"
+              onChange={(evento, elegida) => {
+                if (evento.type === 'set' && elegida) setFecha(alMediodia(elegida))
+                setVerCalendarioIOS(false)
+              }}
+            />
+          ) : null}
+        </View>
+
+        <Field
+          label="Nota (opcional)"
+          value={nota}
+          onChangeText={setNota}
+          placeholder="Ej. Mercado del mes en D1"
+          autoCapitalize="sentences"
+          maxLength={140}
+        />
+      </Card>
+
+      <View style={{ marginTop: theme.space['2xl'] }}>
+        <Button label={ctaLabel} onPress={submit} loading={guardando} />
       </View>
-
-      <Field
-        label="Nota (opcional)"
-        value={nota}
-        onChangeText={setNota}
-        placeholder="Ej. Mercado del mes en D1"
-        autoCapitalize="sentences"
-        maxLength={140}
-      />
-
-      <Button label={ctaLabel} onPress={submit} loading={guardando} />
     </ScrollView>
   )
 }
@@ -333,7 +328,9 @@ function alMediodia(d: Date): Date {
 }
 
 const styles = StyleSheet.create({
-  montoWrap: { alignItems: 'flex-start' },
+  montoWrap: { alignItems: 'flex-start', gap: 4 },
   montoFila: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'stretch' },
   montoInput: { flex: 1, paddingVertical: 4 },
+  etiqueta: { marginBottom: 8 },
+  saldo: { flexDirection: 'row', alignItems: 'center', gap: 4 },
 })

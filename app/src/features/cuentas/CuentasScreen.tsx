@@ -2,12 +2,21 @@
 // Sienta el patrón que copian Categorías y Movimientos: hook reactivo de datos +
 // pantalla que solo pinta y navega.
 import { useRouter } from 'expo-router'
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
-import { formatCOP, sumarSaldos } from '@vaulto/shared'
+import ArrowLeft from 'lucide-react-native/icons/arrow-left'
+import Banknote from 'lucide-react-native/icons/banknote'
+import Landmark from 'lucide-react-native/icons/landmark'
+import Plus from 'lucide-react-native/icons/plus'
+import { Pressable, StyleSheet, View } from 'react-native'
+import { sumarSaldos } from '@vaulto/shared'
 
+import { Amount } from '@/components/Amount'
 import { Button } from '@/components/Button'
+import { Card } from '@/components/Card'
 import { EmptyState } from '@/components/EmptyState'
+import { IconBadge } from '@/components/IconBadge'
+import { ListRow } from '@/components/ListRow'
 import { Screen } from '@/components/Screen'
+import { Text } from '@/components/Text'
 import { useEspacioActual } from '@/lib/espacio/useEspacioActual'
 import { useTheme } from '@/theme'
 
@@ -19,10 +28,18 @@ export function CuentasScreen() {
   const { espacioId, cargando: cargandoEspacio } = useEspacioActual()
   const { cuentas, cargando, error } = useCuentas(espacioId)
 
+  function volver() {
+    if (router.canGoBack()) router.back()
+    else router.replace('/')
+  }
+
   if (error) {
     return (
-      <Screen>
-        <EmptyState title="No se pudieron cargar las cuentas" hint="Tus datos se conservan. Vuelve a abrir esta pantalla para reintentar." />
+      <Screen tabBar>
+        <EmptyState
+          title="No se pudieron cargar las cuentas"
+          hint="Tus datos se conservan. Vuelve a abrir esta pantalla para reintentar."
+        />
       </Screen>
     )
   }
@@ -31,155 +48,139 @@ export function CuentasScreen() {
   // Este estado solo se ve el instante en que la réplica local aún no lo trae.
   if (!cargandoEspacio && !espacioId) {
     return (
-      <Screen>
+      <Screen tabBar>
         <EmptyState title="Preparando tu espacio" hint="Sincronizando tus datos…" />
       </Screen>
     )
   }
 
   const activas = cuentas.filter((c) => !c.archivada)
+  const archivadas = cuentas.filter((c) => c.archivada)
   const totalDisponible = sumarSaldos(activas.map((c) => c.saldo))
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <Text
-          style={{
-            ...theme.typography.scale.h1,
-            color: theme.colors.text,
-          }}
-        >
-          Cuentas
-        </Text>
+    <Screen scroll tabBar>
+      <View style={[styles.header, { paddingTop: theme.space.lg, paddingBottom: theme.space.xl, gap: theme.space.md }]}>
         <Pressable
           accessibilityRole="button"
-          onPress={() => router.push('/cuentas/nueva')}
-          hitSlop={8}
+          accessibilityLabel="Volver"
+          onPress={volver}
+          hitSlop={4}
+          style={({ pressed }) => [
+            styles.volver,
+            { backgroundColor: theme.colors.surface2, opacity: pressed ? 0.7 : 1 },
+          ]}
         >
-          <Text
-            style={{
-              ...theme.typography.scale.label,
-              color: theme.colors.actionText,
-            }}
-          >
-            + Nueva
-          </Text>
+          <ArrowLeft size={20} color={theme.colors.text} strokeWidth={2} />
         </Pressable>
+        <Text variant="h1" accessibilityRole="header" style={{ flex: 1 }} numberOfLines={1}>
+          Cuentas
+        </Text>
+        <Button
+          label="Nueva"
+          variant="ghost"
+          size="md"
+          icon={Plus}
+          onPress={() => router.push('/cuentas/nueva')}
+        />
       </View>
 
-      <FlatList
-        data={cuentas}
-        keyExtractor={(c) => c.id}
-        contentContainerStyle={{ paddingBottom: theme.space['4xl'] }}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          cuentas.length > 0 ? (
-            <View
-              style={[
-                styles.resumen,
-                { backgroundColor: theme.colors.surface, borderRadius: theme.radius.lg },
-              ]}
-            >
-              <Text style={{ ...theme.typography.scale.label, color: theme.colors.textMuted }}>
-                Disponible total
-              </Text>
-              <Text
-                style={{
-                  ...theme.typography.scale.display,
-                  color: theme.colors.text,
-                  fontVariant: ['tabular-nums'],
-                }}
-              >
-                {formatCOP(totalDisponible)}
-              </Text>
-            </View>
-          ) : undefined
-        }
-        renderItem={({ item }) => <FilaCuenta cuenta={item} onPress={() => router.push(`/cuentas/${item.id}`)} />}
-        ListEmptyComponent={
-          cargando ? undefined : (
-            <View style={styles.emptyWrap}>
-              <EmptyState
-                title="Sin cuentas todavía"
-                hint="Crea tu primera cuenta (banco o efectivo) para empezar a registrar movimientos."
-                action={
-                  <Button label="Crear tu primera cuenta" onPress={() => router.push('/cuentas/nueva')} />
-                }
+      {cuentas.length > 0 ? (
+        <Card style={{ gap: theme.space.sm, marginBottom: theme.space['2xl'] }}>
+          <Text variant="label" tone="muted">
+            Disponible total
+          </Text>
+          <Amount value={totalDisponible} variant="display" adjustsFontSizeToFit />
+          <Text variant="caption" tone="muted">
+            {activas.length === 0
+              ? 'Sin cuentas activas'
+              : `En ${activas.length} ${activas.length === 1 ? 'cuenta activa' : 'cuentas activas'}`}
+          </Text>
+        </Card>
+      ) : null}
+
+      {cuentas.length === 0 ? (
+        cargando ? null : (
+          <View style={styles.vacio}>
+            <EmptyState
+              icon={Landmark}
+              title="Sin cuentas todavía"
+              hint="Crea tu primera cuenta, de banco o efectivo, para empezar a registrar movimientos."
+              action={<Button label="Crear tu primera cuenta" onPress={() => router.push('/cuentas/nueva')} />}
+            />
+          </View>
+        )
+      ) : null}
+
+      {activas.length > 0 ? (
+        <Card padded={false} style={{ paddingHorizontal: theme.space.lg }}>
+          {activas.map((c, i) => (
+            <FilaCuenta
+              key={c.id}
+              cuenta={c}
+              divider={i < activas.length - 1}
+              onPress={() => router.push(`/cuentas/${c.id}`)}
+            />
+          ))}
+        </Card>
+      ) : null}
+
+      {archivadas.length > 0 ? (
+        <View style={{ marginTop: theme.space['3xl'] }}>
+          <Text variant="label" tone="muted" style={{ marginBottom: theme.space.md }}>
+            Archivadas
+          </Text>
+          <Card padded={false} style={{ paddingHorizontal: theme.space.lg, opacity: 0.6 }}>
+            {archivadas.map((c, i) => (
+              <FilaCuenta
+                key={c.id}
+                cuenta={c}
+                divider={i < archivadas.length - 1}
+                onPress={() => router.push(`/cuentas/${c.id}`)}
               />
-            </View>
-          )
-        }
-      />
+            ))}
+          </Card>
+        </View>
+      ) : null}
     </Screen>
   )
 }
 
-function FilaCuenta({ cuenta, onPress }: { cuenta: CuentaConSaldo; onPress: () => void }) {
+function FilaCuenta({
+  cuenta,
+  divider,
+  onPress,
+}: {
+  cuenta: CuentaConSaldo
+  divider: boolean
+  onPress: () => void
+}) {
   const theme = useTheme()
   const negativo = Number.parseFloat(cuenta.saldo) < 0
-  const subtitulo =
-    cuenta.tipo === 'efectivo' ? 'Efectivo' : cuenta.banco ? `Banco · ${cuenta.banco}` : 'Banco'
+  const esEfectivo = cuenta.tipo === 'efectivo'
+  const subtitulo = esEfectivo ? 'Efectivo' : cuenta.banco ? `Banco · ${cuenta.banco}` : 'Banco'
 
   return (
-    <Pressable
-      accessibilityRole="button"
+    <ListRow
+      divider={divider}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.fila,
-        {
-          backgroundColor: theme.colors.surface,
-          borderRadius: theme.radius.md,
-          borderColor: theme.colors.border,
-          opacity: cuenta.archivada ? 0.55 : pressed ? 0.85 : 1,
-        },
-      ]}
-    >
-      <View style={styles.filaTexto}>
-        <Text
-          numberOfLines={1}
-          style={{
-            ...theme.typography.scale.bodyLg,
-            fontFamily: theme.typography.fonts.semibold,
-            color: theme.colors.text,
-          }}
-        >
-          {cuenta.nombre}
-        </Text>
-        <Text style={{ ...theme.typography.scale.caption, color: theme.colors.textMuted, marginTop: 2 }}>
-          {cuenta.archivada ? `Archivada · ${subtitulo}` : subtitulo}
-        </Text>
-      </View>
-      <Text
-        style={{
-          ...theme.typography.scale.h3,
-          color: negativo ? theme.colors.financial.expense : theme.colors.text,
-          fontVariant: ['tabular-nums'],
-        }}
-      >
-        {formatCOP(cuenta.saldo)}
-      </Text>
-    </Pressable>
+      leading={<IconBadge icon={esEfectivo ? Banknote : Landmark} color={theme.colors.actionText} />}
+      title={cuenta.nombre}
+      subtitle={cuenta.archivada ? `Archivada · ${subtitulo}` : subtitulo}
+      trailing={
+        <Amount
+          value={cuenta.saldo}
+          variant="bodyLg"
+          tone={negativo ? 'expense' : undefined}
+          style={{ fontFamily: theme.typography.fonts.semibold }}
+        />
+      }
+    />
   )
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 16,
-    marginBottom: 16,
-  },
-  resumen: { padding: 20, marginBottom: 16 },
-  fila: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-    padding: 16,
-    marginBottom: 10,
-    borderWidth: 1,
-  },
-  filaTexto: { flex: 1 },
-  emptyWrap: { minHeight: 360 },
+  header: { flexDirection: 'row', alignItems: 'center' },
+  volver: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  vacio: { minHeight: 360, flexDirection: 'row' },
 })

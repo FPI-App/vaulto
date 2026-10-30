@@ -1,11 +1,22 @@
 import { useRouter } from 'expo-router'
-import { useState } from 'react'
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
-import { formatCOP } from '@vaulto/shared'
+import { useMemo, useState } from 'react'
+import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native'
+import { diasHastaVencimiento, etiquetaVencimiento, formatCOP } from '@vaulto/shared'
+import ArrowDownLeft from 'lucide-react-native/icons/arrow-down-left'
+import ArrowUpRight from 'lucide-react-native/icons/arrow-up-right'
+import CircleCheck from 'lucide-react-native/icons/circle-check'
+import Handshake from 'lucide-react-native/icons/handshake'
+import Plus from 'lucide-react-native/icons/plus'
 
+import { Amount } from '@/components/Amount'
+import { Button } from '@/components/Button'
+import { Card } from '@/components/Card'
 import { EmptyState } from '@/components/EmptyState'
-import { Screen } from '@/components/Screen'
+import { IconBadge } from '@/components/IconBadge'
+import { ListRow } from '@/components/ListRow'
+import { Screen, TAB_BAR_CLEARANCE } from '@/components/Screen'
 import { SegmentedControl } from '@/components/SegmentedControl'
+import { Text } from '@/components/Text'
 import { useTheme } from '@/theme'
 
 import { useDeudas } from './data/useDeudas'
@@ -14,17 +25,32 @@ export function DeudasScreen() {
   const theme = useTheme()
   const router = useRouter()
   const [direccion, setDireccion] = useState<'yo_debo' | 'me_deben' | null>(null)
-  const { deudas, cargando, error } = useDeudas(direccion)
+  // Se consulta todo una vez: el resumen de arriba suma ambas direcciones
+  // aunque la lista esté filtrada.
+  const { deudas: todas, cargando, error } = useDeudas(null)
+  const deudas = useMemo(
+    () => (direccion ? todas.filter((d) => d.direccion === direccion) : todas),
+    [todas, direccion],
+  )
+  const totales = useMemo(() => {
+    const suma = { me_deben: 0, yo_debo: 0 }
+    for (const d of todas) {
+      if (d.estado === 'activa' && d.saldo_pendiente !== null) suma[d.direccion] += Number(d.saldo_pendiente)
+    }
+    return suma
+  }, [todas])
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <Text style={{ ...theme.typography.scale.h1, color: theme.colors.text, fontFamily: theme.typography.fontFamily }}>
-          Deudas
-        </Text>
-        <Pressable accessibilityRole="button" onPress={() => router.push('/deudas/nueva')} hitSlop={8} style={{ minHeight: theme.layout.minTouchTarget, justifyContent: 'center' }}>
-          <Text style={{ ...theme.typography.scale.label, color: theme.colors.actionText }}>+ Nueva</Text>
-        </Pressable>
+    <Screen
+      title="Deudas"
+      tabBar
+      headerRight={
+        <Button label="Nueva" icon={Plus} size="md" onPress={() => router.push('/deudas/nueva')} />
+      }
+    >
+      <View style={[styles.fila, { gap: theme.space.md, marginBottom: theme.space.lg }]}>
+        <Resumen titulo="Me deben" icon={ArrowDownLeft} valor={totales.me_deben} />
+        <Resumen titulo="Yo debo" icon={ArrowUpRight} valor={totales.yo_debo} />
       </View>
       <SegmentedControl
         value={direccion ?? 'todas'}
@@ -35,44 +61,89 @@ export function DeudasScreen() {
           { value: 'me_deben', label: 'Me deben' },
         ]}
       />
-      {error ? <Text accessibilityRole="alert" style={{ color: theme.colors.text }}>No pudimos consultar tus deudas. Vuelve a abrir esta pantalla para reintentar.</Text> : null}
+      {error ? (
+        <Text accessibilityRole="alert" tone="muted" style={{ marginTop: theme.space.lg }}>
+          No pudimos consultar tus deudas. Vuelve a abrir esta pantalla para reintentar.
+        </Text>
+      ) : null}
       <FlatList
         data={deudas}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingTop: theme.space.lg, paddingBottom: theme.space['4xl'], flexGrow: 1 }}
-        ListEmptyComponent={cargando ? <ActivityIndicator accessibilityLabel="Cargando deudas" color={theme.colors.actionText} /> : error ? undefined : <EmptyState title="Sin deudas" hint="Registra lo que debes o lo que te deben." />}
-        renderItem={({ item }) => (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`${item.direccion === 'yo_debo' ? 'Debes a' : 'Te debe'} ${item.contraparte}, ${item.saldo_pendiente === null ? 'requiere revisión' : formatCOP(item.saldo_pendiente)}`}
-            onPress={() => router.push(`/deudas/${item.id}`)}
-            style={[styles.card, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderRadius: theme.radius.md }]}
-          >
-            <View style={styles.cardHeading}>
-              <Text style={{ ...theme.typography.scale.label, color: theme.colors.text, fontFamily: theme.typography.fontFamily, flex: 1 }}>
-                {item.direccion === 'yo_debo' ? 'Debo a' : 'Me debe'} {item.contraparte}
-              </Text>
-              <Text style={{ ...theme.typography.scale.caption, color: item.estado === 'saldada' ? theme.colors.financial.success : theme.colors.financial.debt }}>
-                {item.estado === 'conflicto' ? 'Requiere revisión' : item.estado === 'saldada' ? 'Saldada' : 'Activa'}
-              </Text>
-            </View>
-            <Text style={{ ...theme.typography.scale.h2, color: theme.colors.financial.debt, fontVariant: ['tabular-nums'], marginTop: theme.space.sm }}>
-              {item.saldo_pendiente === null ? 'Saldo por revisar' : formatCOP(item.saldo_pendiente, item.currency)}
-            </Text>
-            {item.fecha_limite ? (
-              <Text style={{ ...theme.typography.scale.caption, color: theme.colors.textMuted, marginTop: theme.space.xs }}>
-                Vence {item.fecha_limite}
-              </Text>
-            ) : null}
-          </Pressable>
-        )}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: theme.space.lg, paddingBottom: TAB_BAR_CLEARANCE, flexGrow: 1 }}
+        ListEmptyComponent={
+          cargando ? (
+            <ActivityIndicator accessibilityLabel="Cargando deudas" color={theme.colors.actionText} />
+          ) : error ? undefined : (
+            <EmptyState
+              icon={Handshake}
+              title="Sin deudas por ahora"
+              hint="Aún no tienes deudas registradas. Cuando agregues una, la verás aquí."
+            />
+          )
+        }
+        renderItem={({ item }) => {
+          const meDeben = item.direccion === 'me_deben'
+          const saldada = item.estado === 'saldada'
+          const conflicto = item.saldo_pendiente === null
+          const proxima = !saldada && !conflicto && item.fecha_limite !== null && diasHastaVencimiento(item.fecha_limite) <= 1
+          return (
+            <Card padded={false} style={{ paddingHorizontal: theme.space.lg, marginBottom: theme.space.md }}>
+              <ListRow
+                accessibilityLabel={`${meDeben ? 'Te debe' : 'Debes a'} ${item.contraparte}, ${conflicto ? 'requiere revisión' : formatCOP(item.saldo_pendiente, item.currency)}`}
+                onPress={() => router.push(`/deudas/${item.id}`)}
+                leading={
+                  <IconBadge
+                    icon={saldada ? CircleCheck : meDeben ? ArrowDownLeft : ArrowUpRight}
+                    color={saldada ? theme.colors.financial.success : theme.colors.financial.debt}
+                  />
+                }
+                title={meDeben ? `${item.contraparte} te debe` : `Le debes a ${item.contraparte}`}
+                subtitle={saldada ? 'Saldada' : conflicto ? 'Requiere revisión' : etiquetaVencimiento(item.fecha_limite)}
+                trailing={
+                  conflicto ? (
+                    <Text tone="muted">Por revisar</Text>
+                  ) : (
+                    <>
+                      <Amount
+                        value={item.saldo_pendiente}
+                        variant="bodyLg"
+                        tone={saldada ? 'success' : 'debt'}
+                        style={{ fontFamily: theme.typography.fonts.semibold }}
+                      />
+                      {proxima ? (
+                        <Text variant="caption" tone="warning" style={{ marginTop: 2 }}>
+                          Pronto
+                        </Text>
+                      ) : null}
+                    </>
+                  )
+                }
+              />
+            </Card>
+          )
+        }}
       />
     </Screen>
   )
 }
 
+function Resumen({ titulo, icon, valor }: { titulo: string; icon: typeof ArrowDownLeft; valor: number }) {
+  const theme = useTheme()
+  return (
+    <Card style={{ flex: 1, gap: theme.space.md }}>
+      <View style={styles.cabeza}>
+        <IconBadge icon={icon} color={theme.colors.financial.debt} size={32} />
+        <Text variant="label" tone="muted">
+          {titulo}
+        </Text>
+      </View>
+      <Amount value={valor} variant="h3" adjustsFontSizeToFit />
+    </Card>
+  )
+}
+
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  card: { borderWidth: 1, padding: 16, marginBottom: 12 },
-  cardHeading: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  fila: { flexDirection: 'row' },
+  cabeza: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 })

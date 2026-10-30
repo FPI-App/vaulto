@@ -1,21 +1,27 @@
 // Lista de categorías por tipo (issue #8). Dueño: lmilo (Track A).
 import { useRouter } from 'expo-router'
 import { usePowerSync } from '@powersync/react-native'
+import ArrowLeft from 'lucide-react-native/icons/arrow-left'
+import ChevronRight from 'lucide-react-native/icons/chevron-right'
+import Plus from 'lucide-react-native/icons/plus'
+import Tags from 'lucide-react-native/icons/tags'
 import { useState } from 'react'
-import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Alert, Pressable, StyleSheet, View } from 'react-native'
 import type { TipoCategoria } from '@vaulto/shared'
 
 import { Button } from '@/components/Button'
 import { CategoriaIcon } from '@/components/CategoriaIcon'
+import { Card } from '@/components/Card'
 import { EmptyState } from '@/components/EmptyState'
-import { ModalHeader } from '@/components/ModalHeader'
+import { ListRow } from '@/components/ListRow'
 import { Screen } from '@/components/Screen'
 import { SegmentedControl } from '@/components/SegmentedControl'
+import { Text } from '@/components/Text'
 import { useEspacioActual } from '@/lib/espacio/useEspacioActual'
 import { useTheme } from '@/theme'
 
 import { sembrarCategoriasPorDefecto } from './data/categoriasRepo'
-import { useCategorias, useSembrarCategoriasAlSincronizar, type CategoriaRow } from './data/useCategorias'
+import { useCategorias, useSembrarCategoriasAlSincronizar } from './data/useCategorias'
 
 export function CategoriasScreen() {
   const theme = useTheme()
@@ -31,104 +37,78 @@ export function CategoriasScreen() {
     sembrarCategoriasPorDefecto(db, espacioId).catch((e) => Alert.alert('Error', String(e)))
   }
 
-  return (
-    <Screen>
-      <ModalHeader title="Categorías" onClose={() => router.back()} />
+  function volver() {
+    if (router.canGoBack()) router.back()
+    else router.replace('/movimientos')
+  }
 
-      <View style={[styles.barra, { marginBottom: theme.space.lg }]}>
-        <View style={styles.flex}>
-          <SegmentedControl<TipoCategoria>
-            value={tipo}
-            onChange={setTipo}
-            options={[
-              { value: 'egreso', label: 'Gastos' },
-              { value: 'ingreso', label: 'Ingresos' },
-            ]}
-          />
-        </View>
+  return (
+    <Screen scroll tabBar>
+      <View style={[styles.header, { paddingTop: theme.space.lg, paddingBottom: theme.space.xl, gap: theme.space.md }]}>
         <Pressable
           accessibilityRole="button"
-          onPress={() => router.push({ pathname: '/categorias/nueva', params: { tipo } })}
-          hitSlop={8}
-          style={{ minHeight: theme.layout.minTouchTarget, justifyContent: 'center' }}
+          accessibilityLabel="Volver"
+          onPress={volver}
+          hitSlop={4}
+          style={({ pressed }) => [
+            styles.volver,
+            { backgroundColor: theme.colors.surface2, opacity: pressed ? 0.7 : 1 },
+          ]}
         >
-          <Text
-            style={{
-              ...theme.typography.scale.label,
-              color: theme.colors.brand[600],
-            }}
-          >
-            + Nueva
-          </Text>
+          <ArrowLeft size={20} color={theme.colors.text} strokeWidth={2} />
         </Pressable>
+        <Text variant="h1" accessibilityRole="header" style={{ flex: 1 }} numberOfLines={1}>
+          Categorías
+        </Text>
+        <Button
+          label="Nueva"
+          variant="ghost"
+          size="md"
+          icon={Plus}
+          onPress={() => router.push({ pathname: '/categorias/nueva', params: { tipo } })}
+        />
       </View>
 
-      <FlatList
-        data={categorias}
-        keyExtractor={(c) => c.id}
-        contentContainerStyle={{ paddingBottom: theme.space['4xl'] }}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <FilaCategoria categoria={item} onPress={() => router.push(`/categorias/${item.id}`)} />
-        )}
-        ListEmptyComponent={
-          cargando ? undefined : (
-            <View style={styles.emptyWrap}>
-              <EmptyState
-                title={tipo === 'egreso' ? 'Sin categorías de gasto' : 'Sin categorías de ingreso'}
-                hint="Crea las tuyas o empieza con un set sugerido para Colombia que luego puedes editar."
-                action={<Button label="Usar categorías sugeridas" onPress={usarSugeridas} />}
-              />
-            </View>
-          )
-        }
-      />
+      <View style={{ marginBottom: theme.space.xl }}>
+        <SegmentedControl<TipoCategoria>
+          value={tipo}
+          onChange={setTipo}
+          options={[
+            { value: 'egreso', label: 'Gastos' },
+            { value: 'ingreso', label: 'Ingresos' },
+          ]}
+        />
+      </View>
+
+      {categorias.length > 0 ? (
+        <Card padded={false} style={{ paddingHorizontal: theme.space.lg }}>
+          {categorias.map((c, i) => (
+            <ListRow
+              key={c.id}
+              divider={i < categorias.length - 1}
+              onPress={() => router.push(`/categorias/${c.id}`)}
+              leading={<CategoriaIcon icono={c.icono} color={c.color} />}
+              title={c.nombre}
+              trailing={<ChevronRight size={18} color={theme.colors.textMuted} strokeWidth={2} />}
+            />
+          ))}
+        </Card>
+      ) : cargando ? null : (
+        <View style={styles.vacio}>
+          <EmptyState
+            icon={Tags}
+            title={tipo === 'egreso' ? 'Sin categorías de gasto' : 'Sin categorías de ingreso'}
+            hint="Crea las tuyas o empieza con un set sugerido para Colombia que luego puedes editar."
+            action={<Button label="Usar categorías sugeridas" onPress={usarSugeridas} />}
+          />
+        </View>
+      )}
     </Screen>
   )
 }
 
-function FilaCategoria({ categoria, onPress }: { categoria: CategoriaRow; onPress: () => void }) {
-  const theme = useTheme()
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.fila,
-        {
-          backgroundColor: theme.colors.surface,
-          borderRadius: theme.radius.md,
-          borderColor: theme.colors.border,
-          opacity: pressed ? 0.85 : 1,
-        },
-      ]}
-    >
-      <CategoriaIcon icono={categoria.icono} color={categoria.color} />
-      <Text
-        numberOfLines={1}
-        style={{
-          ...theme.typography.scale.bodyLg,
-          color: theme.colors.text,
-          flex: 1,
-        }}
-      >
-        {categoria.nombre}
-      </Text>
-    </Pressable>
-  )
-}
-
 const styles = StyleSheet.create({
-  barra: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  flex: { flex: 1 },
-  fila: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 8,
-    borderWidth: 1,
-  },
-  emptyWrap: { minHeight: 360 },
+  header: { flexDirection: 'row', alignItems: 'center' },
+  volver: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  vacio: { minHeight: 360, flexDirection: 'row' },
 })
