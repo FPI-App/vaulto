@@ -38,3 +38,6 @@ jobs:
 
       - name: Pruebas
         run: pnpm test
+
+      - name: Pruebas del diagnóstico de entorno
+        run: pnpm infra:test

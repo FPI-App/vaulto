@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
-import { StyleSheet, View, Text, Alert } from 'react-native'
-import { useRouter } from 'expo-router'
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Text, Alert } from 'react-native'
 import { completarOnboarding } from '@/features/onboarding/onboardingRepo'
 import { usePowerSync } from '@powersync/react-native'
 
@@ -14,7 +13,6 @@ export default function OnboardingScreen() {
   const theme = useTheme()
   const { session } = useAuth()
   const db = usePowerSync()
-  const router = useRouter()
 
   const [nombre, setNombre] = useState('')
   const [apellido, setApellido] = useState('')
@@ -32,7 +30,6 @@ export default function OnboardingScreen() {
     setLoading(true)
     try {
       await completarOnboarding(db, session.user.id, { nombre, apellido, username })
-      router.replace('/(app)')
     } catch (error) {
       Alert.alert('No se pudo completar el registro', error instanceof Error ? error.message : 'Intenta de nuevo.')
     } finally {
@@ -43,49 +40,53 @@ export default function OnboardingScreen() {
 
   return (
     <Screen padded edges={['top', 'bottom']}>
-      <View style={styles.header}>
-        <Text style={{ ...theme.typography.scale.h1, fontFamily: theme.typography.fontFamily, color: theme.colors.text }}>
-          Te damos la bienvenida a Vaulto
-        </Text>
-        <Text style={{ ...theme.typography.scale.bodyLg, fontFamily: theme.typography.fontFamily, color: theme.colors.textMuted, marginTop: theme.space.xs }}>
-          Para comenzar, configuremos tu perfil y tu espacio personal.
-        </Text>
-      </View>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1 }}>
+          <View style={styles.header}>
+            <Text style={{ ...theme.typography.scale.h1, fontFamily: theme.typography.fontFamily, color: theme.colors.text }}>
+              Te damos la bienvenida a Vaulto
+            </Text>
+            <Text style={{ ...theme.typography.scale.bodyLg, fontFamily: theme.typography.fontFamily, color: theme.colors.textMuted, marginTop: theme.space.xs }}>
+              Para comenzar, configuremos tu perfil y tu espacio personal.
+            </Text>
+          </View>
 
-      <View style={styles.form}>
-        <Field
-          label="Nombre"
-          placeholder="Ej: Juan"
-          value={nombre}
-          onChangeText={setNombre}
-          editable={!loading}
-        />
-        <Field
-          label="Apellido"
-          placeholder="Ej: Pérez"
-          value={apellido}
-          onChangeText={setApellido}
-          editable={!loading}
-        />
-        <Field
-          label="Nombre de usuario"
-          placeholder="Ej: juanperez"
-          value={username}
-          onChangeText={setUsername}
-          autoCapitalize="none"
-          autoCorrect={false}
-          editable={!loading}
-        />
-      </View>
+          <View style={styles.form}>
+            <Field
+              label="Nombre"
+              placeholder="Ej: Juan"
+              value={nombre}
+              onChangeText={setNombre}
+              editable={!loading}
+            />
+            <Field
+              label="Apellido"
+              placeholder="Ej: Pérez"
+              value={apellido}
+              onChangeText={setApellido}
+              editable={!loading}
+            />
+            <Field
+              label="Nombre de usuario"
+              placeholder="Ej: juanperez"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!loading}
+            />
+          </View>
 
-      <View style={styles.footer}>
-        <Button
-          label="Comenzar"
-          onPress={handleComenzar}
-          loading={loading}
-          disabled={!nombre || !apellido || !username}
-        />
-      </View>
+          <View style={styles.footer}>
+            <Button
+              label="Comenzar"
+              onPress={handleComenzar}
+              loading={loading}
+              disabled={!nombre || !apellido || !username}
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   )
 }

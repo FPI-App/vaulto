@@ -20,6 +20,8 @@ supabase/
 
 ## Flujo de trabajo
 
+`pnpm db:migrate` ejecuta `supabase db reset`: borra/recrea la base local. Revisa el destino y obtén confirmación del comando exacto antes de usarlo. No es una aplicación incremental de migraciones.
+
 ```bash
 # Levantar Supabase en local (desde la raíz del repo)
 pnpm supabase:start
@@ -65,3 +67,18 @@ En `app/.env`: `EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321` y `EXPO_PUBLIC_
 - Nombres de migración descriptivos en español imperativo: `agrega_tabla_deudas`, `agrega_rls_movimientos`.
 - Nombres de tabla/columna de dominio en español (`movimiento`, `saldo_inicial`, `espacio_id`).
 - Una migración = un cambio coherente. No mezclar refactors no relacionados.
+
+## RLS aislada sin Supabase CLI
+
+`node scripts/test-rls-local.mjs --check`, desde la raíz, inspecciona exclusivamente
+`vaulto-qa-pg-20261028/vaulto_qa`. Requiere un contenedor etiquetado `com.vaulto.purpose=local-rls`,
+imagen `postgres:15-bookworm`, pgTAP instalado y ningún puerto publicado.
+
+`--apply-migrations` prepara el esquema y ejecuta los tests. **Requiere confirmación explícita**:
+las migraciones contienen DROP de políticas/triggers y los tests incluyen borrados de fixtures.
+Solo admite una base vacía o la misma versión ya preparada; nunca resetea una base existente.
+`--test` repite las pruebas sobre esa versión sin volver a aplicar migraciones.
+
+El bootstrap de prueba implementa únicamente `auth.users`, `auth.uid()` y los roles usados
+por RLS. No emula el servicio Supabase Auth, PostgREST, PowerSync ni los dispositivos.
+Los tests usan usuarios ficticios y hacen rollback; una suite pgTAP aprobada no valida sync.

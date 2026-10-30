@@ -18,19 +18,19 @@ export default function DeudaDetalleScreen() {
   const router = useRouter()
   const db = usePowerSync()
   const { id } = useLocalSearchParams<{ id: string }>()
-  const { deuda, abonos, cargando, espacioId } = useDeuda(id)
+  const { deuda, abonos, cargando, error, espacioId } = useDeuda(id)
   const [editando, setEditando] = useState(false)
   const [abono, setAbono] = useState('')
   const [notaAbono, setNotaAbono] = useState('')
   const [guardando, setGuardando] = useState(false)
   const submitting = useRef(false)
 
-  if (cargando || !deuda || !espacioId) {
+  if (cargando || error || !deuda || !espacioId) {
     return (
       <Screen>
         <ModalHeader title="Deuda" onClose={() => router.back()} />
         <Text style={{ ...theme.typography.scale.body, color: theme.colors.textMuted, marginTop: 24 }}>
-          {cargando ? 'Cargando…' : 'No encontramos esta deuda.'}
+          {error ? 'No pudimos consultar esta deuda. Vuelve a abrir la pantalla para reintentar.' : cargando ? 'Cargando…' : 'No encontramos esta deuda.'}
         </Text>
       </Screen>
     )
@@ -88,8 +88,8 @@ export default function DeudaDetalleScreen() {
 
   return (
     <Screen>
-      <ModalHeader title={editando ? 'Editar deuda' : 'Detalle de deuda'} onClose={() => router.back()} />
-      {editando ? (
+      <ModalHeader title={editando && deuda.estado !== 'conflicto' ? 'Editar deuda' : 'Detalle de deuda'} onClose={() => router.back()} />
+      {editando && deuda.estado !== 'conflicto' ? (
         <FormularioDeuda
           inicial={{ ...deuda, monto_inicial: formatMontoInput(deuda.monto_inicial) }}
           guardando={guardando}
@@ -105,12 +105,13 @@ export default function DeudaDetalleScreen() {
             {deuda.contraparte}
           </Text>
           <Text style={{ ...theme.typography.scale.display, color: theme.colors.financial.debt, fontVariant: ['tabular-nums'], marginTop: theme.space.lg }}>
-            {formatCOP(deuda.saldo_pendiente, deuda.currency)}
+            {deuda.saldo_pendiente === null ? 'Saldo por revisar' : formatCOP(deuda.saldo_pendiente, deuda.currency)}
           </Text>
           <Text style={{ ...theme.typography.scale.body, color: theme.colors.textMuted, marginTop: theme.space.xs }}>
-            {deuda.estado === 'saldada' ? 'Deuda saldada' : `Saldo de ${formatCOP(deuda.monto_inicial, deuda.currency)}`}
+            {deuda.estado === 'conflicto' ? 'Esta deuda requiere revisión' : deuda.estado === 'saldada' ? 'Deuda saldada' : `Saldo de ${formatCOP(deuda.monto_inicial, deuda.currency)}`}
             {deuda.fecha_limite ? ` · Vence ${deuda.fecha_limite}` : ''}
           </Text>
+          {deuda.conflicto ? <Text accessibilityRole="alert" style={{ color: theme.colors.text, marginTop: theme.space.lg }}>{deuda.conflicto}</Text> : null}
           {deuda.nota ? <Text style={{ ...theme.typography.scale.body, color: theme.colors.text, marginTop: theme.space.lg }}>{deuda.nota}</Text> : null}
           {deuda.estado === 'activa' ? (
             <View style={{ marginTop: theme.space['2xl'] }}>
@@ -130,8 +131,8 @@ export default function DeudaDetalleScreen() {
             ))}
           </View>
           <View style={{ gap: theme.space.sm, marginTop: theme.space['2xl'] }}>
-            <Button label="Editar" variant="ghost" onPress={() => setEditando(true)} disabled={guardando} />
-            <Button label="Eliminar" variant="ghost" onPress={confirmarEliminar} disabled={guardando} />
+            <Button label="Editar" variant="ghost" onPress={() => setEditando(true)} disabled={guardando || deuda.estado === 'conflicto'} />
+            <Button label="Eliminar" variant="ghost" onPress={confirmarEliminar} disabled={guardando || deuda.estado === 'conflicto'} />
           </View>
         </ScrollView>
       )}

@@ -14,7 +14,7 @@
   },
   "scripts": {
     "lint": "echo \"(pendiente configurar linter)\" && exit 0",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "pnpm -w exec tsc --noEmit -p packages/shared/tsconfig.json",
     "test": "vitest run"
   },
   "peerDependencies": {

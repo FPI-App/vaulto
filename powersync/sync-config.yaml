@@ -1,0 +1,23 @@
+# Sync Streams para Vaulto MVP1. El JWT de Supabase delimita los espacios
+# mediante la membresía activa del usuario; no sincronizar tablas globalmente.
+config:
+  edition: 3
+
+streams:
+  vaulto:
+    auto_subscribe: true
+    with:
+      user_spaces: |
+        SELECT espacio_id
+        FROM espacio_miembro
+        WHERE user_id = auth.user_id()
+          AND deleted_at IS NULL
+    queries:
+      - SELECT * FROM espacio WHERE id IN user_spaces
+      - SELECT * FROM espacio_miembro WHERE user_id = auth.user_id() OR espacio_id IN user_spaces
+      - SELECT * FROM perfil WHERE id = auth.user_id()
+      - SELECT * FROM cuenta WHERE espacio_id IN user_spaces
+      - SELECT * FROM categoria WHERE espacio_id IN user_spaces
+      - SELECT * FROM movimiento WHERE espacio_id IN user_spaces
+      - SELECT * FROM deuda WHERE espacio_id IN user_spaces
+      - SELECT * FROM pago WHERE espacio_id IN user_spaces

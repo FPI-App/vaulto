@@ -88,10 +88,10 @@ los redefine.
 
 - **RLS** en Supabase protege el servidor: cada fila es visible solo si su `espacio_id`
   pertenece al usuario (vía `espacio_miembro`).
-- **SQLCipher** está habilitado como opción de compilación de op-sqlite. El cifrado
-  en reposo sigue pendiente de verificar: `lib/sync/db.ts` no configura una llave.
-  `expo-secure-store` se usa actualmente para la sesión de Supabase. El aprovisionamiento
-  de una llave y la migración de bases existentes deben validarse en un build nativo.
+- **SQLCipher** se exige al abrir bases nuevas con archivo y llave por usuario. La llave
+  aleatoria se guarda en un servicio SecureStore separado al de la sesión. Si falta
+  una llave o aparece una base antigua, se bloquea el arranque sin borrar información.
+  La migración antigua y el cifrado efectivo deben validarse en un build nativo.
 - RLS ≠ cifrado local: ambos son necesarios. Ver `../ARQUITECTURA.md`.
 
 ## Pruebas locales
@@ -100,6 +100,11 @@ los redefine.
 en memoria (`node:sqlite`); no usa credenciales ni modifica bases de usuario.
 `pnpm --filter @vaulto/shared test` cubre el dominio puro. Estas pruebas no sustituyen
 las de RLS, sincronización ni SQLCipher en Android/iOS.
+
+`pnpm infra:check` (desde la raíz) valida `app/.env` y los probes remotos sin escribir datos.
+El perfil APK development está en `eas.json`; la vinculación EAS e instalación requieren
+una cuenta Expo y un development build, no Expo Go. Detalle en
+`../docs/VALIDACION-SYNC-CIFRADO-2026-10-27.md`.
 
 ## Convenciones
 

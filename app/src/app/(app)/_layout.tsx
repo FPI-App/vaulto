@@ -1,7 +1,8 @@
-import { Tabs, usePathname, useRouter } from 'expo-router'
-import { useEffect, useRef } from 'react'
+import { Tabs, usePathname } from 'expo-router'
+import { ActivityIndicator, Text, View } from 'react-native'
 import { useQuery } from '@powersync/react-native'
 
+import { Screen } from '@/components/Screen'
 import { useTheme } from '@/theme'
 import { useAuth } from '@/lib/auth/AuthProvider'
 
@@ -10,52 +11,58 @@ import { useAuth } from '@/lib/auth/AuthProvider'
 // Iconos definitivos: Lucide outline (BRAND.md §4). Aquí texto-only para no
 // acoplar el spine a una librería de iconos antes de tiempo.
 export default function AppTabsLayout() {
+  const { session, initializing } = useAuth()
+
+  if (initializing || !session) {
+    return (
+      <Screen>
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <ActivityIndicator accessibilityLabel="Cargando sesión" />
+        </View>
+      </Screen>
+    )
+  }
+
+  return <AuthenticatedTabs userId={session.user.id} />
+}
+
+function AuthenticatedTabs({ userId }: { userId: string }) {
   const theme = useTheme()
-  const { session } = useAuth()
-  const router = useRouter()
   const pathname = usePathname()
 
   // Verificamos el estado del perfil en la base local (PowerSync)
-  const { data: perfilData, isLoading } = useQuery('SELECT * FROM perfil')
+  const { data: perfilData, isLoading, error } = useQuery<{ onboarding_completo: number | boolean }>(
+    'SELECT onboarding_completo FROM perfil WHERE id = ? AND deleted_at IS NULL LIMIT 1',
+    [userId],
+  )
 
-  // Ref y no estado: el latch solo lo lee este efecto, no necesita re-render
-  const completedRef = useRef(false)
-
-  useEffect(() => {
-    console.log('[Layout] useEffect disparado. isLoading:', isLoading, 'session:', !!session)
-    if (isLoading || !session) return
-
-    const isOnboarding = pathname === '/onboarding'
-    const myProfile = perfilData?.find((p: any) => p.id === session.user.id)
-    const hasProfile = !!myProfile
-    const isCompleted = hasProfile && (myProfile.onboarding_completo == 1 || myProfile.onboarding_completo === true)
-
-    // Si detectamos que se completó, guardamos este estado de forma optimista
-    // Esto previene el "PowerSync Flicker" (cuando la mutación local se borra al subir, 
-    // pero la descarga del servidor tarda un par de segundos en llegar).
-    if (isCompleted) completedRef.current = true
-
-    const effectivelyCompleted = completedRef.current
-
-    console.log('[Layout] Estado actual -> isOnboarding:', isOnboarding, '| isCompleted (real):', isCompleted, '| effectivelyCompleted:', effectivelyCompleted)
-
-    if (!effectivelyCompleted && !isOnboarding) {
-      console.log('[Layout] Redirigiendo a onboarding porque no está completado.')
-      router.replace('/onboarding')
-    } else if (effectivelyCompleted && isOnboarding) {
-      console.log('[Layout] Redirigiendo al dashboard porque ya está completado.')
-      router.replace('/(app)')
-    }
-  }, [isLoading, perfilData, pathname, router, session])
+  const myProfile = perfilData[0]
+  const isCompleted = Boolean(
+    myProfile && (myProfile.onboarding_completo === 1 || myProfile.onboarding_completo === true),
+  )
 
   // Ocultamos la barra de navegación si estamos en el flujo de onboarding
   const isOnboardingRoute = pathname === '/onboarding'
+
+  if (isLoading || error) {
+    return (
+      <Screen>
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          {error ? (
+            <Text accessibilityRole="alert" style={{ color: theme.colors.text }}>
+              No pudimos consultar tu perfil. Cierra y vuelve a abrir la app para reintentar.
+            </Text>
+          ) : <ActivityIndicator accessibilityLabel="Cargando perfil" color={theme.colors.actionText} />}
+        </View>
+      </Screen>
+    )
+  }
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.colors.brand[600],
+        tabBarActiveTintColor: theme.colors.actionText,
         tabBarInactiveTintColor: theme.colors.textMuted,
         tabBarStyle: isOnboardingRoute
           ? { display: 'none' }
@@ -69,14 +76,17 @@ export default function AppTabsLayout() {
         },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Inicio' }} />
-      <Tabs.Screen name="cuentas" options={{ title: 'Cuentas' }} />
-      <Tabs.Screen name="movimientos" options={{ title: 'Movimientos' }} />
-      <Tabs.Screen name="deudas" options={{ title: 'Deudas' }} />
-      <Tabs.Screen name="perfil" options={{ title: 'Perfil' }} />
-      {/* Rutas fuera de la tab bar (modales / flujos): se ocultan como tabs. */}
-      <Tabs.Screen name="categorias" options={{ href: null }} />
-      <Tabs.Screen name="onboarding" options={{ href: null }} />
+      <Tabs.Protected guard={isCompleted} redirectTo="/onboarding">
+        <Tabs.Screen name="index" options={{ title: 'Inicio' }} />
+        <Tabs.Screen name="cuentas" options={{ title: 'Cuentas' }} />
+        <Tabs.Screen name="movimientos" options={{ title: 'Movimientos' }} />
+        <Tabs.Screen name="deudas" options={{ title: 'Deudas' }} />
+        <Tabs.Screen name="perfil" options={{ title: 'Perfil' }} />
+        <Tabs.Screen name="categorias" options={{ href: null }} />
+      </Tabs.Protected>
+      <Tabs.Protected guard={!isCompleted} redirectTo="/(app)">
+        <Tabs.Screen name="onboarding" options={{ title: 'Configuración inicial' }} />
+      </Tabs.Protected>
     </Tabs>
   )
 }

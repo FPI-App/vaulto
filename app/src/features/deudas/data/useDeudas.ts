@@ -1,10 +1,10 @@
 import { useQuery } from '@powersync/react-native'
 import { useMemo } from 'react'
-import { calcularSaldoPendiente, estadoDeudaDesdeSaldo } from '@vaulto/shared'
 
 import { useEspacioActual } from '@/lib/espacio/useEspacioActual'
 
 import type { DeudaRow } from './deudasRepo'
+import { resolverSaldoDeuda } from './resolverSaldoDeuda'
 
 interface PagoRow {
   deuda_id: string
@@ -42,17 +42,16 @@ export function useDeudas(direccion: 'yo_debo' | 'me_deben' | null) {
       pagosPorDeuda.set(pago.deuda_id, pagos)
     }
     return deudasQ.data.map((deuda) => {
-      const saldo_pendiente = calcularSaldoPendiente(deuda.monto_inicial, pagosPorDeuda.get(deuda.id) ?? [])
-      return { ...deuda, saldo_pendiente, estado: estadoDeudaDesdeSaldo(saldo_pendiente) }
+      return resolverSaldoDeuda(deuda, pagosPorDeuda.get(deuda.id) ?? [])
     })
   }, [deudasQ.data, pagosQ.data])
 
-  return { deudas, cargando: deudasQ.isLoading || pagosQ.isLoading, espacioId }
+  return { deudas, cargando: deudasQ.isLoading || pagosQ.isLoading, error: deudasQ.error ?? pagosQ.error, espacioId }
 }
 
 export function useDeuda(id: string) {
   const { espacioId } = useEspacioActual()
-  const { data, isLoading } = useQuery<DeudaRow>(
+  const { data, isLoading, error } = useQuery<DeudaRow>(
     `SELECT id, direccion, contraparte, monto_inicial, saldo_pendiente, currency,
             fecha_limite, prioridad, estado, nota, created_at
      FROM deuda WHERE id = ? AND espacio_id = ? AND deleted_at IS NULL LIMIT 1`,
@@ -65,10 +64,10 @@ export function useDeuda(id: string) {
     [id, espacioId ?? ''],
   )
   const deuda = data[0]
-  const saldo = deuda ? calcularSaldoPendiente(deuda.monto_inicial, pagosQ.data.map((pago) => pago.monto)) : null
   return {
-    deuda: deuda && saldo !== null ? { ...deuda, saldo_pendiente: saldo, estado: estadoDeudaDesdeSaldo(saldo) } : null,
+    deuda: deuda ? resolverSaldoDeuda(deuda, pagosQ.data.map((pago) => pago.monto)) : null,
     cargando: isLoading || pagosQ.isLoading,
+    error: error ?? pagosQ.error,
     abonos: pagosQ.data,
     espacioId,
   }

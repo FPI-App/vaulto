@@ -22,6 +22,8 @@ export function Button({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}
       onPress={onPress}
       style={({ pressed }) => [
@@ -45,7 +47,7 @@ export function Button({
           style={{
             ...theme.typography.scale.label,
             fontFamily: theme.typography.fontFamily,
-            color: isPrimary ? '#FFFFFF' : theme.colors.brand[600],
+            color: isPrimary ? '#FFFFFF' : theme.colors.actionText,
           }}
         >
           {label}
