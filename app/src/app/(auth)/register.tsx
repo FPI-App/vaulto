@@ -1,10 +1,11 @@
 import { Link } from 'expo-router'
 import { useState } from 'react'
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
-import { Screen } from '@/components/Screen'
+import { AuthLayout, FormError } from '@/components/AuthLayout'
+import { Text } from '@/components/Text'
 import { useAuth } from '@/lib/auth/AuthProvider'
 import { useTheme } from '@/theme'
 
@@ -32,80 +33,58 @@ export default function RegisterScreen() {
   }
 
   return (
-    <Screen>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.flex}
-      >
-        <View style={styles.flex}>
-          <Text
-            style={{
-              ...theme.typography.scale.h1,
-              fontFamily: theme.typography.fontFamily,
-              color: theme.colors.text,
-              marginTop: 48,
-              marginBottom: 24,
-            }}
-          >
-            Crear cuenta
-          </Text>
-
-          <Field
-            label="Correo"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            autoComplete="email"
-            keyboardType="email-address"
-            inputMode="email"
-            placeholder="tu@correo.com"
-          />
-          <Field
-            label="Contraseña"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoComplete="new-password"
-            placeholder="Mínimo 6 caracteres"
-          />
-
-          {error ? (
-            <Text
-              style={{
-                ...theme.typography.scale.body,
-                color: theme.colors.financial.expense,
-                marginBottom: theme.space.md,
-              }}
-            >
-              {error}
-            </Text>
-          ) : null}
-          {info ? (
-            <Text
-              style={{
-                ...theme.typography.scale.body,
-                color: theme.colors.financial.success,
-                marginBottom: theme.space.md,
-              }}
-            >
-              {info}
-            </Text>
-          ) : null}
-
-          <Button label="Crear cuenta" onPress={handleSubmit} loading={loading} />
-
-          <View style={styles.links}>
-            <Link href="/(auth)/login" style={{ color: theme.colors.brand[600] }}>
-              Ya tengo cuenta
+    <AuthLayout
+      title="Crea tu cuenta"
+      subtitle="Empieza a ver tu dinero con claridad. Toma menos de un minuto."
+      footer={
+        <View style={styles.links}>
+          <Text tone="muted">
+            ¿Ya tienes cuenta?{' '}
+            <Link href="/(auth)/login" style={{ color: theme.colors.actionText, fontFamily: theme.typography.fonts.semibold }}>
+              Inicia sesión
             </Link>
-          </View>
+          </Text>
         </View>
-      </KeyboardAvoidingView>
-    </Screen>
+      }
+    >
+      <Field
+        label="Correo"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        autoComplete="email"
+        keyboardType="email-address"
+        inputMode="email"
+        placeholder="tu@correo.com"
+      />
+      <Field
+        label="Contraseña"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        autoComplete="new-password"
+        placeholder="Mínimo 6 caracteres"
+      />
+      <FormError message={error} />
+      {info ? (
+        <View
+          accessibilityRole="alert"
+          style={{
+            backgroundColor: theme.colors.brandSoft,
+            borderRadius: theme.radius.sm,
+            paddingHorizontal: theme.space.lg,
+            paddingVertical: theme.space.md,
+            marginBottom: theme.space.lg,
+          }}
+        >
+          <Text tone="brand">{info}</Text>
+        </View>
+      ) : null}
+      <Button label="Crear cuenta" onPress={handleSubmit} loading={loading} />
+    </AuthLayout>
   )
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  links: { marginTop: 20, alignItems: 'center' },
+  links: { alignItems: 'center', gap: 16 },
 })

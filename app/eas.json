@@ -7,6 +7,14 @@
       "android": {
         "buildType": "apk"
       }
+    },
+    "preview": {
+      "distribution": "internal",
+      "environment": "preview",
+      "node": "26.8.1",
+      "android": {
+        "buildType": "apk"
+      }
     }
   }
 }

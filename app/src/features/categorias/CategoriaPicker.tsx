@@ -1,10 +1,11 @@
 // Selector de categoría para el formulario de movimientos. Vive en la feature de
 // categorías para que Movimientos no conozca cómo se consultan.
 import { useRouter } from 'expo-router'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
 import type { TipoCategoria } from '@vaulto/shared'
 
 import { CategoriaIcon } from '@/components/CategoriaIcon'
+import { Text } from '@/components/Text'
 import { useTheme } from '@/theme'
 
 import { useCategorias, useSembrarCategoriasAlSincronizar, type CategoriaRow } from './data/useCategorias'
@@ -48,20 +49,17 @@ export function CategoriaPicker({
                 {
                   borderRadius: theme.radius.md,
                   borderColor: activa ? (c.color ?? theme.colors.brand[600]) : 'transparent',
-                  backgroundColor: activa ? theme.colors.surface : 'transparent',
+                  backgroundColor: activa ? theme.colors.surface2 : 'transparent',
                   opacity: pressed ? 0.7 : 1,
                 },
               ]}
             >
               <CategoriaIcon icono={c.icono} color={c.color} size={40} />
               <Text
-                numberOfLines={1}
-                style={{
-                  ...theme.typography.scale.caption,
-                  fontFamily: theme.typography.fontFamily,
-                  color: activa ? theme.colors.text : theme.colors.textMuted,
-                  marginTop: 4,
-                }}
+                variant="caption"
+                tone={activa ? 'default' : 'muted'}
+                numberOfLines={2}
+                style={{ marginTop: 6, textAlign: 'center', ...(activa && { fontFamily: theme.typography.fonts.semibold }) }}
               >
                 {c.nombre}
               </Text>
@@ -75,13 +73,7 @@ export function CategoriaPicker({
         hitSlop={8}
         style={{ minHeight: theme.layout.minTouchTarget, justifyContent: 'center' }}
       >
-        <Text
-          style={{
-            ...theme.typography.scale.label,
-            fontFamily: theme.typography.fontFamily,
-            color: theme.colors.brand[600],
-          }}
-        >
+        <Text variant="label" tone="brand">
           {opciones.length ? 'Gestionar categorías' : 'Crear categorías'}
         </Text>
       </Pressable>
@@ -90,6 +82,7 @@ export function CategoriaPicker({
 }
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  celda: { width: 76, alignItems: 'center', paddingVertical: 8, paddingHorizontal: 2, borderWidth: 2 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 4 },
+  // Tres columnas: con cinco, «Entretenimiento» y «Restaurantes» quedaban cortados.
+  celda: { width: '33.333%', minHeight: 84, alignItems: 'center', paddingVertical: 10, paddingHorizontal: 4, borderWidth: 2 },
 })

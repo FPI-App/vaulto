@@ -2,9 +2,11 @@
 //
 // Deudas SOLO por el contrato `DeudasSelectors` de @vaulto/shared: este módulo no
 // conoce tablas ni carpetas de Track B (lo vigila la regla de ESLint). Como el
-// contrato es async y no reactivo, se refresca al enfocar la pantalla.
+// contrato es async y no reactivo, se refresca al enfocar la pantalla y tras cada
+// checkpoint de sync, para que un dispositivo en Inicio vea los abonos de otro.
+import { useStatus } from '@powersync/react-native'
 import { useFocusEffect } from 'expo-router'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { sumarSaldos, type DeudasSelectors, type VencimientoResumen } from '@vaulto/shared'
 
 import { useCuentas } from '@/features/cuentas/data/useCuentas'
@@ -63,6 +65,9 @@ export function useDashboard(): Dashboard {
   }, [selectors])
 
   useFocusEffect(cargarDeudas)
+
+  const ultimoSync = useStatus().lastSyncedAt?.getTime()
+  useEffect(() => (ultimoSync === undefined ? undefined : cargarDeudas()), [cargarDeudas, ultimoSync])
 
   const activas = cuentas.filter((c) => !c.archivada)
   return {

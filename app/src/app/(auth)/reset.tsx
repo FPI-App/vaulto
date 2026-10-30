@@ -1,10 +1,11 @@
 import { Link } from 'expo-router'
 import { useState } from 'react'
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
-import { Screen } from '@/components/Screen'
+import { AuthLayout, FormError } from '@/components/AuthLayout'
+import { Text } from '@/components/Text'
 import { useAuth } from '@/lib/auth/AuthProvider'
 import { useTheme } from '@/theme'
 
@@ -31,81 +32,47 @@ export default function ResetScreen() {
   }
 
   return (
-    <Screen>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.flex}
-      >
-        <View style={styles.flex}>
-          <Text
-            style={{
-              ...theme.typography.scale.h1,
-              fontFamily: theme.typography.fontFamily,
-              color: theme.colors.text,
-              marginTop: 48,
-              marginBottom: 8,
-            }}
-          >
-            Restablecer contraseña
-          </Text>
-          <Text
-            style={{
-              ...theme.typography.scale.body,
-              color: theme.colors.textMuted,
-              marginBottom: 24,
-            }}
-          >
-            Te enviaremos un enlace a tu correo.
-          </Text>
-
-          <Field
-            label="Correo"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            autoComplete="email"
-            keyboardType="email-address"
-            inputMode="email"
-            placeholder="tu@correo.com"
-          />
-
-          {error ? (
-            <Text
-              style={{
-                ...theme.typography.scale.body,
-                color: theme.colors.financial.expense,
-                marginBottom: theme.space.md,
-              }}
-            >
-              {error}
-            </Text>
-          ) : null}
-          {info ? (
-            <Text
-              style={{
-                ...theme.typography.scale.body,
-                color: theme.colors.financial.success,
-                marginBottom: theme.space.md,
-              }}
-            >
-              {info}
-            </Text>
-          ) : null}
-
-          <Button label="Enviar enlace" onPress={handleSubmit} loading={loading} />
-
-          <View style={styles.links}>
-            <Link href="/(auth)/login" style={{ color: theme.colors.brand[600] }}>
-              Volver a iniciar sesión
-            </Link>
-          </View>
+    <AuthLayout
+      title="Restablece tu contraseña"
+      subtitle="Escribe tu correo y te enviamos un enlace para elegir una nueva."
+      footer={
+        <View style={styles.links}>
+          <Link href="/(auth)/login" style={[theme.typography.scale.label, { color: theme.colors.actionText }]}>
+            Volver a iniciar sesión
+          </Link>
         </View>
-      </KeyboardAvoidingView>
-    </Screen>
+      }
+    >
+      <Field
+        label="Correo"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        autoComplete="email"
+        keyboardType="email-address"
+        inputMode="email"
+        placeholder="tu@correo.com"
+      />
+      <FormError message={error} />
+      {info ? (
+        <View
+          accessibilityRole="alert"
+          style={{
+            backgroundColor: theme.colors.brandSoft,
+            borderRadius: theme.radius.sm,
+            paddingHorizontal: theme.space.lg,
+            paddingVertical: theme.space.md,
+            marginBottom: theme.space.lg,
+          }}
+        >
+          <Text tone="brand">{info}</Text>
+        </View>
+      ) : null}
+      <Button label="Enviar enlace" onPress={handleSubmit} loading={loading} />
+    </AuthLayout>
   )
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  links: { marginTop: 20, alignItems: 'center' },
+  links: { alignItems: 'center', gap: 16 },
 })

@@ -1,6 +1,7 @@
 import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 const ExpoSecureStoreAdapter = {
   getItem: (key: string) => {
@@ -20,7 +21,8 @@ const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: ExpoSecureStoreAdapter,
+    // SecureStore no existe en web; ahí supabase-js usa localStorage por defecto
+    storage: Platform.OS === 'web' ? undefined : ExpoSecureStoreAdapter,
     autoRefreshToken: true,
     persistSession: true,
     flowType: 'pkce',

@@ -1,6 +1,6 @@
 import { PowerSyncContext, type PowerSyncDatabase } from '@powersync/react-native'
 import { useEffect, useState, type ReactNode } from 'react'
-import { ActivityIndicator, Alert, Text, View } from 'react-native'
+import { ActivityIndicator, Text, View } from 'react-native'
 
 import { Button } from '@/components/Button'
 import { Screen } from '@/components/Screen'
@@ -10,6 +10,7 @@ import { StorageError } from '@/lib/db/storageErrors'
 import { databaseSessions } from '@/lib/sync/db'
 import { useTheme } from '@/theme'
 import { SyncUploadNotice } from './SyncUploadNotice'
+import { showAlert } from '@/lib/ui/alert'
 
 type StorageState = { database: PowerSyncDatabase; error?: never } | { error: string; database?: never }
 
@@ -57,7 +58,7 @@ export function PowerSyncProvider({ children, userId }: { children: ReactNode; u
           <>
             <Text style={{ ...theme.typography.scale.body, color: theme.colors.textMuted }}>{state.error}</Text>
             <Button label="Reintentar" onPress={() => { setState(null); setAttempt((value) => value + 1) }} />
-            <Button label="Cerrar sesión" variant="ghost" onPress={() => { void signOut().catch(() => Alert.alert('No se pudo cerrar sesión', 'Intenta de nuevo.')) }} />
+            <Button label="Cerrar sesión" variant="ghost" onPress={() => { void signOut().catch(() => showAlert('No se pudo cerrar sesión', 'Intenta de nuevo.')) }} />
           </>
         ) : <ActivityIndicator accessibilityLabel="Abriendo la base de datos" color={theme.colors.brand[600]} />}
       </View>
