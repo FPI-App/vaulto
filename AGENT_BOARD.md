@@ -46,7 +46,11 @@ Confirmado al incorporar estas reglas: workers asentados, bandeja sin mensajes p
 - Ambas revisiones entregadas con `worker_done succeeded`; lotes procesados completos y confirmados después de registrar hallazgos y disponer de las sesiones. Sin cambios de los reviewers.
 - Standards: PR31 sin bloqueante declarado, con salvedades sobre alcance compartido, web sin cifrar y duplicación de conexión. PR32 aprobado. Spec: PR31 requiere corregir suma flotante y armonizar layout con PR32; PR32 aprobado. No se mezclan estos dos ejes de evaluación.
 
-### Integración PR31 y PR32 — desarrollo y QA en ejecución
+### Integración PR31 y PR32 — fusionada en main
+
+- PR conjunto #35 fusionado en main: `1fcf35e9cc31240fb380b1e6ec250909b19d6fa6`. CI del head `1c4a7ce01a6dfe1cdd85d626623df45c28d9aab4` correcto (run `41143036636`, 46 s).
+- Gate de merge #35: `gate_2f8ba7f32b15`, Task `task_7277434b2305`, resuelto yes por aprobación delegada. GitHub marcó también #31 y #32 MERGED al incorporar sus commits con historia. No se cerraron Issues por ese merge.
+- PR históricos #20/#22 marcados listos y fusionados en sus bases originales con CI correcto y heads ya presentes en main. Gates `gate_ced1ce0be5f8` / `gate_0050c6b9e809`, merges `66209e8f` / `8d1e9c48`. Sin cambios nuevos de producto en main por esa limpieza.
 
 - Entregas aceptadas: DEV `2447e78` y QA `64e877c`, ambos `worker_done succeeded`. Sesiones dispuestas mediante worker-release (retención de terminales preexistentes) y lotes completos procesados antes de ack. Sin workers pendientes.
 - Integradas ambas ramas en `orchestration/issue-26` conservando los heads originales #31 `21325ba` y #32 `7d43de4` como ancestros. El coordinador verificó que el layout coincide con el rediseño y que useDashboard/eas.json conservan la demo.
@@ -62,6 +66,7 @@ Confirmado al incorporar estas reglas: workers asentados, bandeja sin mensajes p
 - QA Antigravity (resultado): completado localmente en `feature/qa-tests`, merge de DEV `2447e78` (`2ad7085`) y SHA final de QA `64e877c`, sin push ni PR. Suite significativa `app/src/features/deudas/data/calcularTotalesDeudas.test.ts` (63 líneas) verifica que `'0.01' + '2.01' + '0.48'` acumula `2.5` (`formatCOP` produce `$ 3`) y no la deriva de coma flotante `2.4999999999999996`; verifica separación por dirección `me_deben`/`yo_debo`, exclusión de saldadas/conflicto null y lista vacía. Verificación ejecutada: `pnpm install --frozen-lockfile` correcto; `pnpm test` 79 shared + 118 app = 197/197 pruebas pasadas; `pnpm typecheck` 0 errores; `pnpm lint` 0 errores y 0 warnings (`eslint src` + `expo lint`). Revisión estática de integración: guard `!__DEV__` verificado en `db.web.ts`; layout `_layout.tsx` conserva TabBar del rediseño, rutas cuentas/categorias accesibles sin `href: null` y refresco de `useDashboard` con `lastSyncedAt`. Verificación DEV citada: bundle Hermes Android 2.179 módulos. Limitaciones/pendientes: ejecución y validación nativa APK con `expo-blur`/`linear-gradient` y sync multi-dispositivo permanecen pendientes de entorno nativo. Reporte entregado: `docs/qa/pr31-32-integracion.md`.
 - Orquestador: espera exacta `orca orchestration check --wait --types worker_done,escalation,question --timeout-ms 900000 --json`. No aprobar integración si falla un worker o hay escalation/question; detener y reportar.
 - La publicación conjunta usará `orchestration/issue-26`, cuyo comando exacto de push ya fue autorizado. Creará PR de integración separado del #34 ya fusionado y gates rastreables por aprobación delegada.
+- Publicación e integración realizadas: `git push -u origin orchestration/issue-26` exit 0; `gh pr create ... --body-file .cache/orchestration/pr-ui-demo.md` creó #35; `gh pr checks 35 --watch --interval 10` exit 0; `gh pr merge 35 --merge --match-head-commit 1c4a7ce01a6dfe1cdd85d626623df45c28d9aab4` correcto.
 
 ### Pendientes de la app — evidencia más reciente del tracker
 
