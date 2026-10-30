@@ -6,7 +6,7 @@ Actualizado: 2026-10-30. Run Orca: `run_7292d436ace4`.
 
 - Issue: [#26 — Sustituir el lint ficticio de packages/shared por una verificación real](https://github.com/FPI-App/vaulto/issues/26).
 - Estado: DEV y QA entregados e integrados localmente; pendiente confirmación de publicación y CI remoto. P2; sin más Todo en el último escaneo; #25 sigue abierto/bloqueado por evidencia nativa.
-- Base de integración: `main` inicial `2ba0875`. Rama PR aislada `orchestration/issue-26`; integrar únicamente commits de #26, sin arrastrar las pruebas de #25.
+- Base inicial de verificación: `main` `2ba0875`. Rama `orchestration/issue-26`; incluye ahora la integración local #25 como dependencia para publicar/fusionar primero PR #25 y después PR #26 sin conflicto del tablero. El diff del segundo PR se revisa contra main actualizado tras el primero.
 
 ### [DEV] Claude — #26
 
@@ -41,6 +41,9 @@ Actualizado: 2026-10-30. Run Orca: `run_7292d436ace4`.
 - Confirmado por ejecución propia: `pnpm install --frozen-lockfile --ignore-scripts`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (79 shared + 101 app) y `pnpm infra:test` (12) correctos.
 - Confirmado por ejecución propia: ESLint analiza 19 archivos (15 domain, 1 types, 2 powersync, 1 index); 0 errores y 0 advertencias. stdin con `export const lintProbe: any = 1` bajo `src/domain/lint-probe.ts` falla con exit 1 por `@typescript-eslint/no-explicit-any`; el mismo ejemplo con `number` da exit 0. No se añadió `--rule` ni se crearon archivos temporales.
 - Diferencia de conteos esperada: ramas DEV/QA contienen pruebas #25; la integración aislada #26 conserva las 101 pruebas app de main. No se arrastran pruebas de sincronización al PR de lint.
+- Preparación final de integración secuencial: #25 se fusionó localmente como ancestro de #26. El único conflicto fue AGENT_BOARD.md (add/add), resuelto conservando el tablero más reciente de #26 con historial #25. Se repiten las pruebas sobre el conjunto final; publicar/mergear #25 primero evita que su código figure como cambio nuevo del PR de lint.
+- Confirmado por el orquestador en conjunto final: `pnpm test` correcto, 79 shared + 114 app = 193 pruebas. Los 12 tests de infraestructura ya pasaron y no hubo cambios posteriores en scripts/infra. No quedan terminales supervisados pendientes de liberar; las sesiones preexistentes se conservan por Orca.
+- Confirmado en el mismo conjunto final: `pnpm lint` y `pnpm typecheck` correctos después de integrar ambas entregas y resolver el tablero.
 - QA aceptado: commit `7af5e29`, solo reporte independiente; worktree QA limpio. Integrado por cherry-pick sin arrastrar #25.
 - Pendiente: confirmación de publicación, PR y CI remoto antes de cerrar #26. Comando de publicación previsto: `git push -u origin orchestration/issue-26` hacia `https://github.com/FPI-App/vaulto`.
 - Último escaneo confirmado: no hay ítems Todo; #25 y #26 figuran In Progress. Los otros Issues ya In Progress no se reasignan automáticamente.
