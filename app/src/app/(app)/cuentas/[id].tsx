@@ -4,7 +4,7 @@ import { useRef, useState } from 'react'
 import Archive from 'lucide-react-native/icons/archive'
 import ArchiveRestore from 'lucide-react-native/icons/archive-restore'
 import Trash from 'lucide-react-native/icons/trash'
-import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { formatMontoInput } from '@vaulto/shared'
 
 import { Button } from '@/components/Button'
@@ -21,6 +21,7 @@ import { useCuenta } from '@/features/cuentas/data/useCuentas'
 import { FormularioCuenta } from '@/features/cuentas/FormularioCuenta'
 import { useEspacioActual } from '@/lib/espacio/useEspacioActual'
 import { useTheme } from '@/theme'
+import { showAlert } from '@/lib/ui/alert'
 
 export default function EditarCuentaScreen() {
   const theme = useTheme()
@@ -40,7 +41,7 @@ export default function EditarCuentaScreen() {
       await operacion()
       if (cerrar) router.back()
     } catch {
-      Alert.alert('No se pudo guardar', 'Revisa los datos de la cuenta e inténtalo de nuevo.')
+      showAlert('No se pudo guardar', 'Revisa los datos de la cuenta e inténtalo de nuevo.')
     } finally {
       operacionPendiente.current = false
       setGuardando(false)
@@ -59,7 +60,7 @@ export default function EditarCuentaScreen() {
 
   function confirmarEliminar() {
     if (!cuenta || !espacioId || operacionPendiente.current) return
-    Alert.alert('Eliminar cuenta', '¿Seguro? Dejará de aparecer en tus movimientos.', [
+    showAlert('Eliminar cuenta', '¿Seguro? Dejará de aparecer en tus movimientos.', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Eliminar',

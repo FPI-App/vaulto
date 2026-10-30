@@ -27,7 +27,7 @@ export function Placeholder({
         <View style={{ marginBottom: theme.space.lg }}>
           <IconBadge icon={Hourglass} size={64} />
         </View>
-        <Text variant="h2" accessibilityRole="header" style={{ textAlign: 'center' }}>
+        <Text variant="h2" heading={2} style={{ textAlign: 'center' }}>
           {title}
         </Text>
         {hint ? (

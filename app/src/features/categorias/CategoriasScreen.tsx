@@ -6,12 +6,13 @@ import ChevronRight from 'lucide-react-native/icons/chevron-right'
 import Plus from 'lucide-react-native/icons/plus'
 import Tags from 'lucide-react-native/icons/tags'
 import { useState } from 'react'
-import { Alert, Pressable, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import type { TipoCategoria } from '@vaulto/shared'
 
 import { Button } from '@/components/Button'
 import { CategoriaIcon } from '@/components/CategoriaIcon'
 import { Card } from '@/components/Card'
+import { IconButton } from '@/components/IconButton'
 import { EmptyState } from '@/components/EmptyState'
 import { ListRow } from '@/components/ListRow'
 import { Screen } from '@/components/Screen'
@@ -22,6 +23,7 @@ import { useTheme } from '@/theme'
 
 import { sembrarCategoriasPorDefecto } from './data/categoriasRepo'
 import { useCategorias, useSembrarCategoriasAlSincronizar } from './data/useCategorias'
+import { showAlert } from '@/lib/ui/alert'
 
 export function CategoriasScreen() {
   const theme = useTheme()
@@ -34,7 +36,7 @@ export function CategoriasScreen() {
 
   function usarSugeridas() {
     if (!espacioId) return
-    sembrarCategoriasPorDefecto(db, espacioId).catch((e) => Alert.alert('Error', String(e)))
+    sembrarCategoriasPorDefecto(db, espacioId).catch((e) => showAlert('Error', String(e)))
   }
 
   function volver() {
@@ -45,19 +47,8 @@ export function CategoriasScreen() {
   return (
     <Screen scroll tabBar>
       <View style={[styles.header, { paddingTop: theme.space.lg, paddingBottom: theme.space.xl, gap: theme.space.md }]}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Volver"
-          onPress={volver}
-          hitSlop={4}
-          style={({ pressed }) => [
-            styles.volver,
-            { backgroundColor: theme.colors.surface2, opacity: pressed ? 0.7 : 1 },
-          ]}
-        >
-          <ArrowLeft size={20} color={theme.colors.text} strokeWidth={2} />
-        </Pressable>
-        <Text variant="h1" accessibilityRole="header" style={{ flex: 1 }} numberOfLines={1}>
+        <IconButton icon={ArrowLeft} label="Volver" onPress={volver} />
+        <Text variant="h1" heading={1} style={{ flex: 1 }} numberOfLines={1}>
           Categorías
         </Text>
         <Button
@@ -109,6 +100,5 @@ export function CategoriasScreen() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center' },
-  volver: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   vacio: { minHeight: 360, flexDirection: 'row' },
 })

@@ -58,6 +58,17 @@ export const financialDark = {
   success: '#22D3EE',
 } as const
 
+/**
+ * Sobre superficies de marca (tarjeta de saldo, botón primario). El texto
+ * secundario va al 92 % de blanco: 4,65:1 sobre brand/600 (AA).
+ */
+export const onBrand = {
+  text: '#FFFFFF',
+  textMuted: 'rgba(255,255,255,0.92)',
+  halo: 'rgba(255,255,255,0.08)',
+  haloAccent: 'rgba(245,158,11,0.10)',
+} as const
+
 /** Degradado de marca: lineal 135°, brand/600 → brand/700. */
 export const brandGradient = {
   angle: 135,
@@ -155,6 +166,13 @@ export interface Theme {
     actionText: string
     /** Fondo suave de marca: chips seleccionados, íconos activos. */
     brandSoft: string
+    /** Texto sobre brandSoft (chip seleccionado): AA en ambos modos. */
+    brandSoftText: string
+    /** Placeholder de inputs: ≥4,5:1 sobre surface. */
+    placeholder: string
+    /** Fondo y texto de mensajes de error de formulario. */
+    dangerSoft: string
+    dangerText: string
     /** Glass (§6.1): solo tab bar, modales y tarjeta de saldo. */
     glassFill: string
     glassBorder: string
@@ -184,8 +202,12 @@ export const lightTheme: Theme = {
     textMuted: neutral[600],
     actionText: brand[600],
     brandSoft: brand[100],
+    brandSoftText: brand[700],
+    placeholder: neutral[600],
+    dangerSoft: '#FEF2F2',
+    dangerText: '#B91C1C',
     glassFill: 'rgba(255,255,255,0.72)',
-    glassBorder: 'rgba(255,255,255,0.6)',
+    glassBorder: 'rgba(15,23,42,0.06)',
     backdrop: '#E9EDF3',
     financial: financialLight,
   },
@@ -210,6 +232,10 @@ export const darkTheme: Theme = {
     textMuted: darkPalette.textMuted,
     actionText: '#60A5FA',
     brandSoft: 'rgba(59,130,246,0.16)',
+    brandSoftText: '#60A5FA',
+    placeholder: '#7D8897',
+    dangerSoft: 'rgba(248,113,113,0.12)',
+    dangerText: financialDark.expense,
     glassFill: 'rgba(20,26,36,0.72)',
     glassBorder: 'rgba(255,255,255,0.08)',
     backdrop: '#06090F',

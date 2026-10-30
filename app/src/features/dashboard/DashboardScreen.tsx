@@ -21,7 +21,7 @@ import { PressableScale } from '@/components/PressableScale'
 import { Screen } from '@/components/Screen'
 import { Text } from '@/components/Text'
 import { useAuth } from '@/lib/auth/AuthProvider'
-import { useTheme } from '@/theme'
+import { onBrand, useTheme } from '@/theme'
 
 import { useDashboard } from './useDashboard'
 
@@ -45,7 +45,7 @@ export function DashboardScreen() {
         <Text variant="caption" tone="muted">
           {hoy}
         </Text>
-        <Text variant="h1" accessibilityRole="header" style={{ marginTop: 2 }}>
+        <Text variant="h1" heading={1} style={{ marginTop: 2 }}>
           {nombre ? `Hola, ${nombre}` : 'Hola'}
         </Text>
       </View>
@@ -67,7 +67,7 @@ export function DashboardScreen() {
         <View pointerEvents="none" style={[styles.halo, styles.haloA]} />
         <View pointerEvents="none" style={[styles.halo, styles.haloB]} />
 
-        <Text variant="label" style={{ color: 'rgba(255,255,255,0.78)' }}>
+        <Text variant="label" style={{ color: onBrand.textMuted }}>
           Disponible
         </Text>
         <Amount
@@ -78,7 +78,7 @@ export function DashboardScreen() {
           style={{ marginTop: theme.space.sm, fontSize: 38, lineHeight: 46 }}
         />
         <View style={[styles.heroPie, { marginTop: theme.space.xl }]}>
-          <Text variant="caption" style={{ color: 'rgba(255,255,255,0.78)', flex: 1 }}>
+          <Text variant="caption" style={{ color: onBrand.textMuted, flex: 1 }}>
             {cuentasActivas === 0
               ? 'Aún no tienes cuentas activas'
               : `En ${cuentasActivas} ${cuentasActivas === 1 ? 'cuenta activa' : 'cuentas activas'}`}
@@ -87,7 +87,7 @@ export function DashboardScreen() {
             <Text variant="label" tone="onBrand">
               Ver cuentas
             </Text>
-            <ChevronRight size={16} color="#FFFFFF" strokeWidth={2.2} />
+            <ChevronRight size={16} color={onBrand.text} strokeWidth={2.2} />
           </View>
         </View>
       </PressableScale>
@@ -98,8 +98,14 @@ export function DashboardScreen() {
       </View>
 
       <View style={[styles.seccion, { marginTop: theme.space['3xl'], marginBottom: theme.space.md }]}>
-        <Text variant="h3">Próximos vencimientos</Text>
-        <Pressable accessibilityRole="link" onPress={() => router.navigate('/deudas')} hitSlop={8}>
+        <Text variant="h3" heading={2}>
+          Próximos vencimientos
+        </Text>
+        <Pressable
+          accessibilityRole="link"
+          onPress={() => router.navigate('/deudas')}
+          style={{ minHeight: theme.layout.minTouchTarget, justifyContent: 'center', paddingHorizontal: 4 }}
+        >
           <Text variant="label" tone="brand">
             Ver deudas
           </Text>
@@ -188,9 +194,9 @@ function FilaVencimiento({ v, divider }: { v: VencimientoResumen; divider: boole
 const styles = StyleSheet.create({
   saludo: {},
   hero: { overflow: 'hidden', padding: 24, minHeight: 176 },
-  halo: { position: 'absolute', borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.08)' },
+  halo: { position: 'absolute', borderRadius: 999, backgroundColor: onBrand.halo },
   haloA: { width: 220, height: 220, top: -90, right: -60 },
-  haloB: { width: 140, height: 140, bottom: -70, right: 40, backgroundColor: 'rgba(245,158,11,0.10)' },
+  haloB: { width: 140, height: 140, bottom: -70, right: 40, backgroundColor: onBrand.haloAccent },
   heroPie: { flexDirection: 'row', alignItems: 'center' },
   verCuentas: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   fila: { flexDirection: 'row' },

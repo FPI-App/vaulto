@@ -6,12 +6,13 @@ import ArrowLeft from 'lucide-react-native/icons/arrow-left'
 import Banknote from 'lucide-react-native/icons/banknote'
 import Landmark from 'lucide-react-native/icons/landmark'
 import Plus from 'lucide-react-native/icons/plus'
-import { Pressable, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { sumarSaldos } from '@vaulto/shared'
 
 import { Amount } from '@/components/Amount'
 import { Button } from '@/components/Button'
 import { Card } from '@/components/Card'
+import { IconButton } from '@/components/IconButton'
 import { EmptyState } from '@/components/EmptyState'
 import { IconBadge } from '@/components/IconBadge'
 import { ListRow } from '@/components/ListRow'
@@ -61,19 +62,8 @@ export function CuentasScreen() {
   return (
     <Screen scroll tabBar>
       <View style={[styles.header, { paddingTop: theme.space.lg, paddingBottom: theme.space.xl, gap: theme.space.md }]}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Volver"
-          onPress={volver}
-          hitSlop={4}
-          style={({ pressed }) => [
-            styles.volver,
-            { backgroundColor: theme.colors.surface2, opacity: pressed ? 0.7 : 1 },
-          ]}
-        >
-          <ArrowLeft size={20} color={theme.colors.text} strokeWidth={2} />
-        </Pressable>
-        <Text variant="h1" accessibilityRole="header" style={{ flex: 1 }} numberOfLines={1}>
+        <IconButton icon={ArrowLeft} label="Volver" onPress={volver} />
+        <Text variant="h1" heading={1} style={{ flex: 1 }} numberOfLines={1}>
           Cuentas
         </Text>
         <Button
@@ -127,7 +117,7 @@ export function CuentasScreen() {
 
       {archivadas.length > 0 ? (
         <View style={{ marginTop: theme.space['3xl'] }}>
-          <Text variant="label" tone="muted" style={{ marginBottom: theme.space.md }}>
+          <Text variant="label" tone="muted" heading={2} style={{ marginBottom: theme.space.md }}>
             Archivadas
           </Text>
           <Card padded={false} style={{ paddingHorizontal: theme.space.lg, opacity: 0.6 }}>
@@ -181,6 +171,5 @@ function FilaCuenta({
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center' },
-  volver: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   vacio: { minHeight: 360, flexDirection: 'row' },
 })

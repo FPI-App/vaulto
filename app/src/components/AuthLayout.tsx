@@ -34,7 +34,7 @@ export function AuthLayout({
           <View style={{ marginBottom: theme.space['4xl'] }}>
             <Logo size={36} />
           </View>
-          <Text variant="h1" accessibilityRole="header">
+          <Text variant="h1" heading={1}>
             {title}
           </Text>
           {subtitle ? (
@@ -60,14 +60,14 @@ export function FormError({ message }: { message: string | null }) {
     <View
       accessibilityRole="alert"
       style={{
-        backgroundColor: theme.mode === 'dark' ? 'rgba(248,113,113,0.12)' : '#FEF2F2',
+        backgroundColor: theme.colors.dangerSoft,
         borderRadius: theme.radius.sm,
         paddingHorizontal: theme.space.lg,
         paddingVertical: theme.space.md,
         marginBottom: theme.space.lg,
       }}
     >
-      <Text tone="expense">{message}</Text>
+      <Text style={{ color: theme.colors.dangerText }}>{message}</Text>
     </View>
   )
 }

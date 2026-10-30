@@ -1,6 +1,6 @@
 import { useQuery, usePowerSync } from '@powersync/react-native'
 import { useRef, useState } from 'react'
-import { Alert, Image, View } from 'react-native'
+import { Image, View } from 'react-native'
 import LogOut from 'lucide-react-native/icons/log-out'
 
 import { Button } from '@/components/Button'
@@ -12,6 +12,7 @@ import { useAuth } from '@/lib/auth/AuthProvider'
 import { useTheme } from '@/theme'
 
 import { guardarPerfil } from './perfilRepo'
+import { showAlert } from '@/lib/ui/alert'
 
 interface PerfilRow {
   id: string
@@ -45,7 +46,7 @@ export function PerfilScreen() {
           label="Cerrar sesión"
           variant="secondary"
           icon={LogOut}
-          onPress={() => signOut().catch(() => Alert.alert('No se pudo cerrar sesión', 'Intenta de nuevo.'))}
+          onPress={() => signOut().catch(() => showAlert('No se pudo cerrar sesión', 'Intenta de nuevo.'))}
         />
       </View>
     </Screen>
@@ -79,9 +80,9 @@ function PerfilEditor({ perfil }: { perfil: PerfilRow }) {
         descripcion: descripcion ?? perfil.descripcion,
         ocupacion: ocupacion ?? perfil.ocupacion,
       })
-      Alert.alert('Perfil actualizado', 'Tus cambios se sincronizarán cuando tengas conexión.')
+      showAlert('Perfil actualizado', 'Tus cambios se sincronizarán cuando tengas conexión.')
     } catch (error) {
-      Alert.alert('No se pudo actualizar', error instanceof Error ? error.message : 'Intenta de nuevo.')
+      showAlert('No se pudo actualizar', error instanceof Error ? error.message : 'Intenta de nuevo.')
     } finally {
       submitting.current = false
       setGuardando(false)

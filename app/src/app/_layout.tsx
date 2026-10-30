@@ -20,6 +20,7 @@ import { AppFrame } from '@/components/AppFrame'
 import { AuthProvider, useAuth } from '@/lib/auth/AuthProvider'
 import { DeudasSelectorsProvider } from '@/lib/deudas/DeudasSelectorsProvider'
 import { PowerSyncProvider } from '@/lib/powersync/PowerSyncProvider'
+import { AlertHost } from '@/lib/ui/alert'
 import { ThemeProvider, useTheme } from '@/theme'
 
 /**
@@ -78,6 +79,7 @@ export default function RootLayout() {
             <AuthProvider>
               <Navigation />
             </AuthProvider>
+            <AlertHost />
           </AppFrame>
         </ThemeProvider>
       </SafeAreaProvider>

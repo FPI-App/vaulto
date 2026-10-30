@@ -144,7 +144,7 @@ export function MovimientosScreen() {
         }
         renderItem={({ item: seccion }) => (
           <View style={{ marginTop: theme.space.lg }}>
-            <Text variant="caption" tone="muted" accessibilityRole="header" style={{ marginBottom: theme.space.sm }}>
+            <Text variant="caption" tone="muted" heading={2} style={{ marginBottom: theme.space.sm }}>
               {seccion.titulo}
             </Text>
             <Card padded={false} style={{ paddingHorizontal: theme.space.lg }}>

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { Platform, StyleSheet, View } from 'react-native'
 
 import { useTheme } from '@/theme'
@@ -12,6 +12,7 @@ const MAX_WIDTH = 480
  */
 export function AppFrame({ children }: { children: ReactNode }) {
   const theme = useTheme()
+  useWebDocument(theme.colors.brand[500])
   if (Platform.OS !== 'web') return <>{children}</>
   const glow = theme.mode === 'dark' ? 'rgba(37,99,235,0.18)' : 'rgba(37,99,235,0.10)'
   return (
@@ -52,3 +53,26 @@ const styles = StyleSheet.create({
     borderRightWidth: StyleSheet.hairlineWidth,
   },
 })
+
+/**
+ * Ajustes del documento en web que React Native no expresa:
+ * - `lang`: el contenido es español; sin esto el lector de pantalla lo lee en inglés (WCAG 3.1.1).
+ * - Foco visible solo con teclado (WCAG 2.4.7): react-native-web quita el outline de los pulsables.
+ */
+function useWebDocument(focusColor: string) {
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return
+    document.documentElement.lang = 'es-CO'
+    const style = document.createElement('style')
+    style.dataset.vaulto = 'focus'
+    style.textContent = `
+      [role="button"]:focus-visible, [role="tab"]:focus-visible, [role="link"]:focus-visible,
+      a:focus-visible, button:focus-visible {
+        outline: 2px solid ${focusColor} !important;
+        outline-offset: 2px !important;
+      }
+    `
+    document.head.appendChild(style)
+    return () => style.remove()
+  }, [focusColor])
+}

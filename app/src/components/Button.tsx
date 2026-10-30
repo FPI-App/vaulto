@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react-native'
 import { ActivityIndicator, StyleSheet } from 'react-native'
 
-import { useTheme } from '@/theme'
+import { onBrand, useTheme } from '@/theme'
 import { PressableScale } from './PressableScale'
 import { Text } from './Text'
 
@@ -66,7 +66,7 @@ export function Button({
 function colors(theme: ReturnType<typeof useTheme>, variant: ButtonVariant) {
   switch (variant) {
     case 'primary':
-      return { bg: theme.colors.brand[600], fg: '#FFFFFF', border: 'transparent' }
+      return { bg: theme.colors.brand[600], fg: onBrand.text, border: 'transparent' }
     case 'secondary':
       return { bg: theme.colors.surface, fg: theme.colors.text, border: theme.colors.border }
     case 'danger':

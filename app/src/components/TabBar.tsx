@@ -60,7 +60,7 @@ export function TabBar({ state, navigateToTab }: TabBarProps) {
           numberOfLines={1}
           style={{
             color,
-            fontSize: 11,
+            fontSize: 12,
             marginTop: 3,
             fontFamily: focused ? theme.typography.fonts.semibold : theme.typography.fonts.medium,
           }}
@@ -73,12 +73,12 @@ export function TabBar({ state, navigateToTab }: TabBarProps) {
 
   const glass = {
     backgroundColor: theme.colors.glassFill,
-    borderColor: theme.mode === 'dark' ? theme.colors.glassBorder : 'rgba(15,23,42,0.06)',
+    borderColor: theme.colors.glassBorder,
   }
 
   return (
     <View pointerEvents="box-none" style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-      <View style={[styles.bar, glass, theme.shadow.lg]}>
+      <View accessibilityRole="tablist" style={[styles.bar, glass, theme.shadow.lg]}>
         {Platform.OS === 'web' ? (
           <View style={[StyleSheet.absoluteFill, { backdropFilter: 'blur(20px) saturate(160%)' } as object]} />
         ) : (

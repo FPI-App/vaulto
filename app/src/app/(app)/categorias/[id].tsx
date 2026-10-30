@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import { usePowerSync } from '@powersync/react-native'
 import { useRef, useState } from 'react'
 import Trash from 'lucide-react-native/icons/trash'
-import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { esIconoCategoria } from '@vaulto/shared'
 
 import { Button } from '@/components/Button'
@@ -18,6 +18,7 @@ import { useCategoria } from '@/features/categorias/data/useCategorias'
 import { FormularioCategoria } from '@/features/categorias/FormularioCategoria'
 import { useEspacioActual } from '@/lib/espacio/useEspacioActual'
 import { useTheme } from '@/theme'
+import { showAlert } from '@/lib/ui/alert'
 
 export default function EditarCategoriaScreen() {
   const theme = useTheme()
@@ -34,7 +35,7 @@ export default function EditarCategoriaScreen() {
     pendiente.current = true
     setGuardando(true)
     try { await operacion(); router.back() } catch {
-      Alert.alert('No se pudo guardar', 'Revisa los datos e inténtalo de nuevo.')
+      showAlert('No se pudo guardar', 'Revisa los datos e inténtalo de nuevo.')
     } finally { pendiente.current = false; setGuardando(false) }
   }
 
@@ -45,7 +46,7 @@ export default function EditarCategoriaScreen() {
 
   function confirmarEliminar() {
     if (!espacioId || pendiente.current) return
-    Alert.alert(
+    showAlert(
       'Eliminar categoría',
       'Los movimientos que la usan se conservan, pero ya no podrás elegirla en movimientos nuevos.',
       [

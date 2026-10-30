@@ -2,7 +2,7 @@
 // navegación ni de DB, entrega `DatosCategoria` validados vía onSubmit.
 import { useState } from 'react'
 import Check from 'lucide-react-native/icons/check'
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import {
   COLORES_CATEGORIA,
   ICONOS_CATEGORIA,
@@ -18,6 +18,7 @@ import { Text } from '@/components/Text'
 import { useTheme } from '@/theme'
 
 import type { DatosCategoria } from './data/categoriasRepo'
+import { showAlert } from '@/lib/ui/alert'
 
 const NOMBRE_ICONO: Record<IconoCategoria, string> = {
   'shopping-cart': 'Carrito',
@@ -89,7 +90,7 @@ export function FormularioCategoria({
   function submit() {
     const nombreLimpio = nombre.trim()
     if (!nombreLimpio) {
-      Alert.alert('Falta el nombre', 'Ponle un nombre a la categoría.')
+      showAlert('Falta el nombre', 'Ponle un nombre a la categoría.')
       return
     }
     onSubmit({ nombre: nombreLimpio, icono, color })

@@ -36,7 +36,7 @@ export function Screen({
   const header = title ? (
     <View style={[styles.header, { paddingTop: theme.space.lg, paddingBottom: theme.space.xl }]}>
       <View style={{ flex: 1 }}>
-        <Text variant="h1" accessibilityRole="header">
+        <Text variant="h1" heading={1}>
           {title}
         </Text>
         {subtitle ? (

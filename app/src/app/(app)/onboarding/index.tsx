@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Alert } from 'react-native'
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native'
 import { completarOnboarding } from '@/features/onboarding/onboardingRepo'
 import { usePowerSync } from '@powersync/react-native'
 
@@ -11,6 +11,7 @@ import { Card } from '@/components/Card'
 import { LogoMark } from '@/components/Logo'
 import { Text } from '@/components/Text'
 import { useAuth } from '@/lib/auth/AuthProvider'
+import { showAlert } from '@/lib/ui/alert'
 
 export default function OnboardingScreen() {
   const theme = useTheme()
@@ -26,7 +27,7 @@ export default function OnboardingScreen() {
   const handleComenzar = async () => {
     if (submitting.current) return
     if (!session?.user.id) {
-      Alert.alert('Inicia sesión', 'Necesitas una sesión activa para continuar.')
+      showAlert('Inicia sesión', 'Necesitas una sesión activa para continuar.')
       return
     }
     submitting.current = true
@@ -34,7 +35,7 @@ export default function OnboardingScreen() {
     try {
       await completarOnboarding(db, session.user.id, { nombre, apellido, username })
     } catch (error) {
-      Alert.alert('No se pudo completar el registro', error instanceof Error ? error.message : 'Intenta de nuevo.')
+      showAlert('No se pudo completar el registro', error instanceof Error ? error.message : 'Intenta de nuevo.')
     } finally {
       submitting.current = false
       setLoading(false)
@@ -52,7 +53,7 @@ export default function OnboardingScreen() {
           <View style={{ marginBottom: theme.space['3xl'] }}>
             <LogoMark size={56} />
           </View>
-          <Text variant="h1" accessibilityRole="header">
+          <Text variant="h1" heading={1}>
             Empecemos por lo básico
           </Text>
           <Text variant="bodyLg" tone="muted" style={{ marginTop: theme.space.sm, marginBottom: theme.space['3xl'] }}>

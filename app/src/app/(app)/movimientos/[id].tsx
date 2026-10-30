@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import { usePowerSync } from '@powersync/react-native'
 import { useState } from 'react'
 import Trash from 'lucide-react-native/icons/trash'
-import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { formatMontoInput } from '@vaulto/shared'
 
 import { Amount } from '@/components/Amount'
@@ -21,6 +21,7 @@ import { etiquetaDia, parseFecha } from '@/features/movimientos/fechas'
 import { FormularioMovimiento } from '@/features/movimientos/FormularioMovimiento'
 import { useEspacioActual } from '@/lib/espacio/useEspacioActual'
 import { useTheme } from '@/theme'
+import { showAlert } from '@/lib/ui/alert'
 
 export default function EditarMovimientoScreen() {
   const theme = useTheme()
@@ -37,14 +38,14 @@ export default function EditarMovimientoScreen() {
     actualizarMovimiento(db, espacioId, id, datos)
       .then(() => router.back())
       .catch((e) => {
-        Alert.alert('No se pudo guardar', String(e))
+        showAlert('No se pudo guardar', String(e))
         setGuardando(false)
       })
   }
 
   function confirmarEliminar() {
     if (!espacioId) return
-    Alert.alert('Eliminar movimiento', 'Los saldos de las cuentas se recalculan sin él.', [
+    showAlert('Eliminar movimiento', 'Los saldos de las cuentas se recalculan sin él.', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Eliminar',
@@ -52,7 +53,7 @@ export default function EditarMovimientoScreen() {
         onPress: () =>
           eliminarMovimiento(db, espacioId, id)
             .then(() => router.back())
-            .catch((e) => Alert.alert('Error', String(e))),
+            .catch((e) => showAlert('Error', String(e))),
       },
     ])
   }

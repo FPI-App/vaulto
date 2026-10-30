@@ -4,7 +4,7 @@ import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/d
 import { useRouter } from 'expo-router'
 import { useMemo, useState } from 'react'
 import Wallet from 'lucide-react-native/icons/wallet'
-import { Alert, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native'
+import { Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import {
   MENSAJE_ERROR_MOVIMIENTO,
   normalizarBorrador,
@@ -29,6 +29,7 @@ import { tabularNums, useTheme } from '@/theme'
 
 import type { DatosMovimiento } from './data/movimientosRepo'
 import { claveDia, etiquetaDia } from './fechas'
+import { showAlert } from '@/lib/ui/alert'
 
 export interface ValoresInicialesMovimiento {
   tipo: TipoMovimiento
@@ -146,7 +147,7 @@ export function FormularioMovimiento({
       tipoCategoria,
     })
     if (errores.length > 0) {
-      Alert.alert('Revisa el movimiento', MENSAJE_ERROR_MOVIMIENTO[errores[0]!])
+      showAlert('Revisa el movimiento', MENSAJE_ERROR_MOVIMIENTO[errores[0]!])
       return
     }
     onSubmit({

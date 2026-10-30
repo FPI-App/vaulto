@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet } from 'react-native'
+import { Platform, ScrollView, StyleSheet } from 'react-native'
 
 import { useTheme } from '@/theme'
 import { PressableScale } from './PressableScale'
@@ -41,12 +41,12 @@ export function Chips<T extends string>({
             accessibilityRole="button"
             accessibilityState={{ selected: activo }}
             onPress={() => onChange(opt.value)}
-            // 36 px visibles + 4 px arriba/abajo = objetivo táctil de 44 px.
+            // Nativo: 36 px visibles + 4 px de hitSlop = 44. En web hitSlop no existe: 44 reales.
             hitSlop={{ top: 4, bottom: 4 }}
             style={[
               styles.chip,
               {
-                minHeight: 36,
+                minHeight: Platform.OS === 'web' ? 44 : 36,
                 borderRadius: theme.radius.full,
                 borderColor: activo ? 'transparent' : theme.colors.border,
                 backgroundColor: activo ? theme.colors.brandSoft : 'transparent',
@@ -56,8 +56,8 @@ export function Chips<T extends string>({
             <Text
               variant="label"
               numberOfLines={1}
-              tone={activo ? 'brand' : 'muted'}
-              style={activo && { fontFamily: theme.typography.fonts.semibold }}
+              tone="muted"
+              style={activo && { color: theme.colors.brandSoftText, fontFamily: theme.typography.fonts.semibold }}
             >
               {opt.label}
             </Text>

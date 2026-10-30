@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Alert, ScrollView, View } from 'react-native'
+import { ScrollView, View } from 'react-native'
 import { normalizarMontoInput } from '@vaulto/shared'
 
 import { Button } from '@/components/Button'
@@ -10,6 +10,7 @@ import { Text } from '@/components/Text'
 import { useTheme } from '@/theme'
 
 import type { DatosDeuda } from './data/deudasRepo'
+import { showAlert } from '@/lib/ui/alert'
 
 export function FormularioDeuda({
   inicial,
@@ -33,17 +34,17 @@ export function FormularioDeuda({
   function submit() {
     const montoNormalizado = normalizarMontoInput(monto)
     if (!contraparte.trim() || !montoNormalizado || Number(montoNormalizado) <= 0) {
-      Alert.alert('Revisa los datos', 'Escribe la contraparte y un monto mayor que cero.')
+      showAlert('Revisa los datos', 'Escribe la contraparte y un monto mayor que cero.')
       return
     }
     const fecha = fechaLimite.trim()
     if (fecha && (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || Number.isNaN(Date.parse(`${fecha}T00:00:00Z`)) || new Date(`${fecha}T00:00:00Z`).toISOString().slice(0, 10) !== fecha)) {
-      Alert.alert('Fecha inválida', 'Usa el formato AAAA-MM-DD.')
+      showAlert('Fecha inválida', 'Usa el formato AAAA-MM-DD.')
       return
     }
     const nivel = Number(prioridad)
     if (!prioridad.trim() || !Number.isInteger(nivel) || nivel < 0 || nivel > 5) {
-      Alert.alert('Prioridad inválida', 'Elige un valor entre 0 y 5.')
+      showAlert('Prioridad inválida', 'Elige un valor entre 0 y 5.')
       return
     }
     onSubmit({

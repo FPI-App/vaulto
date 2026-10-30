@@ -28,7 +28,7 @@ export function Field({
       </Text>
       <TextInput
         accessibilityLabel={label}
-        placeholderTextColor={theme.mode === 'dark' ? '#5F6B7B' : theme.colors.textMuted}
+        placeholderTextColor={theme.colors.placeholder}
         onFocus={(e) => {
           setFocused(true)
           onFocus?.(e)

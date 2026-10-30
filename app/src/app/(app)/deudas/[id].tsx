@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { usePowerSync } from '@powersync/react-native'
 import { useRef, useState } from 'react'
-import { Alert, ScrollView, View } from 'react-native'
+import { ScrollView, View } from 'react-native'
 import ArrowDownLeft from 'lucide-react-native/icons/arrow-down-left'
 import ArrowUpRight from 'lucide-react-native/icons/arrow-up-right'
 import CircleCheck from 'lucide-react-native/icons/circle-check'
@@ -21,6 +21,7 @@ import { FormularioDeuda } from '@/features/deudas/FormularioDeuda'
 import { actualizarDeuda, eliminarDeuda, registrarAbono } from '@/features/deudas/data/deudasRepo'
 import { useDeuda } from '@/features/deudas/data/useDeudas'
 import { useTheme } from '@/theme'
+import { showAlert } from '@/lib/ui/alert'
 
 export default function DeudaDetalleScreen() {
   const theme = useTheme()
@@ -52,7 +53,7 @@ export default function DeudaDetalleScreen() {
     if (submitting.current) return
     const monto = normalizarMontoInput(abono)
     if (!monto || Number(monto) <= 0) {
-      Alert.alert('Abono inválido', 'Escribe un monto mayor que cero.')
+      showAlert('Abono inválido', 'Escribe un monto mayor que cero.')
       return
     }
     submitting.current = true
@@ -62,7 +63,7 @@ export default function DeudaDetalleScreen() {
       setAbono('')
       setNotaAbono('')
     } catch (error) {
-      Alert.alert('No se pudo registrar el abono', String(error))
+      showAlert('No se pudo registrar el abono', String(error))
     } finally {
       submitting.current = false
       setGuardando(false)
@@ -77,7 +78,7 @@ export default function DeudaDetalleScreen() {
       await actualizarDeuda(db, espacioActual, deudaActual.id, datos)
       setEditando(false)
     } catch (error) {
-      Alert.alert('No se pudo actualizar', String(error))
+      showAlert('No se pudo actualizar', String(error))
     } finally {
       submitting.current = false
       setGuardando(false)
@@ -85,12 +86,12 @@ export default function DeudaDetalleScreen() {
   }
 
   function confirmarEliminar() {
-    Alert.alert('Eliminar deuda', 'Se ocultará de la lista; sus datos se conservan para sincronizar.', [
+    showAlert('Eliminar deuda', 'Se ocultará de la lista; sus datos se conservan para sincronizar.', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Eliminar',
         style: 'destructive',
-        onPress: () => eliminarDeuda(db, espacioActual, deudaActual.id).then(() => router.back()).catch((error) => Alert.alert('No se pudo eliminar', String(error))),
+        onPress: () => eliminarDeuda(db, espacioActual, deudaActual.id).then(() => router.back()).catch((error) => showAlert('No se pudo eliminar', String(error))),
       },
     ])
   }
@@ -192,7 +193,7 @@ export default function DeudaDetalleScreen() {
           ) : null}
           {deuda.estado === 'activa' ? (
             <Card style={{ marginTop: theme.space.xl }}>
-              <Text variant="h3" accessibilityRole="header" style={{ marginBottom: theme.space.lg }}>
+              <Text variant="h3" heading={2} style={{ marginBottom: theme.space.lg }}>
                 Registrar abono
               </Text>
               <Field label="Monto" value={abono} onChangeText={setAbono} placeholder="0" keyboardType="decimal-pad" editable={!guardando} />
@@ -200,7 +201,7 @@ export default function DeudaDetalleScreen() {
               <Button label="Aplicar abono" onPress={registrar} loading={guardando} />
             </Card>
           ) : null}
-          <Text variant="h3" accessibilityRole="header" style={{ marginTop: theme.space['2xl'], marginBottom: theme.space.md }}>
+          <Text variant="h3" heading={2} style={{ marginTop: theme.space['2xl'], marginBottom: theme.space.md }}>
             Historial de abonos
           </Text>
           <Card padded={false} style={{ paddingHorizontal: theme.space.lg }}>
