@@ -1,11 +1,10 @@
 // Lista de movimientos con filtros (issue #10). Dueño: lmilo (Track A).
 import { useRouter } from 'expo-router'
 import ArrowLeftRight from 'lucide-react-native/icons/arrow-left-right'
-import Plus from 'lucide-react-native/icons/plus'
 import ReceiptText from 'lucide-react-native/icons/receipt-text'
 import Tags from 'lucide-react-native/icons/tags'
 import { useMemo, useState } from 'react'
-import { FlatList, Pressable, StyleSheet, View } from 'react-native'
+import { FlatList, StyleSheet, View } from 'react-native'
 import {
   formatCOP,
   rangoDeMes,
@@ -74,28 +73,13 @@ export function MovimientosScreen() {
       edges={['top']}
       title="Movimientos"
       headerRight={
-        <View style={styles.headerAcciones}>
-          <Button
+        <Button
             label="Categorías"
             variant="ghost"
             size="md"
             icon={Tags}
             onPress={() => router.push('/categorias')}
           />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Nuevo movimiento"
-            onPress={() => router.push('/movimientos/nuevo')}
-            hitSlop={2}
-            style={({ pressed }) => [
-              styles.nuevo,
-              { backgroundColor: theme.colors.brand[600], opacity: pressed ? 0.85 : 1 },
-              theme.shadow.sm,
-            ]}
-          >
-            <Plus size={22} color="#FFFFFF" strokeWidth={2.2} />
-          </Pressable>
-        </View>
       }
     >
       <FlatList
@@ -298,8 +282,6 @@ function agruparPorDia(movs: MovimientoListado[]): SeccionDia[] {
 }
 
 const styles = StyleSheet.create({
-  headerAcciones: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  nuevo: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   resumen: { flexDirection: 'row', gap: 12 },
   total: { flex: 1, gap: 2 },
   emptyWrap: { minHeight: 320, flexDirection: 'row' },

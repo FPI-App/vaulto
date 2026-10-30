@@ -53,7 +53,7 @@ export function DashboardScreen() {
       <PressableScale
         accessibilityRole="button"
         accessibilityLabel="Disponible. Abre tus cuentas"
-        onPress={() => router.push('/cuentas')}
+        onPress={() => router.navigate('/cuentas')}
         scaleTo={0.985}
         style={[styles.hero, { borderRadius: theme.radius.lg + 4 }, theme.shadow.md]}
       >
@@ -99,7 +99,7 @@ export function DashboardScreen() {
 
       <View style={[styles.seccion, { marginTop: theme.space['3xl'], marginBottom: theme.space.md }]}>
         <Text variant="h3">Próximos vencimientos</Text>
-        <Pressable accessibilityRole="link" onPress={() => router.push('/deudas')} hitSlop={8}>
+        <Pressable accessibilityRole="link" onPress={() => router.navigate('/deudas')} hitSlop={8}>
           <Text variant="label" tone="brand">
             Ver deudas
           </Text>

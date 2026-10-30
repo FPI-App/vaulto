@@ -200,7 +200,13 @@ export function FormularioMovimiento({
             keyboardType="decimal-pad"
             inputMode="decimal"
             autoFocus={!inicial}
-            style={[styles.montoInput, theme.typography.scale.display, tabularNums, { color: colorMonto }]}
+            style={[
+              styles.montoInput,
+              theme.typography.scale.display,
+              tabularNums,
+              { color: colorMonto },
+              Platform.OS === 'web' && ({ outlineStyle: 'none' } as object),
+            ]}
           />
         </View>
         {montoTexto.trim() ? (
@@ -330,7 +336,8 @@ function alMediodia(d: Date): Date {
 const styles = StyleSheet.create({
   montoWrap: { alignItems: 'flex-start', gap: 4 },
   montoFila: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'stretch' },
-  montoInput: { flex: 1, paddingVertical: 4 },
+  // minWidth 0: en web un input flex no se encoge por debajo de su ancho intrínseco y desborda.
+  montoInput: { flex: 1, minWidth: 0, paddingVertical: 4 },
   etiqueta: { marginBottom: 8 },
   saldo: { flexDirection: 'row', alignItems: 'center', gap: 4 },
 })

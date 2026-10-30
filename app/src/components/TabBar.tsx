@@ -1,5 +1,5 @@
 import { BlurView } from 'expo-blur'
-import { router, type Tabs } from 'expo-router'
+import { router, usePathname, type Tabs } from 'expo-router'
 import type { LucideIcon } from 'lucide-react-native'
 import ArrowLeftRight from 'lucide-react-native/icons/arrow-left-right'
 import Handshake from 'lucide-react-native/icons/handshake'
@@ -16,6 +16,8 @@ import { Text } from './Text'
 
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0]
 
+const ROOT_PATHS = new Set(['/', '/movimientos', '/deudas', '/perfil', '/cuentas', '/categorias'])
+
 const TABS: { name: string; label: string; icon: LucideIcon }[] = [
   { name: 'index', label: 'Inicio', icon: House },
   { name: 'movimientos', label: 'Movimientos', icon: ArrowLeftRight },
@@ -31,8 +33,11 @@ const TABS: { name: string; label: string; icon: LucideIcon }[] = [
 export function TabBar({ state, navigateToTab }: TabBarProps) {
   const theme = useTheme()
   const insets = useSafeAreaInsets()
-  const current = state.routes[state.index]?.name
-  if (current?.startsWith('onboarding')) return null
+  const pathname = usePathname()
+  // Rutas sin _layout propio se llaman «perfil/index»: se compara por segmento.
+  const current = state.routes[state.index]?.name.split('/')[0]
+  // Solo en las pantallas raíz; en formularios y detalles (modales) estorba.
+  if (!ROOT_PATHS.has(pathname)) return null
 
   const renderTab = ({ name, label, icon: Icon }: (typeof TABS)[number]) => {
     const focused = current === name
@@ -44,7 +49,7 @@ export function TabBar({ state, navigateToTab }: TabBarProps) {
         accessibilityLabel={label}
         accessibilityState={{ selected: focused }}
         onPress={() => {
-          const route = state.routes.find((r) => r.name === name)
+          const route = state.routes.find((r) => r.name.split('/')[0] === name)
           if (route && !focused) navigateToTab(route.key)
         }}
         style={styles.tab}

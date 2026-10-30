@@ -67,9 +67,10 @@ function AuthenticatedTabs({ userId }: { userId: string }) {
         <Tabs.Screen name="movimientos" options={{ title: 'Movimientos' }} />
         <Tabs.Screen name="deudas" options={{ title: 'Deudas' }} />
         <Tabs.Screen name="perfil" options={{ title: 'Perfil' }} />
-        {/* Fuera de la barra: Cuentas se abre desde la tarjeta de saldo en Inicio. */}
-        <Tabs.Screen name="cuentas" options={{ href: null }} />
-        <Tabs.Screen name="categorias" options={{ href: null }} />
+        {/* Fuera de la barra (TabBar solo dibuja sus 4 destinos). Sin `href: null`:
+            en web esa opción hace que la ruta redirija a Inicio. */}
+        <Tabs.Screen name="cuentas" options={{ title: 'Cuentas' }} />
+        <Tabs.Screen name="categorias" options={{ title: 'Categorías' }} />
       </Tabs.Protected>
       <Tabs.Protected guard={!isCompleted} redirectTo="/(app)">
         <Tabs.Screen name="onboarding" options={{ title: 'Configuración inicial' }} />
