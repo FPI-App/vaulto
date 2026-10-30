@@ -79,6 +79,103 @@ describe('Subida atómica ligada a la cuenta propietaria', () => {
       expect(f.complete).toHaveBeenCalledTimes(2)
     } finally { database.close() }
   })
+  describe('recuperación de abonos con anulación pendiente', () => {
+    const crud = [
+      { clientId: 1, id: 'QA-pago', table: 'pago', op: UpdateType.PUT, opData: { deuda_id: 'QA-deuda', monto: '60.00' } },
+      { clientId: 2, id: 'QA-deuda', table: 'deuda', op: UpdateType.PATCH, opData: { saldo_pendiente: '40.00' } },
+    ]
+    const operations = crud.map((op) => ({ table: op.table, id: op.id, op: op.op, data: op.opData }))
+    const rechazo = { throwOnError: async () => { throw { code: '23514', message: 'QA-private-detail' } } }
+    const sesion = (id: string) => mocks.session.mockResolvedValue({ data: { session: { user: { id }, access_token: 'fixture-not-a-real-token' } }, error: null })
+    const recibo = (status: string) => ({ throwOnError: async () => ({ data: { protocol: 1, batch_id: 'QA-device:1:2', status } }) })
+
+    it('conserva la anulación solicitada al cambiar de cuenta y la retoma al volver, sin llamar al servidor con la otra sesión', async () => {
+      const cuentaA = testDatabase()
+      try {
+        const store = new SyncRecoveryStore(cuentaA.queries)
+        await store.init()
+        const f = fixture()
+        const source = { getClientId: async () => 'QA-device', getNextCrudTransaction: async () => ({ crud, complete: f.complete }) }
+        f.rpc.mockReturnValueOnce(rechazo)
+        await expect(new SupabaseConnector('a', store).uploadData(source)).rejects.toMatchObject({ code: 'conflict' })
+        await store.requestCancellation('QA-device:1:2')
+
+        sesion('b')
+        f.rpc.mockClear()
+        await expect(new SupabaseConnector('a', store).uploadData(source)).rejects.toThrow('sesión cambió')
+        expect(f.rpc).not.toHaveBeenCalled()
+        expect(f.complete).not.toHaveBeenCalled()
+        expect((await store.get('QA-device:1:2', operations))?.decision).toBe('requested')
+
+        sesion('a')
+        f.rpc.mockReturnValue(recibo('cancelled'))
+        await new SupabaseConnector('a', new SyncRecoveryStore(cuentaA.queries)).uploadData(source)
+        expect(f.rpc).toHaveBeenCalledTimes(1)
+        expect(f.rpc.mock.calls[0]?.[0]).toBe('cancelar_lote_abono')
+        expect((await store.get('QA-device:1:2', operations))?.decision).toBe('cancelled')
+        expect(f.complete).toHaveBeenCalledOnce()
+      } finally { cuentaA.close() }
+    })
+    it('no aplica a otra cuenta la anulación registrada en la base de la primera', async () => {
+      const cuentaA = testDatabase()
+      const cuentaB = testDatabase()
+      try {
+        const storeA = new SyncRecoveryStore(cuentaA.queries)
+        const storeB = new SyncRecoveryStore(cuentaB.queries)
+        await storeA.init()
+        await storeB.init()
+        await storeA.record('QA-device:1:2', operations)
+        await storeA.requestCancellation('QA-device:1:2')
+        const f = fixture()
+        const source = { getClientId: async () => 'QA-device', getNextCrudTransaction: async () => ({ crud, complete: f.complete }) }
+        sesion('b')
+        f.rpc.mockReturnValue(recibo('applied'))
+        await new SupabaseConnector('b', storeB).uploadData(source)
+        expect(f.rpc.mock.calls[0]?.[0]).toBe('aplicar_lote_sync')
+        expect(await storeB.get('QA-device:1:2', operations)).toBeNull()
+        expect((await storeA.get('QA-device:1:2', operations))?.decision).toBe('requested')
+      } finally { cuentaA.close(); cuentaB.close() }
+    })
+    it('tras perder la respuesta de la anulación reenvía el mismo payload y completa la cola una sola vez (no simula recibos del servidor)', async () => {
+      const database = testDatabase()
+      try {
+        const store = new SyncRecoveryStore(database.queries)
+        await store.init()
+        await store.record('QA-device:1:2', operations)
+        await store.requestCancellation('QA-device:1:2')
+        const f = fixture()
+        const source = { getClientId: async () => 'QA-device', getNextCrudTransaction: async () => ({ crud, complete: f.complete }) }
+        f.rpc.mockReturnValueOnce({ throwOnError: async () => { throw { code: 'NETWORK', message: 'QA-private-detail' } } })
+        await expect(new SupabaseConnector('a', store).uploadData(source)).rejects.toMatchObject({ code: 'retry' })
+        expect((await store.get('QA-device:1:2', operations))?.decision).toBe('requested')
+        expect(f.complete).not.toHaveBeenCalled()
+        f.rpc.mockReturnValue(recibo('cancelled'))
+        await new SupabaseConnector('a', store).uploadData(source)
+        expect(f.rpc.mock.calls.map((call) => call[0])).toEqual(['cancelar_lote_abono', 'cancelar_lote_abono'])
+        expect(f.rpc.mock.calls[0]?.[1]).toEqual(f.rpc.mock.calls[1]?.[1])
+        expect(f.complete).toHaveBeenCalledOnce()
+      } finally { database.close() }
+    })
+    it('en reintentos manuales registra el rechazo una sola vez y aplica con el mismo lote (no simula reconexión automática)', async () => {
+      const database = testDatabase()
+      try {
+        const store = new SyncRecoveryStore(database.queries)
+        await store.init()
+        const f = fixture()
+        const source = { getClientId: async () => 'QA-device', getNextCrudTransaction: async () => ({ crud, complete: f.complete }) }
+        f.rpc.mockReturnValueOnce(rechazo).mockReturnValueOnce(rechazo)
+        const connector = new SupabaseConnector('a', store)
+        await expect(connector.uploadData(source)).rejects.toMatchObject({ code: 'conflict' })
+        await expect(connector.uploadData(source)).rejects.toMatchObject({ code: 'conflict' })
+        expect(await database.queries.getOptional('SELECT count(*) n FROM vaulto_sync_recovery')).toEqual({ n: 1 })
+        f.rpc.mockReturnValue(recibo('applied'))
+        await connector.uploadData(source)
+        expect(new Set(f.rpc.mock.calls.map((call) => call[1].p_lote_id))).toEqual(new Set(['QA-device:1:2']))
+        expect((await store.get('QA-device:1:2', operations))?.decision).toBe('applied')
+        expect(f.complete).toHaveBeenCalledOnce()
+      } finally { database.close() }
+    })
+  })
   it('no lee la cola ni crea un cliente cuando la sesión pertenece a otra cuenta', async () => {
     const f = fixture()
     mocks.createClient.mockClear()
