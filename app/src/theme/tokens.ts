@@ -176,8 +176,9 @@ export interface Theme {
     /** Glass (§6.1): solo tab bar, modales y tarjeta de saldo. */
     glassFill: string
     glassBorder: string
-    /** Fondo exterior en web, alrededor de la columna móvil. */
+    /** Fondo exterior en web, alrededor de la columna móvil, y su halo de marca. */
     backdrop: string
+    backdropGlow: string
     /** Color semántico financiero del modo activo. */
     financial: typeof financialLight | typeof financialDark
   }
@@ -209,6 +210,7 @@ export const lightTheme: Theme = {
     glassFill: 'rgba(255,255,255,0.72)',
     glassBorder: 'rgba(15,23,42,0.06)',
     backdrop: '#E9EDF3',
+    backdropGlow: 'rgba(37,99,235,0.10)',
     financial: financialLight,
   },
   radius,
@@ -239,6 +241,7 @@ export const darkTheme: Theme = {
     glassFill: 'rgba(20,26,36,0.72)',
     glassBorder: 'rgba(255,255,255,0.08)',
     backdrop: '#06090F',
+    backdropGlow: 'rgba(37,99,235,0.18)',
     financial: financialDark,
   },
   radius,

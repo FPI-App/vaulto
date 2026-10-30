@@ -14,7 +14,6 @@ export function AppFrame({ children }: { children: ReactNode }) {
   const theme = useTheme()
   useWebDocument(theme.colors.brand[500])
   if (Platform.OS !== 'web') return <>{children}</>
-  const glow = theme.mode === 'dark' ? 'rgba(37,99,235,0.18)' : 'rgba(37,99,235,0.10)'
   return (
     <View
       style={[
@@ -22,7 +21,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
         {
           backgroundColor: theme.colors.backdrop,
           // Solo web: degradado radial muy tenue (§4.4, 8–12 %).
-          backgroundImage: `radial-gradient(1200px 600px at 50% -10%, ${glow}, transparent 70%)`,
+          backgroundImage: `radial-gradient(1200px 600px at 50% -10%, ${theme.colors.backdropGlow}, transparent 70%)`,
         } as object,
       ]}
     >

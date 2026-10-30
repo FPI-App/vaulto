@@ -12,6 +12,7 @@ import {
   validarMovimiento,
   type TipoCategoria,
   type TipoMovimiento,
+  formatNumero,
 } from '@vaulto/shared'
 
 import { Amount } from '@/components/Amount'
@@ -212,7 +213,10 @@ export function FormularioMovimiento({
         </View>
         {montoTexto.trim() ? (
           montoNormalizado ? (
-            <Amount value={montoNormalizado} variant="caption" tone="muted" />
+            // La vista previa solo aporta si el texto aún no tiene el formato final.
+            formatNumero(montoNormalizado) === montoTexto.trim() ? null : (
+              <Amount value={montoNormalizado} variant="caption" tone="muted" />
+            )
           ) : (
             <Text variant="caption" tone="expense">
               Usa solo números: 25.000 o 25000,50
