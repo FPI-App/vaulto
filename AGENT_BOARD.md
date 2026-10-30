@@ -2,6 +2,28 @@
 
 Actualizado: 2026-10-30. Run Orca: `run_7292d436ace4`.
 
+## Puntos de parada obligatorios — instrucción vigente del usuario
+
+Estas reglas prevalecen sobre las instrucciones de integración del historial.
+
+1. Si hay workers pendientes, esperar con `orca orchestration check --wait --types worker_done,escalation,question --timeout-ms 900000 --json`. Mantener ese proceso observable mediante su handle; un timeout no prueba finalización ni autoriza relanzar workers.
+2. Procesar todos los mensajes del lote antes de confirmar su `deliveryId` con `--ack`.
+3. Si llega `worker_done` con `outcome: failed`, `escalation` o `question`, reportar al usuario y detener el flujo; no reintentar ni responder la decisión por cuenta propia.
+4. Antes de abrir cada PR, crear un gate del coordinador con `orca orchestration gate-create`, pregunta exacta `¿Revisaste el diff y apruebas abrir el PR?` y opciones `["yes","no"]`. Esperar resolución del usuario; solo `yes` permite esa apertura.
+5. Antes de cada merge o `gh issue close`, crear otro gate con la misma pregunta y opciones, identificando la acción en la tarea asociada. La aprobación de apertura no aprueba merge ni cierre. Un `no` detiene esa acción.
+6. Al terminar cada Issue, entregar resumen de archivos modificados, comandos ejecutados con sus resultados y lo que NO se pudo verificar. Un resumen local no acredita cierre remoto.
+7. Sigue vigente la confirmación explícita del comando exacto y destino para `git push`; un gate de PR no la sustituye.
+
+Confirmado al incorporar estas reglas: workers asentados, bandeja sin mensajes pendientes; no hay workers que requieran una espera nueva.
+
+### Gate pendiente — apertura PR #25
+
+- Task del coordinador: `task_61946f5961d7`.
+- Gate: `gate_b5fb7c349737`, estado `pending`, resolución sin emitir.
+- Pregunta: **¿Revisaste el diff y apruebas abrir el PR?** Opciones: `yes` / `no`.
+- Diff a revisar: `git diff main..orchestration/issue-25`; head preparado `a2d8f24`.
+- Esperar la resolución humana. Publicación y apertura siguen pendientes; #25 mantiene el bloqueo nativo y no se cerrará con estas regresiones.
+
 ## Ciclo activo — Issue #26
 
 - Issue: [#26 — Sustituir el lint ficticio de packages/shared por una verificación real](https://github.com/FPI-App/vaulto/issues/26).
@@ -47,7 +69,7 @@ Actualizado: 2026-10-30. Run Orca: `run_7292d436ace4`.
 - QA aceptado: commit `7af5e29`, solo reporte independiente; worktree QA limpio. Integrado por cherry-pick sin arrastrar #25.
 - Pendiente: confirmación de publicación, PR y CI remoto antes de cerrar #26. Comando de publicación previsto: `git push -u origin orchestration/issue-26` hacia `https://github.com/FPI-App/vaulto`.
 - Último escaneo confirmado: no hay ítems Todo; #25 y #26 figuran In Progress. Los otros Issues ya In Progress no se reasignan automáticamente.
-- Cuerpos de PR preparados en `.cache/orchestration/pr-issue-25.md` y `pr-issue-26.md` (ignorados). Al autorizar pushes exactos, crear cada PR hacia main con `gh pr create --body-file`; esperar CI correcto; `gh pr merge --merge` sin borrar ramas. Solo #26 puede cerrarse tras cumplir esos checks; #25 conserva el bloqueo nativo.
+- Cuerpos de PR preparados en `.cache/orchestration/pr-issue-25.md` y `pr-issue-26.md` (ignorados). Publicar, abrir PR, mergear y cerrar requieren los puntos de parada vigentes de la cabecera; CI correcto por sí solo no autoriza merge ni cierre. Solo #26 puede cerrarse tras cumplir todos los checks y gates; #25 conserva el bloqueo nativo.
 
 PROHIBIDO BORRAR ARCHIVOS O CARPETAS, INCLUIDOS TUS TEMPORALES (REMOVE-ITEM, RM, DEL, ERASE, RD, RMDIR O EQUIVALENTES). PROHIBIDO IMPRIMIR SECRETOS. ENMASCARA PASSWORD, TOKEN, COOKIE, AUTHORIZATION Y CADENAS DE CONEXIÓN EN LOGS Y REPORTES.
 
