@@ -18,14 +18,18 @@ interface DeudasSelectors {
 }
 ```
 
-Entrega la impl real y pásala al `DeudasSelectorsProvider` (en el árbol autenticado del
-root `_layout.tsx`) vía su prop `value`. Hasta entonces el dashboard usa
-`noopDeudasSelectors` (0 / []) — **cero bloqueo** entre tracks.
+`DeudasSelectorsProvider` crea la implementación real para la base y el espacio activo;
+no necesita una prop `value`. Usa la noop mientras el usuario no tenga espacio activo.
 
 La lógica de dominio vive en `packages/shared/src/domain/deudas.ts`. Los selectores
 locales implementan el contrato en `app/src/features/deudas/data/deudasSelectors.ts`;
 leen únicamente el espacio activo, omiten filas con soft delete y consultan la copia
 local de PowerSync para funcionar sin conexión.
+
+El detalle muestra el historial de abonos con monto, moneda, fecha y nota. Cada abono
+se inserta en la misma transacción que actualiza el saldo; no se aceptan sobrepagos.
+Las pruebas de `deudasRepo.test.ts` y `deudasSelectors.test.ts` usan SQLite en memoria
+para comprobar rollback, límites de espacio, soft deletes y vencimientos.
 
 ## Reglas de la costura (no romper el spine)
 - Importa tipos/esquema desde `@vaulto/shared`. No redefinas el `AppSchema` ni el contrato.

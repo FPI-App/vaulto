@@ -11,6 +11,13 @@ interface PagoRow {
   monto: string
 }
 
+export interface AbonoRow extends PagoRow {
+  id: string
+  currency: string
+  fecha: string
+  nota: string | null
+}
+
 export function useDeudas(direccion: 'yo_debo' | 'me_deben' | null) {
   const { espacioId } = useEspacioActual()
   const deudasQ = useQuery<DeudaRow>(
@@ -51,9 +58,10 @@ export function useDeuda(id: string) {
      FROM deuda WHERE id = ? AND espacio_id = ? AND deleted_at IS NULL LIMIT 1`,
     [id, espacioId ?? ''],
   )
-  const pagosQ = useQuery<PagoRow>(
-    `SELECT deuda_id, monto FROM pago
-     WHERE deuda_id = ? AND espacio_id = ? AND deleted_at IS NULL`,
+  const pagosQ = useQuery<AbonoRow>(
+    `SELECT id, deuda_id, monto, currency, fecha, nota FROM pago
+     WHERE deuda_id = ? AND espacio_id = ? AND deleted_at IS NULL
+     ORDER BY fecha DESC, id DESC`,
     [id, espacioId ?? ''],
   )
   const deuda = data[0]
@@ -61,6 +69,7 @@ export function useDeuda(id: string) {
   return {
     deuda: deuda && saldo !== null ? { ...deuda, saldo_pendiente: saldo, estado: estadoDeudaDesdeSaldo(saldo) } : null,
     cargando: isLoading || pagosQ.isLoading,
+    abonos: pagosQ.data,
     espacioId,
   }
 }

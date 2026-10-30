@@ -31,7 +31,7 @@ Todas las tablas tienen `created_at` (`timestamptz`) para auditoría. La pertene
 ## 2. Estrategia de sincronización (PowerSync)
 
 ### Pila
-- **Local:** SQLite cifrada con **SQLCipher**. Los datos en reposo en el dispositivo van cifrados (RLS protege el servidor, no el teléfono perdido — son garantías distintas).
+- **Local (objetivo):** SQLite cifrada con **SQLCipher**. La compilación habilita SQLCipher, pero la apertura actual en `app/src/lib/sync/db.ts` no configura una llave: el cifrado efectivo sigue pendiente de implementación y verificación nativa.
 - **Sync:** **PowerSync** sobre Supabase. PowerSync mantiene la réplica local sincronizada con Postgres y gestiona la conectividad intermitente.
 - **Cola local:** las escrituras offline se encolan y se reenvían al recuperar conexión, con idempotencia y respeto al orden de dependencias (no se sincroniza un `movimiento` antes que su `cuenta`).
 
@@ -54,7 +54,7 @@ No se aplica una sola estrategia ciega. Se elige por el dominio del dato:
 
 - **RLS obligatorio** en todas las tablas de Supabase. Sin política = sin acceso. Las políticas se documentan en `supabase/policies/`.
 - **RLS ≠ cifrado local.** RLS protege el servidor. El cifrado en reposo del dispositivo lo da SQLCipher. Ambos son necesarios; ninguno sustituye al otro.
-- La llave de SQLCipher se deriva por usuario y se guarda en el secure storage del dispositivo (`expo-secure-store`), nunca en el repo ni en `.env` de producción.
+- La llave de SQLCipher debe aprovisionarse por usuario y guardarse en el secure storage del dispositivo (`expo-secure-store`), nunca en el repo ni en `.env` de producción. Actualmente SecureStore guarda la sesión de Supabase; la llave de base de datos y la migración de archivos existentes no están implementadas.
 
 ---
 

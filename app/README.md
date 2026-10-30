@@ -46,7 +46,7 @@ pnpm app:android        # o: pnpm app:ios
 ```
 app/
 ├─ index.ts                 entry de expo-router
-├─ app.json                 config Expo (scheme vaulto, plugins, newArchEnabled)
+├─ app.json                 config Expo (scheme vaulto, plugins y rutas tipadas)
 ├─ metro.config.js          monorepo-aware (watchFolders + nodeModulesPaths)
 └─ src/
    ├─ app/                  árbol de rutas (expo-router, file-based)
@@ -63,9 +63,10 @@ app/
    ├─ lib/
    │  ├─ env.ts             lectura validada de EXPO_PUBLIC_*
    │  ├─ supabase/          cliente Supabase (AsyncStorage + url-polyfill)
-   │  ├─ powersync/         system + connector + provider + llave SQLCipher
+   │  ├─ powersync/         provider de la base local
+   │  ├─ sync/              base OP-SQLite + conector Supabase
    │  ├─ auth/              AuthProvider + useAuth (sesión Supabase)
-   │  └─ deudas/            DeudasSelectorsProvider + noopDeudasSelectors
+   │  └─ deudas/            DeudasSelectorsProvider por espacio activo
    ├─ components/           Screen · Button · Field · Placeholder
    └─ theme/                tokens (desde BRAND.md) + ThemeProvider + useTheme
 ```
@@ -79,18 +80,26 @@ los redefine.
 - **Capa de datos** en `@vaulto/shared`: tipos, `AppSchema` y reglas de dominio. La app
   importa desde ahí; nunca redefine tipos ni el `AppSchema`.
 - **Contrato `DeudasSelectors`** (en `@vaulto/shared`): el dashboard (Track A) lo consume vía
-  `useDeudasSelectors()`. Track B (edav) entrega la impl real y la inyecta en
-  `<DeudasSelectorsProvider value={...}>`. Hasta entonces se usa `noopDeudasSelectors`
-  (retorna 0 / []). Cero bloqueo.
+  `useDeudasSelectors()`. `DeudasSelectorsProvider` crea `SQLiteDeudasSelectors` con
+  la base local y el espacio activo. La noop solo se usa mientras no hay espacio.
 - Cada carpeta de feature tiene un `README-OWNER.md` con su dueño y su tabla canónica.
 
 ## Seguridad
 
 - **RLS** en Supabase protege el servidor: cada fila es visible solo si su `espacio_id`
   pertenece al usuario (vía `espacio_miembro`).
-- **SQLCipher** cifra la SQLite local. La llave se genera por dispositivo y se guarda en
-  `expo-secure-store` (Keychain/Keystore), nunca en el repo ni en `.env` de producción.
+- **SQLCipher** está habilitado como opción de compilación de op-sqlite. El cifrado
+  en reposo sigue pendiente de verificar: `lib/sync/db.ts` no configura una llave.
+  `expo-secure-store` se usa actualmente para la sesión de Supabase. El aprovisionamiento
+  de una llave y la migración de bases existentes deben validarse en un build nativo.
 - RLS ≠ cifrado local: ambos son necesarios. Ver `../ARQUITECTURA.md`.
+
+## Pruebas locales
+
+`pnpm --filter @vaulto/app test` ejecuta validaciones y repositorios sobre SQLite
+en memoria (`node:sqlite`); no usa credenciales ni modifica bases de usuario.
+`pnpm --filter @vaulto/shared test` cubre el dominio puro. Estas pruebas no sustituyen
+las de RLS, sincronización ni SQLCipher en Android/iOS.
 
 ## Convenciones
 
