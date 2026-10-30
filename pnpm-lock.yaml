@@ -129,9 +129,21 @@ importers:
 
   packages/shared:
     devDependencies:
+      '@eslint/js':
+        specifier: ^9.39.5
+        version: 9.39.5
       '@powersync/react-native':
         specifier: ^2.3.3
         version: 2.3.3(@op-engineering/op-sqlite@17.1.1(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(@powersync/common@2.4.0)(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^8.71.2
+        version: 8.71.2(@typescript-eslint/parser@8.71.2(eslint@9.39.5)(typescript@6.0.3))(eslint@9.39.5)(typescript@6.0.3)
+      '@typescript-eslint/parser':
+        specifier: ^8.71.2
+        version: 8.71.2(eslint@9.39.5)(typescript@6.0.3)
+      eslint:
+        specifier: ^9.39.5
+        version: 9.39.5
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
