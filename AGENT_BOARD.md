@@ -2,7 +2,96 @@
 
 Actualizado: 2026-10-30. Run Orca: `run_7292d436ace4`.
 
-## Ciclo activo
+## Puntos de parada obligatorios — instrucción vigente del usuario
+
+Estas reglas prevalecen sobre las instrucciones de integración del historial.
+
+1. Si hay workers pendientes, esperar con `orca orchestration check --wait --types worker_done,escalation,question --timeout-ms 900000 --json`. Mantener ese proceso observable mediante su handle; un timeout no prueba finalización ni autoriza relanzar workers.
+2. Procesar todos los mensajes del lote antes de confirmar su `deliveryId` con `--ack`.
+3. Si llega `worker_done` con `outcome: failed`, `escalation` o `question`, reportar al usuario y detener el flujo; no reintentar ni responder la decisión por cuenta propia.
+4. Antes de abrir cada PR, crear un gate del coordinador con `orca orchestration gate-create`, pregunta exacta `¿Revisaste el diff y apruebas abrir el PR?` y opciones `["yes","no"]`. Instrucción más reciente del usuario: «yes, aprueba todos los pr tú»; el coordinador puede resolver los gates de apertura y merge tras revisar diff y evidencia, sin volver a preguntar por cada PR.
+5. Antes de cada merge o `gh issue close`, crear otro gate con la misma pregunta y opciones, identificando la acción en la tarea asociada. La aprobación de apertura no aprueba merge ni cierre. Un `no` detiene esa acción. La delegación de PR no elimina el gate separado de cierre del Issue.
+6. Al terminar cada Issue, entregar resumen de archivos modificados, comandos ejecutados con sus resultados y lo que NO se pudo verificar. Un resumen local no acredita cierre remoto.
+7. Sigue vigente la confirmación explícita del comando exacto y destino para `git push`; un gate de PR no la sustituye.
+
+Confirmado al incorporar estas reglas: workers asentados, bandeja sin mensajes pendientes; no hay workers que requieran una espera nueva.
+
+### Gate aprobado — apertura PR #25
+
+- Task del coordinador: `task_61946f5961d7`.
+- Gate: `gate_b5fb7c349737`, estado `resolved`, resolución `yes` por respuesta explícita del usuario; verificado en Orca.
+- Pregunta: **¿Revisaste el diff y apruebas abrir el PR?** Opciones: `yes` / `no`.
+- Diff a revisar: `git diff main..orchestration/issue-25`; head preparado `a2d8f24`.
+- Apertura y comandos exactos de push autorizados explícitamente por el usuario. Ambas ramas publicadas. PR #33 abierto: https://github.com/FPI-App/vaulto/pull/33, head `a2d8f24d1752d33ee97814c2906ffd2dc90352c4`. CI remoto en ejecución al abrirlo. #25 mantiene el bloqueo nativo y no se cerrará con estas regresiones. Merge y cierre conservan gates separados.
+- CI del PR #33 confirmado correcto: `gh pr checks 33 --watch --interval 10`, exit 0; job «Lint, typecheck y pruebas» pass (39 s), run `41137831998`.
+- Gate de MERGE del PR #33: `gate_ba3a42da4d3b`, Task `task_cb810cc3f311`, resuelto `yes` por respuesta explícita del usuario. PR #33 fusionado mediante `gh pr merge 33 --merge --match-head-commit a2d8f24d1752d33ee97814c2906ffd2dc90352c4`; merge `73e5920352422e99515baca54b05575ec02115b6`. Issue #25 permanece abierto por validación nativa pendiente.
+
+### Resumen de entrega #25 — PR fusionado, Issue abierto
+
+- Archivos: `app/src/lib/sync/SupabaseConnector.test.ts`, `app/src/lib/sync/recuperacionAbonosRechazados.test.ts`, `docs/qa/issue-25-antigravity.md`, `AGENT_BOARD.md`.
+- Comandos/resultados: 31/31 pruebas afectadas correctas; exportación Android Hermes correcta (2.102 módulos); `git push -u origin orchestration/issue-25` exit 0; `gh pr create --base main --head orchestration/issue-25 --title ... --body-file .cache/orchestration/pr-issue-25.md` creó PR #33; CI remoto correcto.
+- NO verificado: reconexión automática, pérdida de respuesta contra servidor real, SQLCipher tras reinicio y sincronización entre dos dispositivos para los pendientes del Issue. Los mocks no cubren esas garantías. El PR ya se fusionó; el Issue no se cerró.
+
+## Ciclo activo — Issue #26
+
+- Issue: [#26 — Sustituir el lint ficticio de packages/shared por una verificación real](https://github.com/FPI-App/vaulto/issues/26).
+- Estado: DEV y QA entregados e integrados localmente; pendiente confirmación de publicación y CI remoto. P2; sin más Todo en el último escaneo; #25 sigue abierto/bloqueado por evidencia nativa.
+- Gate de apertura del PR de lint: `gate_fc85b1f44b0a`, Task `task_b6daaaa25133`, resuelto `yes` por delegación explícita del usuario tras revisión del coordinador. La publicación de las ramas ya estaba autorizada.
+
+### Revisión de los demás PR solicitada por el usuario
+
+- Confirmado por `git merge-base --is-ancestor`: heads de PR #20 (`519ab796`) y #22 (`79cbb4c2`) ya son ancestros de `origin/main`. Son borradores históricos, no features nuevas pendientes.
+- PR #31 head `21325ba07544196bce81d36ea0cb2b41c5ba9f45` y PR #32 head `7d43de44ac40a2bbddca6e85e328a62b6bc5dc84`: revisión paralela en solo lectura contra base `73e5920`, ejes Standards y Spec.
+- Claude: Task `task_a73c2fb668fb`, Dispatch `ctx_0bdd92400c8a`. Antigravity: Task `task_e89e76378d80`, Dispatch `ctx_ab3c0f83252f`. Ambos iniciados y en espera con el comando exacto solicitado; detener/reportar ante failed, escalation o question.
+- Base inicial de verificación: `main` `2ba0875`. Rama `orchestration/issue-26`; incluye ahora la integración local #25 como dependencia para publicar/fusionar primero PR #25 y después PR #26 sin conflicto del tablero. El diff del segundo PR se revisa contra main actualizado tras el primero.
+
+### [DEV] Claude — #26
+
+- Rama existente `feature/dev-features`; crear commits exclusivos de #26 sin mezclar cambios de #25. No reescribas historia.
+- Configura lint real en `packages/shared`, compatible con TS estricto, comillas simples y sin punto y coma. Respeta pnpm 9.12.0 y ESLint 9 de la app; reutiliza versiones resueltas cuando sea viable. Declara dependencias directas requeridas; no dependas accidentalmente de hoisting/transitivas.
+- Propiedad: `packages/shared/package.json`, configuración ESLint de shared, lockfile y ajustes mínimos de lint en shared si son necesarios. No modifiques la interfaz DeudasSelectors, app/ ni dominio de negocio ni reformatees masivamente. Comunica antes cualquier cambio que salga de este alcance.
+- Lee #26, plan y manifiestos; usa Context7. Referencia ya verificada por el coordinador: ESLint 9.39.3, flat config `languageOptions.parser`; CLI `--stdin --stdin-filename` para demostrar fallo sin crear/borrar archivos temporales.
+- Aceptación: lint analiza fuentes TS y falla con infracción real mediante stdin; pnpm lint, typecheck y test correctos; lockfile compatible con instalación frozen. Entrega commits exclusivos de #26, comandos y resultados reales. Sin push, PR, merge remoto ni cierre.
+- Estado: completado localmente; Task `task_e16999b133a6`, Dispatch `ctx_7d75ff5125ff`. SHA exclusivo de #26: `4c33de8` (sobre `290e01d` de #25; cherry-pick aislado de ese único commit). Sin push/PR/merge.
+  - Archivos: `packages/shared/package.json` (lint `eslint src` + devDependencies directas `eslint`/`@eslint/js` ^9.39.5, `@typescript-eslint/parser`/`eslint-plugin` ^8.71.2), `packages/shared/eslint.config.js` (nuevo, flat config), `pnpm-lock.yaml` (+12 líneas, solo el importer de shared; mismas versiones ya resueltas). Sin cambios en `app/`, `selectors.ts` ni dominio.
+  - Confirmado (ejecutado): `pnpm install --frozen-lockfile --offline` correcto; `pnpm lint` (shared con ESLint real + app) sin errores; `pnpm typecheck` correcto; `pnpm test` 79 shared + 105 app (esta rama incluye las de #25; sobre main serían 101 app). Stdin negativo (`const x = "a";` en `src/domain/…ts`): exit 1 con reglas `quotes` y `semi`; `any` explícito: exit 1 con `@typescript-eslint/no-explicit-any`; positivo (`export const x = 'a'`): exit 0. Sin archivos temporales.
+  - Reglas: `@eslint/js` recommended, `typescript-eslint/eslint-recommended`, `no-explicit-any`, `no-unused-vars` TS con `argsIgnorePattern: '^_'` (necesario por parámetros `_direccion/_limite` en `selectors.ts`; evita tocar el contrato), `quotes` single y `semi` never (reglas núcleo, obsoletas en ESLint 9 pero activas; no se añadió `@stylistic`).
+  - Limitaciones: lint sin información de tipos (no `recommended-type-checked`); alcance `src/**/*.ts`; Context7 no disponible entre mis herramientas, la API se verificó contra la instalación local (`configs['flat/eslint-recommended']` existe en 8.71.2) y la ejecución real. CI remoto: Desconocido, no verificado.
+
+### [QA] Antigravity — #26
+
+- Rama existente `feature/qa-tests`; #25 ya entregado, no seguir ampliándolo.
+- Propiedad: reporte nuevo `docs/qa/issue-26-antigravity.md`; no modificar configuración, lockfile, código de producción ni escribir tests que reproduzcan la configuración.
+- Valida independientemente los commits de #26 de Claude: lint shared analiza `src/**/*.ts`, una infracción real produce exit 1 y un ejemplo válido exit 0; usa stdin/filename y registra regla activada. No crear archivos temporales que requieran borrados.
+- Verifica cobertura de domain/types/powersync y que DeudasSelectors no cambió. Ejecuta calidad del conjunto cuando exista el SHA final; no dupliques suites completas sin cambio nuevo. CI remoto es pendiente hasta PR, no se presume por pasar localmente.
+- Alcance de #26 no requiere Expo Go ni dispositivos. No publiques ramas ni PR ni cierres Issues. Entrega SHA local, reporte preciso y estado en esta sección; termina el turno, no entres en bucle.
+- Estado: completado localmente; Task `task_da652ecb1b63`, Dispatch `ctx_2c68f7cdffd2`. SHA de validación `7af5e29` (reporte sobre `0b3e3d1`, cherry-pick local de DEV `4c33de8`). Sin push remoto, PR ni merge.
+  - Confirmado (ejecutado): `pnpm install --frozen-lockfile` correcto; cobertura confirmada de 19 archivos (15 domain, 1 types, 2 powersync, 1 index raíz) vía `eslint src --format json` con 0 errores y 0 advertencias.
+  - Pruebas stdin sin archivos temporales: fallo con exit 1 en `src/domain/prueba.ts` por reglas `quotes`, `semi` y `@typescript-eslint/no-unused-vars`; fallo con exit 1 en `src/types/prueba.ts` por `@typescript-eslint/no-explicit-any`; caso positivo en `src/powersync/prueba.ts` con exit 0.
+  - Contrato de integración: `git diff 2ba0875..HEAD -- packages/shared/src/domain/selectors.ts` sin cambios (DeudasSelectors intacto).
+  - Calidad: `pnpm typecheck` correcto (0 errores); `pnpm lint` correcto (shared `eslint src` + app `expo lint`); `pnpm test` 193/193 pasados (79 shared + 114 app en esta rama).
+  - Reporte entregado: `docs/qa/issue-26-antigravity.md`. CI remoto: Pendiente hasta publicación de PR.
+
+### Reglas de ejecución del ciclo #26
+
+- Orquestador: DEV `4c33de8` verificado e integrado como `63d271b` en rama aislada `orchestration/issue-26`.
+- Confirmado por ejecución propia: `pnpm install --frozen-lockfile --ignore-scripts`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (79 shared + 101 app) y `pnpm infra:test` (12) correctos.
+- Confirmado por ejecución propia: ESLint analiza 19 archivos (15 domain, 1 types, 2 powersync, 1 index); 0 errores y 0 advertencias. stdin con `export const lintProbe: any = 1` bajo `src/domain/lint-probe.ts` falla con exit 1 por `@typescript-eslint/no-explicit-any`; el mismo ejemplo con `number` da exit 0. No se añadió `--rule` ni se crearon archivos temporales.
+- Diferencia de conteos esperada: ramas DEV/QA contienen pruebas #25; la integración aislada #26 conserva las 101 pruebas app de main. No se arrastran pruebas de sincronización al PR de lint.
+- Preparación final de integración secuencial: #25 se fusionó localmente como ancestro de #26. El único conflicto fue AGENT_BOARD.md (add/add), resuelto conservando el tablero más reciente de #26 con historial #25. Se repiten las pruebas sobre el conjunto final; publicar/mergear #25 primero evita que su código figure como cambio nuevo del PR de lint.
+- Confirmado por el orquestador en conjunto final: `pnpm test` correcto, 79 shared + 114 app = 193 pruebas. Los 12 tests de infraestructura ya pasaron y no hubo cambios posteriores en scripts/infra. No quedan terminales supervisados pendientes de liberar; las sesiones preexistentes se conservan por Orca.
+- Confirmado en el mismo conjunto final: `pnpm lint` y `pnpm typecheck` correctos después de integrar ambas entregas y resolver el tablero.
+- QA aceptado: commit `7af5e29`, solo reporte independiente; worktree QA limpio. Integrado por cherry-pick sin arrastrar #25.
+- Confirmado: el usuario autorizó ambos comandos exactos de push; `git push -u origin orchestration/issue-25` y `git push -u origin orchestration/issue-26` terminaron con exit 0 hacia `https://github.com/FPI-App/vaulto`. PR #26 todavía sin abrir: requiere gate humano propio y respeta el orden de integración después del PR #33. CI y cierre remoto pendientes.
+- Último escaneo confirmado: no hay ítems Todo; #25 y #26 figuran In Progress. Los otros Issues ya In Progress no se reasignan automáticamente.
+- Cuerpos de PR preparados en `.cache/orchestration/pr-issue-25.md` y `pr-issue-26.md` (ignorados). Publicar, abrir PR, mergear y cerrar requieren los puntos de parada vigentes de la cabecera; CI correcto por sí solo no autoriza merge ni cierre. Solo #26 puede cerrarse tras cumplir todos los checks y gates; #25 conserva el bloqueo nativo.
+
+PROHIBIDO BORRAR ARCHIVOS O CARPETAS, INCLUIDOS TUS TEMPORALES (REMOVE-ITEM, RM, DEL, ERASE, RD, RMDIR O EQUIVALENTES). PROHIBIDO IMPRIMIR SECRETOS. ENMASCARA PASSWORD, TOKEN, COOKIE, AUTHORIZATION Y CADENAS DE CONEXIÓN EN LOGS Y REPORTES.
+
+- NO hacer push. NO escrituras DB. NO git add -f, reset --hard ni clean. El orquestador recibe commits locales y solicita confirmación del comando exacto de publicación cuando el resultado esté listo.
+- Las secciones inferiores son HISTORIAL de #25; no son la tarea activa ni autorizan nuevas acciones sobre #25.
+
+## Historial — Issue #25
 
 - Issue: [#25 — Resolver abonos rechazados sin bloquear la cola de sincronización](https://github.com/FPI-App/vaulto/issues/25)
 - Prioridad: P0. Selección: único P0 abierto en Todo; los demás P0 ya están In Progress.
