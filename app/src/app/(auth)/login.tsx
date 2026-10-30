@@ -1,10 +1,11 @@
 import { Link } from 'expo-router'
 import { useState } from 'react'
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
-import { Screen } from '@/components/Screen'
+import { AuthLayout, FormError } from '@/components/AuthLayout'
+import { Text } from '@/components/Text'
 import { useAuth } from '@/lib/auth/AuthProvider'
 import { useTheme } from '@/theme'
 
@@ -30,85 +31,48 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.flex}
-      >
-        <View style={styles.flex}>
-          <View style={styles.header}>
-            <Text
-              style={{
-                ...theme.typography.scale.display,
-                color: theme.colors.text,
-              }}
-            >
-              Vaulto
-            </Text>
-            <Text
-              style={{
-                ...theme.typography.scale.bodyLg,
-                color: theme.colors.textMuted,
-                marginTop: theme.space.xs,
-              }}
-            >
-              Tu vida financiera, en orden y a la vista.
-            </Text>
-          </View>
-
-          <Field
-            label="Correo"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            autoComplete="email"
-            keyboardType="email-address"
-            inputMode="email"
-            placeholder="tu@correo.com"
-          />
-          <Field
-            label="Contraseña"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoComplete="password"
-            placeholder="••••••••"
-          />
-
-          {error ? (
-            <Text
-              style={{
-                ...theme.typography.scale.body,
-                color: theme.colors.financial.expense,
-                marginBottom: theme.space.md,
-              }}
-            >
-              {error}
-            </Text>
-          ) : null}
-
-          <Button label="Entrar" onPress={handleSubmit} loading={loading} />
-
-          <View style={styles.links}>
-            <Link href="/(auth)/reset" style={{ color: theme.colors.brand[600] }}>
-              ¿Olvidaste tu contraseña?
+    <AuthLayout
+      title="Hola de nuevo"
+      subtitle="Tu vida financiera, en orden y a la vista."
+      footer={
+        <View style={styles.links}>
+          <Link href="/(auth)/reset" style={[theme.typography.scale.label, { color: theme.colors.actionText }]}>
+            ¿Olvidaste tu contraseña?
+          </Link>
+          <Text tone="muted">
+            ¿Aún no tienes cuenta?{' '}
+            <Link href="/(auth)/register" style={{ color: theme.colors.actionText, fontFamily: theme.typography.fonts.semibold }}>
+              Créala gratis
             </Link>
-            <Link href="/(auth)/register" style={{ color: theme.colors.brand[600] }}>
-              Crear cuenta
-            </Link>
-          </View>
+          </Text>
         </View>
-      </KeyboardAvoidingView>
-    </Screen>
+      }
+    >
+      <Field
+        label="Correo"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        autoComplete="email"
+        keyboardType="email-address"
+        inputMode="email"
+        placeholder="tu@correo.com"
+      />
+      <Field
+        label="Contraseña"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        autoComplete="password"
+        placeholder="Tu contraseña"
+        onSubmitEditing={handleSubmit}
+      />
+      <FormError message={error} />
+      <Button label="Entrar" onPress={handleSubmit} loading={loading} />
+    </AuthLayout>
   )
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  header: { marginTop: 48, marginBottom: 32 },
-  links: {
-    marginTop: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
+  links: { alignItems: 'center', gap: 16 },
 })
