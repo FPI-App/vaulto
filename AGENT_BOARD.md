@@ -16,13 +16,13 @@ Estas reglas prevalecen sobre las instrucciones de integración del historial.
 
 Confirmado al incorporar estas reglas: workers asentados, bandeja sin mensajes pendientes; no hay workers que requieran una espera nueva.
 
-### Gate pendiente — apertura PR #25
+### Gate aprobado — apertura PR #25
 
 - Task del coordinador: `task_61946f5961d7`.
-- Gate: `gate_b5fb7c349737`, estado `pending`, resolución sin emitir.
+- Gate: `gate_b5fb7c349737`, estado `resolved`, resolución `yes` por respuesta explícita del usuario; verificado en Orca.
 - Pregunta: **¿Revisaste el diff y apruebas abrir el PR?** Opciones: `yes` / `no`.
 - Diff a revisar: `git diff main..orchestration/issue-25`; head preparado `a2d8f24`.
-- Esperar la resolución humana. Publicación y apertura siguen pendientes; #25 mantiene el bloqueo nativo y no se cerrará con estas regresiones.
+- Apertura autorizada por el usuario; pendiente confirmación explícita del comando y destino de `git push` antes de publicar. #25 mantiene el bloqueo nativo y no se cerrará con estas regresiones. Merge y cierre conservan gates separados.
 
 ## Ciclo activo — Issue #26
 
