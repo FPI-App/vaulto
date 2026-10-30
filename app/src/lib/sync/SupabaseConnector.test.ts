@@ -136,7 +136,7 @@ describe('Subida atómica ligada a la cuenta propietaria', () => {
         expect((await storeA.get('QA-device:1:2', operations))?.decision).toBe('requested')
       } finally { cuentaA.close(); cuentaB.close() }
     })
-    it('pierde la respuesta de la anulación, reintenta con la misma identidad y no duplica el recibo', async () => {
+    it('tras perder la respuesta de la anulación reenvía el mismo payload y completa la cola una sola vez (no simula recibos del servidor)', async () => {
       const database = testDatabase()
       try {
         const store = new SyncRecoveryStore(database.queries)
@@ -156,7 +156,7 @@ describe('Subida atómica ligada a la cuenta propietaria', () => {
         expect(f.complete).toHaveBeenCalledOnce()
       } finally { database.close() }
     })
-    it('tras reconectar registra el rechazo una sola vez y el siguiente intento aplica con el mismo lote', async () => {
+    it('en reintentos manuales registra el rechazo una sola vez y aplica con el mismo lote (no simula reconexión automática)', async () => {
       const database = testDatabase()
       try {
         const store = new SyncRecoveryStore(database.queries)
