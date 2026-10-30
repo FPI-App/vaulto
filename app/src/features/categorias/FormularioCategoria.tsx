@@ -1,7 +1,8 @@
 // Formulario de crear/editar categoría. Igual que FormularioCuenta: no sabe de
 // navegación ni de DB, entrega `DatosCategoria` validados vía onSubmit.
 import { useState } from 'react'
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import Check from 'lucide-react-native/icons/check'
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import {
   COLORES_CATEGORIA,
   ICONOS_CATEGORIA,
@@ -13,9 +14,11 @@ import { Button } from '@/components/Button'
 import { CategoriaIcon } from '@/components/CategoriaIcon'
 import { Field } from '@/components/Field'
 import { SegmentedControl } from '@/components/SegmentedControl'
+import { Text } from '@/components/Text'
 import { useTheme } from '@/theme'
 
 import type { DatosCategoria } from './data/categoriasRepo'
+import { showAlert } from '@/lib/ui/alert'
 
 const NOMBRE_ICONO: Record<IconoCategoria, string> = {
   'shopping-cart': 'Carrito',
@@ -84,17 +87,10 @@ export function FormularioCategoria({
   const [icono, setIcono] = useState<IconoCategoria>(inicial?.icono ?? 'ellipsis')
   const [color, setColor] = useState<string>(inicial?.color ?? COLORES_CATEGORIA[6])
 
-  const etiqueta = {
-    ...theme.typography.scale.label,
-    fontFamily: theme.typography.fontFamily,
-    color: theme.colors.textMuted,
-    marginBottom: theme.space.xs,
-  }
-
   function submit() {
     const nombreLimpio = nombre.trim()
     if (!nombreLimpio) {
-      Alert.alert('Falta el nombre', 'Ponle un nombre a la categoría.')
+      showAlert('Falta el nombre', 'Ponle un nombre a la categoría.')
       return
     }
     onSubmit({ nombre: nombreLimpio, icono, color })
@@ -103,19 +99,16 @@ export function FormularioCategoria({
   return (
     <ScrollView
       keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{ paddingVertical: theme.space.lg }}
+      contentContainerStyle={{ paddingVertical: theme.space.lg, paddingBottom: theme.space['2xl'] }}
       showsVerticalScrollIndicator={false}
     >
       <View style={[styles.preview, { marginBottom: theme.space.xl }]}>
         <CategoriaIcon icono={icono} color={color} size={64} />
         <Text
+          variant="h3"
+          tone={nombre.trim() ? 'default' : 'muted'}
           numberOfLines={1}
-          style={{
-            ...theme.typography.scale.h3,
-            fontFamily: theme.typography.fontFamily,
-            color: nombre.trim() ? theme.colors.text : theme.colors.textMuted,
-            marginTop: theme.space.sm,
-          }}
+          style={{ marginTop: theme.space.md }}
         >
           {nombre.trim() || 'Nueva categoría'}
         </Text>
@@ -123,7 +116,9 @@ export function FormularioCategoria({
 
       {onCambiarTipo ? (
         <View style={{ marginBottom: theme.space.lg }}>
-          <Text style={etiqueta}>Tipo</Text>
+          <Text variant="label" tone="muted" style={styles.etiqueta}>
+            Tipo
+          </Text>
           <SegmentedControl<TipoCategoria>
             value={tipo}
             onChange={onCambiarTipo}
@@ -144,7 +139,9 @@ export function FormularioCategoria({
         maxLength={40}
       />
 
-      <Text style={etiqueta}>Ícono</Text>
+      <Text variant="label" tone="muted" style={styles.etiqueta}>
+        Ícono
+      </Text>
       <View style={[styles.grid, { marginBottom: theme.space.lg }]}>
         {ICONOS_CATEGORIA.map((nombreIcono) => {
           const activo = nombreIcono === icono
@@ -171,7 +168,9 @@ export function FormularioCategoria({
         })}
       </View>
 
-      <Text style={etiqueta}>Color</Text>
+      <Text variant="label" tone="muted" style={styles.etiqueta}>
+        Color
+      </Text>
       <View style={[styles.grid, { marginBottom: theme.space.xl }]}>
         {COLORES_CATEGORIA.map((hex) => {
           const activo = hex === color
@@ -192,7 +191,9 @@ export function FormularioCategoria({
                 },
               ]}
             >
-              <View style={[styles.muestra, { backgroundColor: hex }]} />
+              <View style={[styles.muestra, { backgroundColor: hex }]}>
+                {activo ? <Check size={16} color="#FFFFFF" strokeWidth={3} /> : null}
+              </View>
             </Pressable>
           )
         })}
@@ -207,5 +208,6 @@ const styles = StyleSheet.create({
   preview: { alignItems: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   celda: { alignItems: 'center', justifyContent: 'center', borderWidth: 2 },
-  muestra: { width: 28, height: 28, borderRadius: 14 },
+  muestra: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  etiqueta: { marginBottom: 8 },
 })

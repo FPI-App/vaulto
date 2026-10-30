@@ -1,0 +1,47 @@
+{
+  "checkedAt": "2026-10-30T00:30:00Z",
+  "backend": "pqxvttkyevbkfdhmcmxu (migraciones 0001-0016)",
+  "clientes": "APK development en emulator-5554 (VaultoQA1) y emulator-5556 (VaultoQA2), Metro localhost:8082 y pasarela QA 127.0.0.1:8084/8085 con TLS verificado en el host",
+  "usuarios": {
+    "A": "a0c432f9-36b4-4836-8df7-f8d651a350fe",
+    "B": "ed123afa-5288-4fbb-a236-4198a60c6911",
+    "C": "482a85d0-ad1c-4050-b0b1-cc0d31c50863"
+  },
+  "espacioA": "8c99e17e-087b-4b0d-ba1e-93a3bf6aeed0",
+  "nota": "Usuarios sinteticos @vaulto.test creados con la Admin API; la clave service_role solo estuvo en memoria. Credenciales en .cache/qa/cuentas-qa.json (ignorado).",
+  "resultados": [
+    { "caso": "Login con contrasena y onboarding de A en D2", "passed": true },
+    { "caso": "Cuentas Ahorros Demo 1.000.000 y Billetera 200.000 creadas con el formulario real", "passed": true },
+    { "caso": "Ingreso 500.000, egreso 80.000 y transferencia 150.000; saldos 1.350.000 / 270.000 / total 1.620.000", "passed": true },
+    { "caso": "Servidor: 1 espacio, 2 cuentas, 15 categorias sembradas y 3 movimientos sin duplicados, recibidos en 7 lotes RPC", "passed": true },
+    { "caso": "A en D1: descarga 1.620.000 sin repetir onboarding (espera del primer sync)", "passed": true },
+    { "caso": "Deuda yo_debo 100 creada en D1 llega a D2; KPI Debo 100 y vencimiento", "passed": true },
+    { "caso": "D1 y D2 sin conexion, abono 60 en cada uno; ambos muestran saldo 40 localmente", "passed": true },
+    { "caso": "Reinicio de la app en D1 sin conexion: sesion, abono pendiente y KPI Debo 40 conservados", "passed": true },
+    { "caso": "D1 reconecta: servidor con 1 pago (60, Abono D1), saldo 40", "passed": true },
+    { "caso": "D2 reconecta: rechazo 23514 -> 'Revisar abono pendiente' -> 'Anular abono' -> cola desbloqueada", "passed": true },
+    { "caso": "Operacion posterior en D2 (egreso 20.000) sincroniza; historial de D2 converge a Abono D1", "passed": true },
+    { "caso": "Abono final 40 en D1: deuda saldada, saldo 0; servidor pagos 60+40, 11 lotes applied + 1 cancelled", "passed": true },
+    { "caso": "Cierre de sesion y nuevo login de A en D1 conservan los datos", "passed": true },
+    { "caso": "Cambio de cuenta en D2 A -> B -> C -> A: cada usuario ve solo su espacio; A conserva sus datos", "passed": true },
+    { "caso": "Membresia sintetica de B en el espacio de A (INSERT admin autorizado): B ve 1.600.000 y Me deben 40 en vivo", "passed": true },
+    { "caso": "Revocacion (UPDATE deleted_at admin autorizado): B vuelve a su espacio vacio sin reiniciar", "passed": true },
+    { "caso": "Categoria semilla renombrada (Mercado -> Supermercado) y otra eliminada en D2; converge en D1; la siembra if_absent posterior no revive ni sobrescribe", "passed": true },
+    { "caso": "Dashboard de D2 refresca Me deben 50 -> 40 en vivo tras un abono hecho en D1 (correccion cd4e9d1)", "passed": true }
+  ],
+  "bugsCorregidos": [
+    "fe6b25a: la navegacion a Categorias redirigia a Inicio (href:null => hidden en expo-router)",
+    "cd4e9d1: KPIs de deudas del dashboard no se refrescaban tras un sync mientras la pantalla seguia visible"
+  ],
+  "observaciones": [
+    "Desconocido: tras reconectar D2, la subida rechazada no se reintento hasta reiniciar la app (aviso 'retry' sin cambio en ~60 s). Despues del reinicio la clasificacion 23514 fue correcta.",
+    "Desconocido: tras un Fast Refresh de Metro, el stream de descarga de D2 dejo de aplicar checkpoints hasta reiniciar la app. Puede ser un artefacto del entorno de desarrollo; no se reprodujo sin Fast Refresh.",
+    "Supuesto: la revocacion purga de la replica local de B las filas del espacio de A (sync rules); solo se verifico en la UI."
+  ],
+  "noCubierto": [
+    "APK preview standalone en emulador: el login falla por TLS porque Avast Web/Mail Shield re-firma los certificados en este PC; requiere un telefono real o una exclusion en Avast",
+    "Perdida de confirmacion de un lote aplicado (cubierta solo por pgTAP sync_atomico y por las pruebas del conector)",
+    "Escritura directa de un cliente anterior a 0012 contra el remoto",
+    "iOS, fuera de alcance por decision del usuario"
+  ]
+}
