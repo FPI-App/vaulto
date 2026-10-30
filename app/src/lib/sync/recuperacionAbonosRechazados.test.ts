@@ -282,7 +282,7 @@ describe('QA — Suite de recuperación de abonos rechazados (Issue #25)', () =>
     }
   })
 
-  it('caso 5: reinicio preserva el estado de recuperación durablemente en SQLite', async () => {
+  it('caso 5: recreación de SyncRecoveryStore sobre la misma conexión conserva decisión y lote', async () => {
     const db = testDatabase()
     try {
       const storeInicial = new SyncRecoveryStore(db.queries)
@@ -384,7 +384,7 @@ describe('QA — Suite de recuperación de abonos rechazados (Issue #25)', () =>
     }
   })
 
-  it('caso 7: reintento tras reconexión conserva decisión requested y retransmite', async () => {
+  it('caso 7: reintento manual tras error de red retransmite lote con decisión requested', async () => {
     const db = testDatabase()
     try {
       const store = new SyncRecoveryStore(db.queries)
@@ -433,7 +433,7 @@ describe('QA — Suite de recuperación de abonos rechazados (Issue #25)', () =>
     }
   })
 
-  it('caso 8: pérdida de respuesta sin duplicados manejada con recibo already_applied', async () => {
+  it('caso 8: fallo local de complete seguido de recibo simulado already_applied marca aplicada la anulación', async () => {
     const db = testDatabase()
     try {
       const store = new SyncRecoveryStore(db.queries)
@@ -476,7 +476,7 @@ describe('QA — Suite de recuperación de abonos rechazados (Issue #25)', () =>
     }
   })
 
-  it('caso 9: aislamiento de usuario y espacio en tablas locales y sync', async () => {
+  it('caso 9: consultas y registros locales filtran por espacio_id sin validar RLS ni sincronización remota', async () => {
     const db = testDatabase()
     try {
       const now = new Date().toISOString()
