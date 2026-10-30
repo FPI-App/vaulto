@@ -35,7 +35,7 @@ Confirmado al incorporar estas reglas: workers asentados, bandeja sin mensajes p
 ## Ciclo activo — Issue #26
 
 - Issue: [#26 — Sustituir el lint ficticio de packages/shared por una verificación real](https://github.com/FPI-App/vaulto/issues/26).
-- Estado: DEV y QA entregados e integrados localmente; pendiente confirmación de publicación y CI remoto. P2; sin más Todo en el último escaneo; #25 sigue abierto/bloqueado por evidencia nativa.
+- Estado: código integrado en main mediante PR #34, merge `ae93ace42fcb7c7418498429128d4c1ba604573d`; CI remoto correcto (run `41139141904`, 49 s). Cierre del Issue pendiente de gate separado `gate_aff7f6bce8db`, Task `task_51e58afa1187`. El usuario delegó gates de PR, no se ha interpretado eso como delegación del cierre de Issues.
 - Gate de apertura del PR de lint: `gate_fc85b1f44b0a`, Task `task_b6daaaa25133`, resuelto `yes` por delegación explícita del usuario tras revisión del coordinador. La publicación de las ramas ya estaba autorizada.
 
 ### Revisión de los demás PR solicitada por el usuario
@@ -43,6 +43,26 @@ Confirmado al incorporar estas reglas: workers asentados, bandeja sin mensajes p
 - Confirmado por `git merge-base --is-ancestor`: heads de PR #20 (`519ab796`) y #22 (`79cbb4c2`) ya son ancestros de `origin/main`. Son borradores históricos, no features nuevas pendientes.
 - PR #31 head `21325ba07544196bce81d36ea0cb2b41c5ba9f45` y PR #32 head `7d43de44ac40a2bbddca6e85e328a62b6bc5dc84`: revisión paralela en solo lectura contra base `73e5920`, ejes Standards y Spec.
 - Claude: Task `task_a73c2fb668fb`, Dispatch `ctx_0bdd92400c8a`. Antigravity: Task `task_e89e76378d80`, Dispatch `ctx_ab3c0f83252f`. Ambos iniciados y en espera con el comando exacto solicitado; detener/reportar ante failed, escalation o question.
+- Ambas revisiones entregadas con `worker_done succeeded`; lotes procesados completos y confirmados después de registrar hallazgos y disponer de las sesiones. Sin cambios de los reviewers.
+- Standards: PR31 sin bloqueante declarado, con salvedades sobre alcance compartido, web sin cifrar y duplicación de conexión. PR32 aprobado. Spec: PR31 requiere corregir suma flotante y armonizar layout con PR32; PR32 aprobado. No se mezclan estos dos ejes de evaluación.
+
+### Integración PR31 y PR32 — desarrollo y QA en ejecución
+
+- El coordinador confirmó el bug visible del resumen: `0.01 + 2.01 + 0.48` con floats produce `2.4999999999999996` y se muestra como COP 2; la suma de centavos produce 2.50 y se muestra como COP 3.
+- DEV Claude: Task `task_8ea475bc8fe8`, Dispatch `ctx_1025098f2f11`; integrar main, PR31 y PR32 conservando historia; resolver layout con TabBar del rediseño y Categorías accesible; usar helper de centavos en resumen; bloquear base web sin cifrar fuera de desarrollo. Sin push ni EAS remoto.
+- QA Antigravity: Task `task_d85c92fa78d3`, Dispatch `ctx_ba91212a79ea`; prueba significativa de `calcularTotalesDeudas` con centavos, dirección, saldadas y conflictos; verificar integración y reporte `docs/qa/pr31-32-integracion.md`. Sin modificar producción ni publicar.
+- Orquestador: espera exacta `orca orchestration check --wait --types worker_done,escalation,question --timeout-ms 900000 --json`. No aprobar integración si falla un worker o hay escalation/question; detener y reportar.
+- La publicación conjunta usará `orchestration/issue-26`, cuyo comando exacto de push ya fue autorizado. Creará PR de integración separado del #34 ya fusionado y gates rastreables por aprobación delegada.
+
+### Pendientes de la app — evidencia más reciente del tracker
+
+- #25: cambio de cuenta con anulación pendiente, pérdida de respuesta remota y retraso del reintento al reconectar. El flujo 60+60, anulación y operación posterior ya fue probado en Android; no se presenta como trabajo sin empezar.
+- #21: migración cifrada ya implementada y probada en Android. Falta demostrar reenvío exactamente una vez de la transacción pendiente tras migrar y reiniciar. Conservar originales; cualquier retirada requiere autorización exacta. iOS fuera de alcance según comentario del Issue.
+- #24: backend 0001–0016 y RPC ya desplegados y probados desde Android. Falta mismo lote tras perder confirmación remota, bloqueo real del cliente antiguo y cotejar reglas PowerSync desplegadas con `sync_rules.yaml`. Restringir publicación a ocho tablas es una propuesta, no una migración autorizada.
+- #6: dos Android, offline/reinicio/convergencia, soft delete y aislamiento ya probados. Falta purga local tras revocar membresía y entrega segura de configuración/checkpoint B.0 a lmilo.
+- #16/#17: funcionalidad presente; completar evidencia de cierre de abonos/KPIs sobre integración final y pendientes anteriores. PR32 agrega refresco tras checkpoints de sync.
+- #18: reconciliar README/plan/runbooks y checklist con estado real; los cuerpos de varios Issues conservan diagnóstico anterior al despliegue.
+- Tras rediseño: recompilar APK con expo-blur y expo-linear-gradient y validar navegación/visuales en Android. Bundle JavaScript correcto no sustituye APK ni prueba nativa. Web es herramienta de desarrollo, no almacenamiento cifrado de producción.
 - Base inicial de verificación: `main` `2ba0875`. Rama `orchestration/issue-26`; incluye ahora la integración local #25 como dependencia para publicar/fusionar primero PR #25 y después PR #26 sin conflicto del tablero. El diff del segundo PR se revisa contra main actualizado tras el primero.
 
 ### [DEV] Claude — #26
