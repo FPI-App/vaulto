@@ -35,12 +35,14 @@ export function DashboardScreen() {
     [session?.user.id ?? ''],
   )
   const nombre = perfil[0]?.nombre?.trim()
-  const hoy = new Intl.DateTimeFormat('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())
+  const fecha = new Intl.DateTimeFormat('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())
+  // «Jueves, 29 de octubre»: solo la primera letra en mayúscula.
+  const hoy = fecha.charAt(0).toUpperCase() + fecha.slice(1)
 
   return (
     <Screen scroll tabBar padded>
       <View style={[styles.saludo, { paddingTop: theme.space.lg, paddingBottom: theme.space.xl }]}>
-        <Text variant="caption" tone="muted" style={{ textTransform: 'capitalize' }}>
+        <Text variant="caption" tone="muted">
           {hoy}
         </Text>
         <Text variant="h1" accessibilityRole="header" style={{ marginTop: 2 }}>

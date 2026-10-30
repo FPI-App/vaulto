@@ -32,7 +32,7 @@ export function TabBar({ state, navigateToTab }: TabBarProps) {
   const theme = useTheme()
   const insets = useSafeAreaInsets()
   const current = state.routes[state.index]?.name
-  if (current === 'onboarding') return null
+  if (current?.startsWith('onboarding')) return null
 
   const renderTab = ({ name, label, icon: Icon }: (typeof TABS)[number]) => {
     const focused = current === name
