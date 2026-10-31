@@ -132,6 +132,9 @@ importers:
       '@babel/core':
         specifier: ^7.25.0
         version: 7.29.7
+      '@powersync/shared-internals':
+        specifier: 1.4.0
+        version: 1.4.0(@powersync/common@2.4.0)
       '@types/react':
         specifier: ~19.3.0
         version: 19.3.0
