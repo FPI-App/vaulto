@@ -1,0 +1,14 @@
+{
+  "completedAt": "2026-10-31T05:54:53.451Z",
+  "id": "9692ce86-65a2-41ee-bd76-b6e3561b6f7b",
+  "status": "FINISHED",
+  "platform": "ANDROID",
+  "profile": "development",
+  "gitCommitHash": "df2b6a836bcc2a0170732eb823d27f5fcb7b905c",
+  "artifactBytes": 310956162,
+  "artifactSha256": "353045f60559c6ee9aef15309d5e9fafe48b4b2e3669f14c248660044f46a72a",
+  "installedWithReplaceKeepingData": true,
+  "installedApkSignatureMatches": true,
+  "normalProductUi": "blank-after-js-start",
+  "observedNativeIssue": "SplashScreenManager class not found while Dev Launcher tried to hide splash"
+}

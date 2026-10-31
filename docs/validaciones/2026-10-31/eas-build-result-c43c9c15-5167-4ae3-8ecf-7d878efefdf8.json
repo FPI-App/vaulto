@@ -1,0 +1,9 @@
+{
+  "capturedAt": "2026-10-31T10:15:10.917Z",
+  "id": "c43c9c15-5167-4ae3-8ecf-7d878efefdf8",
+  "status": "FINISHED",
+  "platform": "ANDROID",
+  "gitCommitHash": "df2b6a836bcc2a0170732eb823d27f5fcb7b905c",
+  "bytes": 311003682,
+  "sha256": "371c389d57bc2d3b8814ae39999076d9bc0ab8a3f5eda6b89531033fd2e6241e"
+}

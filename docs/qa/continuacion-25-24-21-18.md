@@ -61,19 +61,20 @@ Confirmado en datos sintéticos del usuario QA A, a través de la API pública a
 
 - EAS build `9692ce86-65a2-41ee-bd76-b6e3561b6f7b` terminó correctamente desde el SHA `df2b6a8`. Se descargó el APK, se verificó que la firma coincidiera con la instalada y se instaló con `adb install -r` (sin borrar datos).
 - La primera apertura del producto mostró blanco. El log nativo reportó que no encontraba `SplashScreenManager`; el layout espera `useFonts` y retorna `null` mientras carga. Se agregó `expo-splash-screen ~58.0.12`, plugin SDK 58, `preventAutoHideAsync()` y ocultamiento al completar o fallar la carga de Inter.
-- Build EAS actualizado `c43c9c15-5167-4ae3-8ecf-7d878efefdf8`: en curso al momento de editar este informe. No se da por verificado el dashboard normal hasta instalar ese APK y observar contenido.
+- Build EAS actualizado `c43c9c15-5167-4ae3-8ecf-7d878efefdf8`: `FINISHED`, APK descargado, firma coincidente e instalación `adb install -r` correcta. Expo `/_expo/open` respondió200 y resolvió `MainActivity`, pero el proceso agotó el tiempo de inicialización en dos aperturas y registró ANR en una tercera antes de cargar JavaScript. Dashboard no renderizado; causa raíz desconocida. Detalle sanitizado en `native-product-startup.json`. No se repitió el build.
 
 ### Archivos y comandos verificados
 
 - Código QA: `app/qa-native-entry.tsx`, `app/src/app/qa-storage.tsx`, `app/src/app/qa-sync-recovery.tsx`, `app/src/lib/db/qaStorageRemote.ts`, `app/src/lib/db/qaSyncRecovery.ts` y sus pruebas.
 - Arranque normal: `app/app.json`, `app/package.json`, `app/src/app/_layout.tsx`, `pnpm-lock.yaml`.
 - `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`: correctos. `pnpm test`: 230/230 (79 shared + 151 app).
+- `git push -u origin orchestration/issue-26`: correcto; commit `b78f34f`. `gh pr checks 37`: CI del SHA exacto pasó (50 s, ejecución 41191260552).
 - `adb install -r <APK>`: correcto; `apksigner verify --print-certs`: el SHA-256 de firma del APK nuevo coincidió con el anterior. La inspección remota de los lotes fue exclusivamente `SELECT`.
 
 ### Pendiente / no verificado
 
 - Concurrencia del caso #25 en dos dispositivos: solo se usó un AVD y dos propietarios alternados. No se probó iOS.
-- Vista normal de Vaulto sobre el build corregido: pendiente de terminar, instalar y observar el segundo build EAS.
+- Vista normal de Vaulto sobre el segundo build: no renderizada por timeout/ANR de inicialización de Android.
 - #24: no se autorizó ni aplicó migración; el destino remoto observado ya tiene 0012–0016. La revisión coordinada del cambio de publicación de las ocho tablas sigue pendiente con lmilo.
 - #18: queda confirmación/revisión compartida de lmilo; no se envió mensaje externo.
-- CI del SHA final de PR #37, merge del PR y cierre de los cuatro Issues: aún pendientes de sus gates separados.
+- CI del SHA `b78f34f` de PR #37: pasó. Merge del PR y cierre de Issues siguen pendientes; no se crearon gates de merge/cierre porque la apertura normal del APK no quedó validada y los issues conservan otros criterios abiertos.
