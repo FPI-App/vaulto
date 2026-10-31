@@ -1,6 +1,16 @@
 # Vaulto — tablero de orquestación
 
-Actualizado: 2026-10-30. Run Orca: `run_7292d436ace4`.
+Actualizado: 2026-10-30. Run activo: `run_2d2020eeaebc` (historial anterior conservado).
+
+## Continuación solicitada — #25, #24, #21 y #18
+
+- Confirmado: DEV #25, Task `task_0f5b022a9907`, Dispatch `ctx_9f4303752b96`, entregó `acb2c7b` y `675fe4c`: cuatro pruebas del bucle real del SDK, sin fallo de producción demostrado. Red, outbox y primera línea son simulados; no equivale a una prueba nativa. Entrega revisada, integrada localmente, terminal retained antes de ack del lote completo.
+- Confirmado: QA preflight Task `task_793444a894e0`, Dispatch `ctx_3ee05a490fce`, commit `bb16bb5`, integrado localmente; lote completo procesado y confirmado tras release. AVD1 activo con APK anterior al rediseño; no se requiere AVD2 para los casos secuenciales.
+- En ejecución: QA nativo Task `task_96b93d6b0882`, Dispatch `ctx_e7d5026ae363`, pruebas #25/#24/#21 sobre datos sintéticos y sesión Android existente; sin SQL administrativo ni cambios remotos de infraestructura. Espera obligatoria activa.
+- Confirmado: el arranque DEV de #18 fue bloqueado por un aviso opcional de compactación (`agent-hooks-review-prompt`, Dispatch `ctx_426ac895d5de`). Tras inspeccionar la pantalla se descartó con Escape, sin cambiar configuración. Retry Dispatch `ctx_6023e6076ce1` activo: revisión en solo lectura del diff documental preparado por el coordinador; solo escribe su reporte QA en feature/dev-features.
+- Confirmado: backend remoto leído sin mutaciones, migraciones0001–0016, ocho guards, RLS y grants RPC; configuración Cloud SHA-256 igual a `powersync/sync-config.yaml`. Evidencia nueva en `docs/validaciones/2026-10-30/`; reglas locales legacy distintas.
+- Confirmado por el coordinador: instalación frozen, tipos y lint correctos; 201 pruebas (79 shared + 122 app) correctas. `private` no expuesto por PostgREST (406/PGRST106), consulta solo lectura.
+- Pendiente: completar ejecución nativa, controles finales, gates de publicación/merge y gate separado para cualquier cierre de Issue. No hay cierres nuevos ni pruebas nativas aprobadas por anticipado.
 
 ## Puntos de parada obligatorios — instrucción vigente del usuario
 

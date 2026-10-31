@@ -19,9 +19,9 @@ Documentación de producto (brief, análisis, brandbook) en el repo [`docs`](htt
 |---|---|
 | **App** | Expo + React Native + TypeScript, Expo Router (tabs + rutas protegidas) |
 | **Base de datos local** | SQLite cifrada con **SQLCipher** (cifrado en reposo) |
-| **Sincronización** | **PowerSync** sobre Supabase + cola local + merge por campo donde el dominio lo justifique, LWW solo como fallback |
+| **Sincronización** | **PowerSync** sobre Supabase + outbox transaccional + RPC idempotente; saldos recalculados en servidor |
 | **Backend** | **Supabase**: Auth (correo/contraseña), Postgres, **RLS obligatorio**, Storage |
-| **Edge functions** | Supabase Functions (Deno) |
+| **Operaciones de dominio remotas** | RPC PostgreSQL de aplicación/anulación de lotes |
 | **Servicios futuros** | Render (parsers, jobs) — aún no existen |
 
 ---
@@ -38,9 +38,10 @@ vaulto/
 │  │  ├─ components/     # Componentes UI reutilizables
 │  │  ├─ features/       # Lógica por dominio (movimientos, deudas, cuentas...)
 │  │  ├─ lib/
-│  │  │  ├─ db/          # SQLite + SQLCipher (esquema local, migraciones)
-│  │  │  ├─ sync/        # Integración PowerSync, cola, resolución de conflictos
-│  │  │  └─ supabase/    # Cliente Supabase, auth
+│  │  │  ├─ powersync/   # Provider de la base por usuario
+│  │  │  ├─ db/          # Llaves, sesiones y migración legacy
+│  │  │  ├─ sync/        # PowerSync, outbox y recuperación por RPC
+│  │  │  └─ supabase.ts  # Cliente Supabase, auth
 │  │  └─ theme/          # Tokens del brandbook (paleta, tipografía, radios)
 │  └─ assets/
 ├─ packages/
@@ -52,7 +53,7 @@ vaulto/
 ├─ supabase/             # Backend gestionado (no es un servidor)
 │  ├─ migrations/        # Migraciones SQL versionadas
 │  ├─ policies/          # Políticas RLS documentadas
-│  └─ functions/         # Edge functions (Deno)
+│  └─ powersync/         # Servicio local y conexión de réplica
 ├─ docs/                 # Documentación interna mínima del repo (ADRs, runbooks)
 └─ .github/workflows/    # CI
 ```
@@ -64,7 +65,7 @@ La decisión de usar un solo repo (no separar frontend/backend) y su justificaci
 ## Requisitos previos
 
 - **Node** 22.13+, 24.3+ o 26+ (requisitos de Expo SDK 58; gestionado con [mise](https://mise.jdx.dev/))
-- **pnpm** 9+ (`corepack enable && corepack prepare pnpm@latest --activate`)
+- **pnpm** 9.12.0 (versión fijada en `package.json`)
 - **Supabase CLI** ([instalación](https://supabase.com/docs/guides/cli))
 - **Expo / EAS**: la app corre con `expo` (incluido como dependencia). Para builds nativas, [EAS CLI](https://docs.expo.dev/eas/).
 - **Docker** (para levantar Supabase en local)
@@ -75,25 +76,25 @@ La decisión de usar un solo repo (no separar frontend/backend) y su justificaci
 
 Orden de levantado: **infra → migraciones → app**.
 
-```bash
+```powershell
 # 1. Instalar dependencias (todo el workspace)
-pnpm install
+pnpm install --frozen-lockfile
 
 # 2. Copiar variables de entorno y completarlas
-cp .env.example .env
-# Edita .env con tus credenciales de Supabase (ver supabase/README.md)
+Copy-Item app/.env.example app/.env
+# Edita app/.env con las variables públicas de Supabase y PowerSync (ver supabase/README.md)
 
 # 3. Levantar Supabase en local (Postgres + Auth + Storage)
 pnpm supabase:start
 
-# 4. Aplicar migraciones
-pnpm db:migrate
+# 4. Revisar el destino de las migraciones con supabase/README.md.
+# db:migrate ejecuta supabase db reset: requiere autorización explícita.
 
 # 5. Arrancar la app Expo
 pnpm app:dev
 ```
 
-Para correr en un dispositivo/emulador, sigue las instrucciones de Expo que imprime el paso 5 (escanear QR con Expo Go en desarrollo, o build de desarrollo para probar SQLCipher/PowerSync nativos).
+Para correr en Android, instala un development build compatible y conéctalo al Metro del paso 5. Expo Go no incluye SQLCipher ni PowerSync nativo. Al añadir módulos nativos, recompila el APK; exportar JavaScript no verifica su ejecución.
 
 > **Nota sobre SQLCipher y PowerSync:** ambos requieren código nativo, por lo que **no funcionan en Expo Go**. Usa una *development build* (`pnpm app:prebuild` + `expo run:android` / `expo run:ios`).
 
@@ -107,7 +108,7 @@ Para correr en un dispositivo/emulador, sigue las instrucciones de Expo que impr
 | `pnpm app:prebuild` | Genera los proyectos nativos (android/ios) |
 | `pnpm supabase:start` | Levanta Supabase local con Docker |
 | `pnpm supabase:stop` | Detiene Supabase local |
-| `pnpm db:migrate` | Aplica migraciones a la DB local |
+| `pnpm db:migrate` | Ejecuta `supabase db reset`; revisa destino y solicita autorización antes de usarlo |
 | `pnpm db:types` | Regenera los tipos TS del esquema en `packages/shared` |
 | `pnpm lint` | Linter en todo el workspace |
 | `pnpm typecheck` | Chequeo de tipos en todo el workspace |

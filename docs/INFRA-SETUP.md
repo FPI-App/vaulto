@@ -2,7 +2,7 @@
 estado: activo
 owner: edav
 creado: 2026-06-26
-actualizado: 2026-06-26
+actualizado: 2026-10-30
 ---
 
 # INFRA-SETUP.md — Provisión de Supabase + PowerSync (edav)
@@ -13,6 +13,10 @@ actualizado: 2026-06-26
 > **Regla dura:** ningún secreto va al repo. El `.env` real nunca se commitea (ya está en `.gitignore`). Solo `.env.example` (placeholders) vive en git.
 
 ---
+
+## Estado actual y uso del runbook
+
+Confirmado: el proyecto remoto tiene migraciones 0001–0016 y Cloud usa `powersync/sync-config.yaml` (Streams edition 3). Consulta el estado y los pendientes en `PLAN-MVP1.md`; esta lista describe provisión, no ordena recrear infraestructura existente. Antes de cualquier reset revisa el destino y obtén autorización explícita. El despliegue remoto requiere revisión del SQL y autorización de escritura.
 
 ## 0. Prerrequisitos
 
@@ -54,13 +58,13 @@ actualizado: 2026-06-26
 - [ ] Vincular el repo al proyecto remoto: `supabase link --project-ref <ref>`.
 - [ ] Crear la migración cimiento (`supabase migration new agrega_cimiento_espacios`):
   - `espacio`, `espacio_miembro` (campos transversales + propios del modelo canónico).
-  - Función helper RLS `espacios_del_usuario()` → `select espacio_id from espacio_miembro where user_id = auth.uid() and deleted_at is null`.
+  - Función helper RLS `is_espacio_member(espacio_id)` → booleano que comprueba membresía activa del usuario autenticado en el espacio recibido.
   - Trigger genérico `set_updated_at()` para mantener `updated_at`.
   - `gen_random_uuid()` disponible (extensión `pgcrypto` si hace falta).
-- [ ] Aplicar local: `pnpm db:migrate` (reset con todas las migraciones).
-- [ ] Aplicar remoto: `supabase db push`.
+- [ ] Aplicar local: `pnpm db:migrate` ejecuta `supabase db reset`; solo después de revisar el destino y obtener autorización explícita.
+- [ ] Aplicar remoto: `supabase db push`, solo tras revisar el diff SQL, confirmar proyecto y autorizar el despliegue.
 - [ ] Regenerar tipos: `pnpm db:types` (escribe `packages/shared/src/types/database.ts`).
-- [ ] Habilitar **RLS en todas** las tablas con su política base por `espacios_del_usuario()`; casos especiales: `espacio` (por `id`), `espacio_miembro` (`user_id = auth.uid()` o pivot), `perfil` (`id = auth.uid()` o miembro).
+- [ ] Habilitar **RLS en todas** las tablas con su política base por `is_espacio_member(espacio_id)`; casos especiales: `espacio` (por `id`), `espacio_miembro` (`user_id = auth.uid()` o pivot), `perfil` (`id = auth.uid()` o miembro).
 - [ ] **Alinear docs del spine** (`ARQUITECTURA.md` §1, `supabase/policies/README.md`) al modelo canónico (RLS por pivot, `espacio_id` NOT NULL salvo `espacio`).
 
 ✅ **Hecho cuando:** `pnpm db:migrate` corre limpio; las tablas cimiento existen con RLS; `pnpm db:types` genera tipos sin error; una query desde un usuario no devuelve filas de otro espacio.
@@ -72,7 +76,7 @@ actualizado: 2026-06-26
 - [ ] Crear instancia PowerSync (journeyapps), conectada al Postgres del proyecto Supabase.
 - [ ] Crear el **rol/usuario de réplica** en Postgres que PowerSync usa para leer cambios (least-privilege); guardar sus credenciales en el secretos del equipo.
 - [ ] Configurar la conexión (host, puerto, db, usuario réplica, password) en PowerSync.
-- [ ] Definir las **Sync Rules** coherentes con RLS: cada dispositivo baja solo filas de los espacios del usuario (mismo criterio que `espacios_del_usuario()`). Respetar `deleted_at` (las filas soft-deleted se sincronizan pero la app las filtra).
+- [ ] Definir **Sync Streams** en `powersync/sync-config.yaml` para Cloud; `supabase/sync_rules.yaml` conserva buckets para el servicio local. Ambas configuraciones deben limitar las filas al alcance permitido por RLS: cada dispositivo baja solo filas de los espacios del usuario (mismo criterio que `is_espacio_member(espacio_id)`). Respetar `deleted_at` (las filas soft-deleted se sincronizan pero la app las filtra).
 - [ ] Definir el **esquema de sync del lado cliente** en `packages/shared/src/powersync/` coherente con las migraciones.
 - [ ] Anotar el **PowerSync URL** (endpoint de la instancia).
 
@@ -92,14 +96,14 @@ actualizado: 2026-06-26
 
 ## 6. Llenar y compartir `.env` (de forma segura)
 
-- [ ] Copiar `cp .env.example .env`.
+- [ ] Copiar `Copy-Item app/.env.example app/.env` y completar la configuración de la app.
 - [ ] Completar:
   - `EXPO_PUBLIC_SUPABASE_URL=` (paso 1)
-  - `EXPO_PUBLIC_SUPABASE_ANON_KEY=` (paso 1; pública por diseño, la seguridad la da RLS)
+  - `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=` (paso 1; pública por diseño, la seguridad la da RLS)
   - `EXPO_PUBLIC_POWERSYNC_URL=` (paso 4)
 - [ ] **NO commitear** el `.env` (verificar `git status` — debe estar ignorado).
 - [ ] Compartir las keys con lmilo por canal seguro (gestor de secretos del equipo / 1Password / mensaje cifrado), **nunca por el repo, PR, ni chat en claro**.
-- [ ] La llave de SQLCipher NO va en el `.env` de producción: se deriva por usuario y se guarda en `expo-secure-store`. `SQLCIPHER_DEV_KEY` es solo para desarrollo local.
+- [ ] La llave de SQLCipher NO va en el `.env` de producción: se genera con 32 bytes aleatorios por usuario y se guarda en `expo-secure-store`. No hay una llave global de desarrollo para sustituir las llaves de bases existentes.
 
 ✅ **Hecho cuando:** lmilo tiene las 3 keys públicas por canal seguro; el `.env` real no aparece en `git status`; ningún secreto está en el historial de git.
 
@@ -110,7 +114,7 @@ actualizado: 2026-06-26
 - [ ] Build de desarrollo en 2 dispositivos (SQLCipher/PowerSync no corren en Expo Go): `pnpm app:prebuild` + `pnpm app:android`/`app:ios`.
 - [ ] Loguear el **mismo usuario/espacio** en ambos.
 - [ ] En dispositivo A: crear un registro (ej. una cuenta o deuda) **offline**; en B verificar que aparece al reconectar A.
-- [ ] Edición concurrente: editar campos distintos del mismo registro en A y B; confirmar el comportamiento de merge esperado (per-field donde aplique; LWW como fallback).
+- [ ] Edición concurrente: editar campos distintos del mismo registro en A y B; registrar el resultado del protocolo real: PATCH de campos, serialización por espacio y saldos recalculados desde pagos activos. No afirmar merge por campo ni LWW por reloj; no están implementados.
 - [ ] Soft delete: borrar en A (escribe `deleted_at`); confirmar que desaparece en B.
 - [ ] Aislamiento: loguear un segundo usuario de **otro espacio**; confirmar que NO ve datos del primero.
 

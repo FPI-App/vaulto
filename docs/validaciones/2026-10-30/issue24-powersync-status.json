@@ -1,0 +1,55 @@
+{
+  "checkedAt": "2026-10-31T04:28:23.844Z",
+  "mode": "read-only",
+  "version": "4",
+  "errors": [],
+  "connections": [
+    {
+      "initialReplicationDone": true,
+      "lastKeepalive": "2026-10-31T04:28:13.030Z",
+      "replicationLagBytes": 56,
+      "tables": [
+        {
+          "schema": "public",
+          "name": "espacio",
+          "errors": []
+        },
+        {
+          "schema": "public",
+          "name": "espacio_miembro",
+          "errors": []
+        },
+        {
+          "schema": "public",
+          "name": "cuenta",
+          "errors": []
+        },
+        {
+          "schema": "public",
+          "name": "categoria",
+          "errors": []
+        },
+        {
+          "schema": "public",
+          "name": "movimiento",
+          "errors": []
+        },
+        {
+          "schema": "public",
+          "name": "deuda",
+          "errors": []
+        },
+        {
+          "schema": "public",
+          "name": "pago",
+          "errors": []
+        },
+        {
+          "schema": "public",
+          "name": "perfil",
+          "errors": []
+        }
+      ]
+    }
+  ]
+}

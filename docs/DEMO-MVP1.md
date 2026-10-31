@@ -4,7 +4,7 @@ Duración aproximada: 12 minutos. Solo datos sintéticos. Evidencia del recorrid
 
 ## Preparación
 
-- **Backend:** Supabase `pqxvttkyevbkfdhmcmxu` con migraciones 0001–0016 y PowerSync configurado con `supabase/sync_rules.yaml`.
+- **Backend:** Supabase `pqxvttkyevbkfdhmcmxu` con migraciones 0001–0016 y PowerSync Cloud configurado con `powersync/sync-config.yaml` (Sync Streams edition 3); `supabase/sync_rules.yaml` corresponde al servicio local legacy.
 - **APK:** perfil EAS `preview` (`app/eas.json`), APK standalone sin Metro que usa las variables públicas del entorno EAS `preview`. Instalar en **dos teléfonos Android reales**. En el PC de QA, Avast Web/Mail Shield intercepta TLS y el emulador rechaza esos certificados; ahí se usa el APK de desarrollo con la pasarela QA (ver `VALIDACION-PRIORIDADES-2026-10-29.md`).
 - **Cuentas:** usuarios sintéticos confirmados. Sus credenciales se guardan en `.cache/qa/cuentas-qa.json` y nunca se proyectan ni se comparten por chat. Para una demo limpia, crear usuarios nuevos (Supabase → Authentication → Add user → Auto Confirm).
 - Llamaremos T1 y T2 a los dos teléfonos.
