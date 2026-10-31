@@ -32,10 +32,12 @@ Confirmado al incorporar estas reglas: workers asentados, bandeja sin mensajes p
 - Comandos/resultados: 31/31 pruebas afectadas correctas; exportación Android Hermes correcta (2.102 módulos); `git push -u origin orchestration/issue-25` exit 0; `gh pr create --base main --head orchestration/issue-25 --title ... --body-file .cache/orchestration/pr-issue-25.md` creó PR #33; CI remoto correcto.
 - NO verificado: reconexión automática, pérdida de respuesta contra servidor real, SQLCipher tras reinicio y sincronización entre dos dispositivos para los pendientes del Issue. Los mocks no cubren esas garantías. El PR ya se fusionó; el Issue no se cerró.
 
-## Ciclo activo — Issue #26
+## Ciclo completado — Issue #26
 
 - Issue: [#26 — Sustituir el lint ficticio de packages/shared por una verificación real](https://github.com/FPI-App/vaulto/issues/26).
-- Estado: código integrado en main mediante PR #34, merge `ae93ace42fcb7c7418498429128d4c1ba604573d`; CI remoto correcto (run `41139141904`, 49 s). Cierre del Issue pendiente de gate separado `gate_aff7f6bce8db`, Task `task_51e58afa1187`. El usuario delegó gates de PR, no se ha interpretado eso como delegación del cierre de Issues.
+- Estado: CLOSED y Done en el Project, verificados tras autorización explícita del usuario. Gate `gate_aff7f6bce8db` resuelto yes; Task `task_51e58afa1187` completada. Código integrado mediante PR #34, merge `ae93ace42fcb7c7418498429128d4c1ba604573d`, con CI correcto (run `41139141904`, 49 s).
+- Cierre ejecutado: `gh issue close 26 --repo FPI-App/vaulto` exit 0; `gh project item-edit` marcó Done, confirmado por lectura del Project. Archivos del Issue: `packages/shared/eslint.config.js`, `packages/shared/package.json`, `pnpm-lock.yaml`, reporte QA y este tablero. Comandos de lint/tipos/tests y sus resultados se conservan abajo; no se repitieron pruebas de código para este cierre administrativo ni se ejecutaron pruebas nativas nuevas.
+- Issues abiertos tras el cierre: #25, #24, #21, #18, #17, #16, #6 y #2 (épica Track B), confirmados con `gh issue list --state open --limit 100`.
 - Gate de apertura del PR de lint: `gate_fc85b1f44b0a`, Task `task_b6daaaa25133`, resuelto `yes` por delegación explícita del usuario tras revisión del coordinador. La publicación de las ramas ya estaba autorizada.
 
 ### Revisión de los demás PR solicitada por el usuario
