@@ -111,6 +111,10 @@ async function currentOwner(sessionUserId: string | undefined, onStage: (stage: 
 }
 
 async function remoteCreate(owner: QaOwner, storage: QaStorage, onStage: (stage: string) => void) {
+  onStage('fixture-state')
+  // Un reintento de create no puede sustituir la llave de un fixture previo o incompleto.
+  if (await storage.get(REMOTE_STATE_KEY) || await storage.get(`vaulto.database.v1.${owner.userId}`)
+    || await new LegacyDatabaseMigration(storage).current(owner.userId)) throw new Error('qa-fixture-existente')
   const ids: [string, string] = [Crypto.randomUUID(), Crypto.randomUUID()]
   const categorias = categoriasQa(owner, ids)
   const directory = new Directory(Paths.document, `qa-storage-remote-${Crypto.randomUUID()}`)
@@ -120,6 +124,7 @@ async function remoteCreate(owner: QaOwner, storage: QaStorage, onStage: (stage:
   // Fuente en texto plano, aislada y sin conectar nunca: no es la base del usuario ni su alias.
   const source = new PowerSyncDatabase({ schema: AppSchema, database: { dbFilename: 'vaulto.sqlite', dbLocation: location } })
   await source.init()
+  onStage('source-profile')
   // El perfil de atribución se escribe en la tabla interna: no genera CRUD y no se enviará al remoto.
   await source.execute("INSERT INTO ps_data__perfil (id, data) VALUES (?, json_object('espacio_id', ?, 'nombre', 'QA', 'onboarding_completo', 1))", [owner.userId, owner.espacioId])
   if ((await source.getAll('SELECT id FROM ps_crud')).length !== 0) throw new Error('qa-crud-previo')
@@ -185,6 +190,7 @@ async function remoteResume(owner: QaOwner, storage: QaStorage, onStage: (stage:
     const recovery = new SyncRecoveryStore(db)
     await recovery.init()
     const counters = { calls: 0, failures: 0, completed: 0 }
+    const batchIds = new Set<string>()
     class CountingConnector extends SupabaseConnector {
       override async uploadData(source: Parameters<SupabaseConnector['uploadData']>[0]) {
         counters.calls++
@@ -192,7 +198,12 @@ async function remoteResume(owner: QaOwner, storage: QaStorage, onStage: (stage:
           getClientId: () => source.getClientId(),
           getNextCrudTransaction: async () => {
             const transaction = await source.getNextCrudTransaction()
-            return transaction && { crud: transaction.crud, complete: async () => { counters.completed++; await transaction.complete() } }
+            if (transaction?.crud.length) {
+              const first = transaction.crud[0]!
+              const last = transaction.crud[transaction.crud.length - 1]!
+              batchIds.add(`${await source.getClientId()}:${first.clientId}:${last.clientId}`)
+            }
+            return transaction && { crud: transaction.crud, complete: async () => { await transaction.complete(); counters.completed++ } }
           },
         }
         try { await super.uploadData(counting) } catch (error) { counters.failures++; throw error }
@@ -215,7 +226,7 @@ async function remoteResume(owner: QaOwner, storage: QaStorage, onStage: (stage:
       status: passed ? 'passed' : 'failed', phase: 'remote-resume', scenario: state.scenario, ownerValidated: true,
       categoryIds: state.categoryIds, queueEntriesBefore: pending.length, queueHashBefore: state.queueHash, preservedQueue: sameQueue, preservedClient: sameClient,
       remoteBefore, remoteAfter, drained, uploadCalls: counters.calls, uploadFailures: counters.failures, transactionsCompleted: counters.completed,
-      recoveryRows, timeoutMs: DRAIN_TIMEOUT_MS,
+      recoveryRows, batchIds: [...batchIds], timeoutMs: DRAIN_TIMEOUT_MS,
     }
   } finally {
     await db.close().catch(() => {})
