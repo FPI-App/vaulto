@@ -23,7 +23,7 @@ Las listas siguientes conservan el alcance original; una casilla histórica sin 
 | Confirmado | Selectores SQLite activos, montos decimales y protocolo de aplicación/anulación idempotente implementados. |
 | Confirmado | Recorridos Android históricos, aislamiento y conflictos: `validaciones/2026-10-29/`. No constituyen una prueba del APK con el rediseño posterior. |
 | Pendiente | #25: anulación pendiente con cambio de cuenta, respuesta perdida y reactivación nativa tras reconexión. #21: replay remoto del outbox migrado tras reinicio. |
-| Pendiente | #24: cliente viejo rechazado en remoto y repetición tras respuesta perdida. Cloud usa `powersync/sync-config.yaml`; `supabase/sync_rules.yaml` es configuración legacy local. |
+| Confirmado | #24: cliente anterior rechazado por guard (23514, cero filas), replay HTTP tras respuesta perdida con una sola fila y un recibo por lote; Cloud coincide por SHA-256 con `powersync/sync-config.yaml`. `supabase/sync_rules.yaml` sigue siendo configuración legacy local. |
 | Propuesto | Reducir publicación Postgres a tablas de dominio; requiere migración revisada y autorización de despliegue. Merge por campo/LWW no están implementados. |
 
 Los cambios compartidos se entregan en PR pequeño para revisión de ambos tracks; no se ha enviado un aviso externo a lmilo en esta ejecución.

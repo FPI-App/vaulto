@@ -1,0 +1,55 @@
+{
+  "checkedAt": "2026-10-31T04:47:42.141Z",
+  "target": "pqxvttkyevbkfdhmcmxu",
+  "scope": "synthetic QA public API; no administrative SQL",
+  "cases": [
+    {
+      "name": "old-client-direct-write",
+      "status": 400,
+      "code": "23514",
+      "rejected": false
+    },
+    {
+      "name": "apply-response-loss",
+      "clientSawNetworkFailure": true,
+      "upstreamCommitted": {
+        "status": 200,
+        "protocol": 1,
+        "batch_id": "QA-http-loss:9addf548-e8fb-4544-bf8e-c7320ab58ce2",
+        "receipt": "applied"
+      },
+      "retryStatus": 200,
+      "retryProtocol": 1,
+      "retryBatch": "QA-http-loss:9addf548-e8fb-4544-bf8e-c7320ab58ce2",
+      "retryReceipt": "already_applied",
+      "rowId": "6f9c27a6-2d63-4a05-a75c-1aee9c413008",
+      "rowCount": 1,
+      "passed": true
+    },
+    {
+      "name": "cancel-response-loss",
+      "rejectedCode": "23514",
+      "clientSawNetworkFailure": true,
+      "upstreamCommitted": {
+        "status": 200,
+        "protocol": 1,
+        "batch_id": "QA-cancel-loss:3f78a89d-7055-48e2-9fe9-5aac5be5eac8",
+        "receipt": "cancelled"
+      },
+      "retryStatus": 200,
+      "retryProtocol": 1,
+      "retryBatch": "QA-cancel-loss:3f78a89d-7055-48e2-9fe9-5aac5be5eac8",
+      "retryReceipt": "cancelled",
+      "debtId": "df9f9a12-7626-4a07-82a8-28359edb6b82",
+      "appliedPayment": "c2cb123e-2d29-4b34-97a7-fca3ca7547b2",
+      "rejectedPayment": "611f00e5-73a5-4e48-934b-3e95c7659a96",
+      "paymentCount": 1,
+      "balance": 40,
+      "replayApplyReceipt": "cancelled",
+      "passed": true
+    }
+  ],
+  "ok": false,
+  "fixturesPreserved": true,
+  "nativeSdkExercised": false
+}

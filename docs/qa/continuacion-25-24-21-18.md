@@ -28,3 +28,14 @@
 - No se aplicó la propuesta de restringir la publicación Postgres FOR ALL TABLES. Requiere cambio SQL revisado y autorización de despliegue.
 - No se borraron archivos legacy ni datos de prueba; no se probará iOS, excluido por decisión previa del usuario.
 - Los cierres de Issues conservan gates separados. Este informe no acredita cierre remoto ni publicación del árbol local.
+
+## Ejecución HTTP remota adicional del coordinador
+
+Confirmado en datos sintéticos del usuario QA A, a través de la API pública autenticada; sin SQL administrativo de escritura. Un puente efímero ligado a 127.0.0.1 consume la respuesta exitosa del servidor y destruye el socket antes de entregarla al cliente; el listener se cierra al finalizar. HTTPS upstream conserva validación TLS.
+
+- Aplicación: primera respuesta interna200/applied perdida; cliente observa fallo de red, reintenta mismo contenido/batch y recibe200/already_applied; una sola categoría por ID.
+- Anulación: deuda100 con pago60; lote posterior60 rechazado23514. Respuesta interna200/cancelled perdida; repetir cancelación y aplicar ese lote devuelven cancelled; un solo pago y saldo40.
+- Recibos: consulta SQL exclusivamente SELECT confirma un recibo por cada lote probado, estados applied/cancelled.
+- Cliente anterior: POST directo a categoría con espacio propio rechazado400/23514 y mensaje exacto del guard atómico; lectura posterior confirma cero filas. La primera versión del oráculo esperaba42501 por error y dejó ok:false en su reporte crudo; se conserva ese reporte y se añade `issue24-old-client-verified.json` con el código esperado verificado contra0012 y la ejecución real. No es un fallo del producto.
+- Evidencia: `issue24-25-http-response-loss.json`, `issue24-old-client-verified.json`, `issue24-response-loss-ledger.json`. Los fixtures se conservan, sin borrado.
+- NO verificado aquí: transporte móvil/SDK nativo, migración o sesión Android. Estos resultados cubren servidor y HTTP real; no sustituyen los pendientes nativos de #25 y #21.
