@@ -346,3 +346,10 @@ export default function SyncRecoveryQA() {
     </ScrollView>
   )
 }
+
+/** Ejecuta el mismo motor en el harness nativo sin depender del dashboard o sus módulos visuales. */
+export async function runSyncRecoveryFixture(mode: 'prepare' | 'resume', userId: string, publish: (report: Record<string, unknown>) => void) {
+  if (!__DEV__) throw new Error('qa-development-only')
+  const owner = await currentOwner(userId)
+  return mode === 'prepare' ? prepare(owner, publish) : resume(owner, publish)
+}

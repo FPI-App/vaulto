@@ -232,3 +232,15 @@ async function remoteResume(owner: QaOwner, storage: QaStorage, onStage: (stage:
     await db.close().catch(() => {})
   }
 }
+
+/** Entrada para el harness nativo aislado: evita montar las pantallas del producto. */
+export async function runRemoteStorageFixture(mode: 'remote-create' | 'remote-resume', userId: string, onStage: (stage: string) => void) {
+  if (!__DEV__) throw new Error('qa-development-only')
+  const options = { keychainService: 'vaulto.qa.migrations' }
+  const store = {
+    get: (key: string) => SecureStore.getItemAsync(key, options),
+    set: (key: string, value: string) => SecureStore.setItemAsync(key, value, options),
+  }
+  const owner = await currentOwner(userId, onStage)
+  return mode === 'remote-create' ? remoteCreate(owner, store, onStage) : remoteResume(owner, store, onStage)
+}
