@@ -40,7 +40,7 @@ class SyncDeLaPrueba extends AbstractStreamingSyncImplementation {
     })
   }
   obtainLock<T>(options: LockOptions<T>) { return options.callback() }
-  protected async streamingSyncIteration(signal: AbortSignal) {
+  protected override async streamingSyncIteration(signal: AbortSignal) {
     if (!this.red.up) throw new Error('sin red')
     this.updateSyncStatus({ connected: true, connecting: false, priority_status: [], downloading: null, streams: [] })
     this.triggerCrudUpload() // el SDK lo hace al recibir la primera línea de sync
@@ -85,7 +85,7 @@ beforeEach(async () => {
   const source = {
     getClientId: async () => 'QA-device',
     getNextCrudTransaction: async () => queue.length ? { crud: queue, complete: async () => { completes++; queue = [] } } : null,
-  }
+  } as unknown as Parameters<SupabaseConnector['uploadData']>[0]
   const connector = new SupabaseConnector('a', store)
   const adapter = {
     nextCrudItem: async () => queue[0],
