@@ -1,19 +1,17 @@
 # Vaulto — tablero de orquestación
 
-Actualizado: 2026-10-30. Run activo: `run_2d2020eeaebc` (historial anterior conservado).
+Actualizado: 2026-10-31. Run activo: `run_2d2020eeaebc` (historial anterior conservado).
 
 ## Continuación solicitada — #25, #24, #21 y #18
 
-- Confirmado: DEV #25, Task `task_0f5b022a9907`, Dispatch `ctx_9f4303752b96`, entregó `acb2c7b` y `675fe4c`: cuatro pruebas del bucle real del SDK, sin fallo de producción demostrado. Red, outbox y primera línea son simulados; no equivale a una prueba nativa. Entrega revisada, integrada localmente, terminal retained antes de ack del lote completo.
-- Confirmado: QA preflight Task `task_793444a894e0`, Dispatch `ctx_3ee05a490fce`, commit `bb16bb5`, integrado localmente; lote completo procesado y confirmado tras release. AVD1 activo con APK anterior al rediseño; no se requiere AVD2 para los casos secuenciales.
-- Revisado parcialmente: QA Task `task_96b93d6b0882`, Dispatch `ctx_e7d5026ae363`, entregó `8c21514`. No se acepta su diagnóstico de causa ni cierre #25/#21: A/B/A general no acredita anulación pendiente, y outbox local más RPC independiente no acredita replay de la misma cola migrada. Informe en corrección. Ambos lotes completos procesados, terminal retenida antes de ack.
-- Confirmado: el arranque DEV de #18 fue bloqueado por un aviso opcional de compactación (`agent-hooks-review-prompt`, Dispatch `ctx_426ac895d5de`). Tras inspeccionar la pantalla se descartó con Escape, sin cambiar configuración. Retry Dispatch `ctx_6023e6076ce1` completado: revisión documental `10715a4`, incorporada mediante cherry-pick `36a4c3d`; hallazgos residuales corregidos.
-- Confirmado: backend remoto leído sin mutaciones, migraciones0001–0016, ocho guards, RLS y grants RPC; configuración Cloud SHA-256 igual a `powersync/sync-config.yaml`. Evidencia nueva en `docs/validaciones/2026-10-30/`; reglas locales legacy distintas.
-- Confirmado por el coordinador: instalación frozen, tipos y lint correctos; 201 pruebas (79 shared + 122 app) correctas. `private` no expuesto por PostgREST (406/PGRST106), consulta solo lectura.
-- Confirmado: prueba HTTP remota de respuesta perdida tras commit, aplicación y anulación idempotentes; un recibo por lote. Cliente viejo rechazado con23514 y cero filas. No equivale a SDK móvil.
-- Confirmado: fixture #25 DEV `7b82452` integrado localmente como `2b85843`; ruta dev-only nueva con sesión/espacio propios, cola de abono rechazado y timeline del SDK. Correcciones del coordinador: importes numéricos PostgREST normalizados a centavos, secuencia offline→requested→reconexión y cierre de sesión asíncrona al desmontar. 29 pruebas de contratos QA correctas; aún no es evidencia nativa.
-- En ejecución: QA #21 Task `task_0bc4026fd3fa`, Dispatch `ctx_fc10d4767232`, fixture DEV `c4441fb` / integración `a56afb0`, Metro aislado8086. Create migra cola válida sin conectar; resume tras force-stop usa SDK real y remoto.
-- Pendiente: completar ejecución nativa, controles finales, gates de publicación/merge y gate separado para cualquier cierre de Issue. No hay cierres nuevos ni pruebas nativas aprobadas por anticipado.
+- Confirmado: trabajadores #25/#21/#18 terminaron; lotes procesados y reconocidos. No hay worker activo, pregunta ni escalación pendiente.
+- Confirmado #21: en Android, exportación SQLCipher validada con llave correcta/incorrecta; se conservó una cola PowerSync real de dos operaciones, se forzó el cierre del proceso y el SDK real la aplicó tras reabrir con el mismo propietario. Remoto: un recibo `applied`. Evidencia `issue21-native-create.json`, `issue21-native-resume.json`, `issue21-native-ledger.json`.
+- Confirmado #25: el mismo proceso se desconectó por caída real del puente HTTPS/WS local, recibió la solicitud de anulación sin vaciar la cola y reconectó automáticamente: un pago de 60, saldo 40, cola 0, un recibo `cancelled`. Un segundo fixture probó A→B→A: B recibió `propietario-distinto`, `opened:false`, `uploaded:false`; A reanudó el lote/cliente/hash original y completó el mismo resultado. Ver `docs/validaciones/2026-10-31/issue25-native-*.json`.
+- Confirmado #24: inspección remota exclusivamente de lectura; migraciones 0001–0016, 8 tablas con guards/RLS, RPCs protegidas, configuración Cloud igual al YAML canónico y pruebas HTTP de pérdida de respuesta/replay con recibo único. No se aplicó migración ni se cambió el sync remoto.
+- Confirmado #18: rutas, modelo y runbooks revisados y corregidos en los cambios documentales de PR #37. La confirmación/revisión de lmilo sigue pendiente; no se le envió mensaje.
+- Confirmado calidad local actual: `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test` (230: 79 shared + 151 app), todos correctos. Backend remoto solo lectura; no se ejecutó SQL administrativo de escritura.
+- En ejecución: PR #37 sigue abierto. El build EAS inicial terminó, pero la vista normal quedó en blanco. Se agregó `expo-splash-screen` SDK 58 y la espera/ocultamiento correcto de splash; build de desarrollo actualizado `c43c9c15-5167-4ae3-8ecf-7d878efefdf8` en curso.
+- Pendiente: comprobar la pantalla de producto en el segundo APK, publicar el SHA final y esperar CI. Antes del merge se requiere gate separado; antes de cerrar cada Issue, gate separado a resolver por el usuario. #25 conserva pendiente la concurrencia de dos dispositivos; #18/#24 requieren coordinación de lmilo.
 
 ## Puntos de parada obligatorios — instrucción vigente del usuario
 

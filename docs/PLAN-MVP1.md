@@ -22,7 +22,7 @@ Las listas siguientes conservan el alcance original; una casilla histórica sin 
 | Confirmado | Migraciones 0001–0016 remotas, RLS en las ocho tablas de dominio, guard de lotes y permisos RPC: `validaciones/2026-10-30/`. |
 | Confirmado | Selectores SQLite activos, montos decimales y protocolo de aplicación/anulación idempotente implementados. |
 | Confirmado | Recorridos Android históricos, aislamiento y conflictos: `validaciones/2026-10-29/`. No constituyen una prueba del APK con el rediseño posterior. |
-| Pendiente | #25: anulación pendiente con cambio de cuenta, respuesta perdida y reactivación nativa tras reconexión. #21: replay remoto del outbox migrado tras reinicio. |
+| Pendiente | #25: la anulación pendiente reactivó el SDK en Android y conservó el mismo lote en la secuencia A→B→A; resta validar simultaneidad en dos dispositivos y el arranque normal del APK final. #21: replay remoto del outbox migrado tras cierre forzado Android confirmado con un recibo; resta iOS. |
 | Confirmado | #24: cliente anterior rechazado por guard (23514, cero filas), replay HTTP tras respuesta perdida con una sola fila y un recibo por lote; Cloud coincide por SHA-256 con `powersync/sync-config.yaml`. `supabase/sync_rules.yaml` sigue siendo configuración legacy local. |
 | Propuesto | Reducir publicación Postgres a tablas de dominio; requiere migración revisada y autorización de despliegue. Merge por campo/LWW no están implementados. |
 

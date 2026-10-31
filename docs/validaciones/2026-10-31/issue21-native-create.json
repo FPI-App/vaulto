@@ -1,0 +1,21 @@
+{
+  "capturedAt": "2026-10-31T05:52:07.529Z",
+  "report": {
+    "status": "passed",
+    "phase": "remote-create",
+    "scenario": "208096d07a27",
+    "ownerValidated": true,
+    "userHash": "5e5e6d40d17b",
+    "spaceHash": "fa38f7113d70",
+    "categoryIds": [
+      "fd9fc3fb-e13a-4d96-8626-1faca99a2f55",
+      "9fc8e961-ba20-4548-bfc9-f02dd2bad4b7"
+    ],
+    "queueEntries": 2,
+    "queueHash": "e2e4ec1881c5",
+    "preservedQueue": true,
+    "preservedClient": true,
+    "connected": false,
+    "sourcePreserved": true
+  }
+}
