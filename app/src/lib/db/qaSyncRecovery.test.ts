@@ -84,5 +84,6 @@ describe('Línea de tiempo y veredicto', () => {
     const input = { decision: 'cancelled', outbox: 0, remotePagos: 1, remoteSaldo: '40.00' }
     expect(evaluarSyncQa({ ...input, events: antes }).reconnectAfterRequestedInProcess).toBe(false)
     expect(evaluarSyncQa({ ...input, events: despues }).reconnectAfterRequestedInProcess).toBe(true)
+    expect(evaluarSyncQa({ ...input, events: ['connected:true', 'connected:false', 'requested', 'connected:true'] }).reconnectAfterRequestedInProcess).toBe(true)
   })
 })

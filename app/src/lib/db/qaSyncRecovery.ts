@@ -101,9 +101,10 @@ export interface QaEvidenceInput {
 
 /** passed exige anulación confirmada, cola vacía, un solo abono remoto de 60 y saldo 40; la reconexión se reporta aparte. */
 export function evaluarSyncQa(input: QaEvidenceInput) {
-  const reconexion = input.events.indexOf('requested') >= 0
-    && input.events.indexOf('connected:false', input.events.indexOf('requested')) >= 0
-    && input.events.indexOf('connected:true', input.events.indexOf('connected:false', input.events.indexOf('requested'))) >= 0
+  const requested = input.events.indexOf('requested')
+  const connectedAfter = input.events.findIndex((event, index) => event === 'connected:true' && index > requested)
+  const disconnectedBefore = input.events.lastIndexOf('connected:false', connectedAfter)
+  const reconexion = requested >= 0 && connectedAfter > requested && disconnectedBefore >= 0
   const passed = input.decision === 'cancelled' && input.outbox === 0 && input.remotePagos === 1 && input.remoteSaldo === '40.00'
   return { passed, reconnectAfterRequestedInProcess: reconexion }
 }

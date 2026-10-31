@@ -57,7 +57,7 @@ Cero archivos compartidos en código de feature. Cero espera mutua. Lo único co
 | `app/src/features/perfil/`, `features/deudas/` | **edav** (Track B) |
 | `app/src/lib/`, `app/src/theme/`, `app/src/components/` (compartidos del spine) | **co-propiedad** — cambios solo por PR pequeño y avisado; no es zona de trabajo de feature |
 | `supabase/` (infra, migraciones, RLS, conector PowerSync) | **edav** (Track B) |
-| `packages/shared/src/domain/deudas`, `powersync` schema, impl de `DeudasSelectors` | **edav** (Track B) |
+| `packages/shared/src/domain/deudas.ts`, `packages/shared/src/powersync/` y `app/src/features/deudas/data/deudasSelectors.ts` | **edav** (Track B) |
 | `packages/shared/src/domain/selectors.ts` (la **interfaz**) | spine — ya hecho; nadie lo reescribe |
 
 ### Tablas

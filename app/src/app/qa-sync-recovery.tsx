@@ -3,6 +3,7 @@ import { ScrollView, Text, View } from 'react-native'
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router'
 import { PowerSyncDatabase } from '@powersync/react-native'
 import { AppSchema } from '@vaulto/shared/powersync'
+import { aCentavos, desdeCentavos } from '@vaulto/shared/domain'
 import * as Crypto from 'expo-crypto'
 import { Directory, Paths } from 'expo-file-system'
 import * as SecureStore from 'expo-secure-store'
@@ -52,7 +53,7 @@ async function remoteState(debtId: string) {
     supabase.from('deuda').select('saldo_pendiente').eq('id', debtId).maybeSingle(),
   ])
   if (pagos.error || deuda.error) throw new Error('qa-remoto')
-  return { pagos: pagos.data?.length ?? 0, montos: (pagos.data ?? []).map((item) => String(item.monto)), saldo: deuda.data ? String(deuda.data.saldo_pendiente) : null }
+  return { pagos: pagos.data?.length ?? 0, montos: (pagos.data ?? []).map((item) => desdeCentavos(aCentavos(item.monto))), saldo: deuda.data ? desdeCentavos(aCentavos(deuda.data.saldo_pendiente)) : null }
 }
 
 class RecoverySession {
@@ -292,6 +293,7 @@ async function resume(owner: QaOwner, publish: (report: Report) => void) {
 export default function SyncRecoveryQA() {
   const { mode } = useLocalSearchParams<{ mode?: string }>()
   const { session, initializing } = useAuth()
+  const userId = session?.user.id
   const router = useRouter()
   const started = useRef(false)
   const active = useRef<RecoverySession | null>(null)
@@ -299,16 +301,28 @@ export default function SyncRecoveryQA() {
   const [report, setReport] = useState<Report>({ status: 'waiting' })
 
   useEffect(() => {
-    if (!__DEV__ || !['prepare', 'resume'].includes(mode ?? '') || started.current || initializing || !session) return
+    if (!__DEV__ || !['prepare', 'resume'].includes(mode ?? '') || started.current || initializing || !userId) return
     started.current = true
+    let disposed = false
     let stage = 'owner'
+    const publish = (next: Report) => { if (!disposed) setReport(next) }
     void (async () => {
-      const current = await currentOwner(session.user.id)
+      const current = await currentOwner(userId)
+      if (disposed) return
       owner.current = current.userId
       stage = mode ?? 'prepare'
-      active.current = mode === 'prepare' ? await prepare(current, setReport) : await resume(current, setReport)
-    })().catch(() => setReport({ status: 'failed', stage }))
-  }, [mode, session, initializing])
+      const opened = mode === 'prepare' ? await prepare(current, publish) : await resume(current, publish)
+      if (disposed) await opened?.close()
+      else active.current = opened
+    })().catch(() => { if (!disposed) setReport({ status: 'failed', stage }) })
+    return () => {
+      disposed = true
+      started.current = false
+      const opened = active.current
+      active.current = null
+      void opened?.close()
+    }
+  }, [mode, userId, initializing])
 
   // Un cambio de sesión mientras el fixture está abierto lo cierra: el conector no sube con otra cuenta.
   useEffect(() => {
