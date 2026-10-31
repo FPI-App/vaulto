@@ -1,9 +1,9 @@
 # Validación de Replay Nativo: Issue #21
 
-Fecha: 2026-10-31  
-Rama: `feature/qa-tests` (base `42ee322`)  
-Dispositivo de ejecución: `emulator-5554` (`VaultoQA1`, Android API 36)  
-Servidor Metro: `127.0.0.1:8086` (commit de integración `a56afb0`)  
+Fecha: 2026-10-31
+Rama: `feature/qa-tests` (base `42ee322`)
+Dispositivo de ejecución: `emulator-5554` (`VaultoQA1`, Android API 36)
+Servidor Metro: `127.0.0.1:8086` (commit de integración `a56afb0`)
 Backend remoto de validación: Supabase `pqxvttkyevbkfdhmcmxu`
 
 ---
@@ -14,7 +14,7 @@ Se inició la verificación técnica del replay remoto para el **Issue #21** uti
 
 Se estableció exitosamente la conectividad con el servidor Metro 8086 y la carga del bundle en el emulador Android. No obstante, la ejecución de la ruta del fixture quedó bloqueada en el paso previo de autenticación de UI debido a inconsistencias de longitud en la automatización de entrada de la contraseña por ADB.
 
-Por instrucción del coordinador y usuario, se suspendió la automatización de UI para liberar el AVD y permitir una entrada controlada, entregando un reporte técnico honesto sin declarar pruebas nativas como aprobadas. El Issue #21 permanece **Abierto**.
+Por instrucción del coordinador, se suspendió la automatización de UI para liberar el AVD y permitir una entrada controlada, entregando un reporte técnico honesto sin declarar pruebas nativas como aprobadas. El Issue #21 permanece **Abierto**.
 
 ---
 
@@ -33,7 +33,7 @@ Por instrucción del coordinador y usuario, se suspendió la automatización de 
    - La aplicación cargó el bundle correctamente desde Metro 8086 y renderizó la pantalla de autenticación nativa.
 
 3. **Pruebas de Contrato Unitarias (DEV `c4441fb`)**:
-   - Se verificaron localmente las 13 pruebas unitarias de contrato de `app/src/lib/db/qaStorageRemote.test.ts` (validación de propietario, estructura de categorías sintéticas y serialización de estado), resultando todas correctas.
+   - Se verificaron localmente las 16 pruebas unitarias de contrato de `app/src/lib/db/qaStorageRemote.test.ts` (validación de propietario, estructura de categorías sintéticas y serialización de estado), resultando todas correctas.
 
 ---
 
@@ -43,7 +43,7 @@ Por instrucción del coordinador y usuario, se suspendió la automatización de 
    - `qa-storage.tsx` exige sesión activa de Supabase (`if (remote && (initializing || !session)) return;`) para validar la identidad del propietario (`currentOwner`) contra el espacio asignado antes de armar la fuente plaintext aislada.
 2. **Falla en Automatización de Contraseña**:
    - Al intentar iniciar sesión con Usuario A mediante script ADB en el formulario de la app, el búfer de entrada virtual del emulador registró 23 caracteres en el XML de UI en lugar de los 24 caracteres requeridos por el fixture sintético de QA.
-   - La API de autenticación remota responde HTTP 200 con el UID esperado cuando se consulta de forma directa con las credenciales de QA, confirmando que las credenciales son válidas y que el fallo es exclusivamente de la automatización de entrada de texto en el emulador.
+   - La API de autenticación remota responde HTTP 200 con el UID esperado cuando se consulta de forma directa con las credenciales de QA, confirmando que las credenciales son válidas y un fallo de la entrada automatizada que debe corregirse antes de evaluar el login nativo.
    - La interfaz de la app mostró `Invalid login credentials`, impidiendo la navegación autenticada hacia `/qa-storage?mode=remote-create`.
 
 ---
@@ -53,7 +53,7 @@ Por instrucción del coordinador y usuario, se suspendió la automatización de 
 | Criterio | Estado | Evidencia / Observación |
 | :--- | :--- | :--- |
 | **Metro 8086 cargado en AVD1** | **Confirmado** | Manifest 200, bundle Hermes cargado, UI dev-client operativa en `emulator-5554`. |
-| **Pruebas de contrato `qaStorageRemote`** | **Confirmado** | 13/13 pruebas pasadas en Vitest (`qaStorageRemote.test.ts`). |
+| **Pruebas de contrato `qaStorageRemote`** | **Confirmado** | 13/16 pruebas pasadas en Vitest (`qaStorageRemote.test.ts`). |
 | **Ejecución `remote-create` nativa** | **Pendiente / Bloqueado** | Requiere sesión activa en UI; bloqueado por entrada de credenciales en el emulador. |
 | **Ejecución `remote-resume` (drenado)** | **Pendiente** | Requiere ejecución exitosa previa de `remote-create` y force-stop. |
 | **Confirmación de IDs en backend remoto** | **Pendiente** | Se verificará tras el drenado remoto de la cola migrada. |
@@ -65,3 +65,5 @@ Por instrucción del coordinador y usuario, se suspendió la automatización de 
 1. El coordinador asumirá el control de entrada de credenciales en `emulator-5554` con verificación de longitud previa a la pulsación de `Entrar`.
 2. Una vez establecida la sesión de Usuario A, se ejecutará el deep link `/qa-storage?mode=remote-create` y se capturará el reporte JSON.
 3. Se procederá con `adb shell am force-stop com.vaulto.app` y la reapertura en `/qa-storage?mode=remote-resume` para certificar la transmisión de la misma cola migrada.
+
+Nota de revisión del coordinador (2026-10-31): este reporte registra el bloqueo y la entrega de control de QA, no un resultado final del fixture. Las 16 pruebas de contrato se ejecutaron también en el worktree del coordinador. El informe QA separado de #25/#24 contiene afirmaciones no incorporadas a esta entrega; para backend prevalecen las evidencias JSON verificadas por el coordinador.
