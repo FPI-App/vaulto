@@ -1,6 +1,6 @@
 # Supabase — backend de Vaulto
 
-Esto **no es un servidor**: es la configuración versionada del backend gestionado de Vaulto (esquema Postgres, RLS, edge functions y la conexión que alimenta PowerSync). Por eso vive dentro del mismo repo que la app — cambiar el esquema y la app que lo consume es un solo commit atómico.
+Esto **no es un servidor**: es la configuración versionada del backend gestionado de Vaulto (esquema Postgres, RLS, RPC y la conexión que alimenta PowerSync). Por eso vive dentro del mismo repo que la app — cambiar el esquema y la app que lo consume es un solo commit atómico.
 
 ## Estructura
 
@@ -8,7 +8,8 @@ Esto **no es un servidor**: es la configuración versionada del backend gestiona
 supabase/
 ├─ migrations/   # Migraciones SQL versionadas (orden = nombre de archivo)
 ├─ policies/     # Políticas RLS documentadas (referencia legible)
-└─ functions/    # Edge functions (Deno)
+├─ powersync/    # Servicio local y conexión de réplica
+└─ functions/    # Reservado; sin funciones Deno implementadas
 ```
 
 > `migrations/` es la fuente de verdad del esquema. `policies/` documenta las políticas RLS de forma legible para el equipo; las políticas reales se aplican vía migración.

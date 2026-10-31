@@ -16,18 +16,19 @@ SQLCipher) sobre Supabase.
 
 ## Puesta en marcha
 
-```bash
+```powershell
 # 1. Instalar dependencias (desde la raíz del monorepo)
-pnpm install
+pnpm install --frozen-lockfile
 
 # 2. Configurar variables de entorno de la app
-cp app/.env.example app/.env
-# Edita app/.env con EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY
-# y EXPO_PUBLIC_POWERSYNC_URL. (Son públicas por diseño; la seguridad la da RLS.)
+Copy-Item app/.env.example app/.env
+# Edita app/.env con EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+# y EXPO_PUBLIC_POWERSYNC_URL. ANON_KEY sigue admitida como alternativa legacy.
+# Son públicas por diseño; la seguridad la da RLS.
 
 # 3. (Opcional) Supabase local
 supabase start          # o: pnpm supabase:start
-pnpm db:migrate         # aplica migraciones
+# db:migrate ejecuta supabase db reset; revisar destino y autorizar antes
 pnpm db:types           # genera tipos en packages/shared
 
 # 4. Levantar el bundler
@@ -61,12 +62,15 @@ app/
    │     ├─ onboarding/     ── Track B · edav
    │     └─ perfil/         ── Track B · edav
    ├─ lib/
-   │  ├─ env.ts             lectura validada de EXPO_PUBLIC_*
-   │  ├─ supabase/          cliente Supabase (AsyncStorage + url-polyfill)
-   │  ├─ powersync/         provider de la base local
-   │  ├─ sync/              base OP-SQLite + conector Supabase
-   │  ├─ auth/              AuthProvider + useAuth (sesión Supabase)
-   │  └─ deudas/            DeudasSelectorsProvider por espacio activo
+   │  ├─ supabase.ts        cliente Supabase (SecureStore nativo + url-polyfill)
+   │  ├─ powersync/         provider y aviso de recuperación
+   │  ├─ sync/              base por usuario, conector RPC y recuperación de lotes
+   │  ├─ db/                llaves, sesiones y migración legacy
+   │  ├─ auth/              sesión y callback de autenticación
+   │  ├─ deudas/            DeudasSelectorsProvider por espacio activo
+   │  ├─ espacio/           espacio actual
+   │  ├─ navigation/        ruta inicial
+   │  └─ ui/                alertas de interfaz
    ├─ components/           Screen · Button · Field · Placeholder
    └─ theme/                tokens (desde BRAND.md) + ThemeProvider + useTheme
 ```
@@ -82,7 +86,7 @@ los redefine.
 - **Contrato `DeudasSelectors`** (en `@vaulto/shared`): el dashboard (Track A) lo consume vía
   `useDeudasSelectors()`. `DeudasSelectorsProvider` crea `SQLiteDeudasSelectors` con
   la base local y el espacio activo. La noop solo se usa mientras no hay espacio.
-- Cada carpeta de feature tiene un `README-OWNER.md` con su dueño y su tabla canónica.
+- La propiedad de carpetas y tablas se define en `docs/PLAN-MVP1.md`.
 
 ## Seguridad
 

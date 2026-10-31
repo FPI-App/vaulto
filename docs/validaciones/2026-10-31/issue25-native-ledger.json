@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-10-31T09:57:22.506Z",
+  "mode": "read-only",
+  "batches": [
+    "b2957f76-a13c-4459-b453-869c4426a3d0:1:2",
+    "7446c2fd-4969-42f7-8ec2-0eeee7c6f28a:1:2"
+  ],
+  "rows": [
+    {
+      "lote_id": "7446c2fd-4969-42f7-8ec2-0eeee7c6f28a:1:2",
+      "estado": "cancelled",
+      "receipt_count": 1
+    },
+    {
+      "lote_id": "b2957f76-a13c-4459-b453-869c4426a3d0:1:2",
+      "estado": "cancelled",
+      "receipt_count": 1
+    }
+  ]
+}

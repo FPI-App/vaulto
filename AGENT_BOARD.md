@@ -1,6 +1,17 @@
 # Vaulto — tablero de orquestación
 
-Actualizado: 2026-10-30. Run Orca: `run_7292d436ace4`.
+Actualizado: 2026-10-31. Run activo: `run_2d2020eeaebc` (historial anterior conservado).
+
+## Continuación solicitada — #25, #24, #21 y #18
+
+- Confirmado: trabajadores #25/#21/#18 terminaron; lotes procesados y reconocidos. No hay worker activo, pregunta ni escalación pendiente.
+- Confirmado #21: en Android, exportación SQLCipher validada con llave correcta/incorrecta; se conservó una cola PowerSync real de dos operaciones, se forzó el cierre del proceso y el SDK real la aplicó tras reabrir con el mismo propietario. Remoto: un recibo `applied`. Evidencia `issue21-native-create.json`, `issue21-native-resume.json`, `issue21-native-ledger.json`.
+- Confirmado #25: el mismo proceso se desconectó por caída real del puente HTTPS/WS local, recibió la solicitud de anulación sin vaciar la cola y reconectó automáticamente: un pago de 60, saldo 40, cola 0, un recibo `cancelled`. Un segundo fixture probó A→B→A: B recibió `propietario-distinto`, `opened:false`, `uploaded:false`; A reanudó el lote/cliente/hash original y completó el mismo resultado. Ver `docs/validaciones/2026-10-31/issue25-native-*.json`.
+- Confirmado #24: inspección remota exclusivamente de lectura; migraciones 0001–0016, 8 tablas con guards/RLS, RPCs protegidas, configuración Cloud igual al YAML canónico y pruebas HTTP de pérdida de respuesta/replay con recibo único. No se aplicó migración ni se cambió el sync remoto.
+- Confirmado #18: rutas, modelo y runbooks revisados y corregidos en los cambios documentales de PR #37. La confirmación/revisión de lmilo sigue pendiente; no se le envió mensaje.
+- Confirmado calidad local actual: `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test` (230: 79 shared + 151 app), todos correctos. PR #37, SHA `a914e2d`, CI pasó (46 s). Backend remoto solo lectura; no se ejecutó SQL administrativo de escritura.
+- Confirmado: EAS build actualizado `c43c9c15-5167-4ae3-8ecf-7d878efefdf8` terminó; firma coincide e instalación `adb install -r` correcta. Expo `/_expo/open` respondió200 y resolvió `MainActivity`, pero Android registró dos `INITIALIZATION FAILURE/start timeout` y un ANR antes de renderizar JavaScript/UI. Causa raíz desconocida; `native-product-startup.json`.
+- Pendiente: vista de producto en development build (sin render). PR #37 permanece abierto; no se creó gate de merge después del timeout/ANR. Antes del merge se requiere gate separado; antes de cerrar cada Issue, gate separado a resolver por el usuario. #25 conserva pendiente la concurrencia de dos dispositivos; #18/#24 requieren coordinación de lmilo.
 
 ## Puntos de parada obligatorios — instrucción vigente del usuario
 
@@ -32,10 +43,12 @@ Confirmado al incorporar estas reglas: workers asentados, bandeja sin mensajes p
 - Comandos/resultados: 31/31 pruebas afectadas correctas; exportación Android Hermes correcta (2.102 módulos); `git push -u origin orchestration/issue-25` exit 0; `gh pr create --base main --head orchestration/issue-25 --title ... --body-file .cache/orchestration/pr-issue-25.md` creó PR #33; CI remoto correcto.
 - NO verificado: reconexión automática, pérdida de respuesta contra servidor real, SQLCipher tras reinicio y sincronización entre dos dispositivos para los pendientes del Issue. Los mocks no cubren esas garantías. El PR ya se fusionó; el Issue no se cerró.
 
-## Ciclo activo — Issue #26
+## Ciclo completado — Issue #26
 
 - Issue: [#26 — Sustituir el lint ficticio de packages/shared por una verificación real](https://github.com/FPI-App/vaulto/issues/26).
-- Estado: código integrado en main mediante PR #34, merge `ae93ace42fcb7c7418498429128d4c1ba604573d`; CI remoto correcto (run `41139141904`, 49 s). Cierre del Issue pendiente de gate separado `gate_aff7f6bce8db`, Task `task_51e58afa1187`. El usuario delegó gates de PR, no se ha interpretado eso como delegación del cierre de Issues.
+- Estado: CLOSED y Done en el Project, verificados tras autorización explícita del usuario. Gate `gate_aff7f6bce8db` resuelto yes; Task `task_51e58afa1187` completada. Código integrado mediante PR #34, merge `ae93ace42fcb7c7418498429128d4c1ba604573d`, con CI correcto (run `41139141904`, 49 s).
+- Cierre ejecutado: `gh issue close 26 --repo FPI-App/vaulto` exit 0; `gh project item-edit` marcó Done, confirmado por lectura del Project. Archivos del Issue: `packages/shared/eslint.config.js`, `packages/shared/package.json`, `pnpm-lock.yaml`, reporte QA y este tablero. Comandos de lint/tipos/tests y sus resultados se conservan abajo; no se repitieron pruebas de código para este cierre administrativo ni se ejecutaron pruebas nativas nuevas.
+- Issues abiertos tras el cierre: #25, #24, #21, #18, #17, #16, #6 y #2 (épica Track B), confirmados con `gh issue list --state open --limit 100`.
 - Gate de apertura del PR de lint: `gate_fc85b1f44b0a`, Task `task_b6daaaa25133`, resuelto `yes` por delegación explícita del usuario tras revisión del coordinador. La publicación de las ramas ya estaba autorizada.
 
 ### Revisión de los demás PR solicitada por el usuario

@@ -1,0 +1,63 @@
+{
+  "capturedAt": "2026-10-31T09:37:08.056Z",
+  "report": {
+    "status": "passed",
+    "origin": "resume",
+    "processId": "188a9601",
+    "connectorCreatedAfterRestart": false,
+    "reconnectAfterRequestedInProcess": false,
+    "fixture": {
+      "id": "ef0724a2-c4ff-4d71-951e-e09065b3ea5b",
+      "debtId": "499774ab-cfc6-4d1c-bf2b-6f833f2730bc",
+      "localPaymentId": "c1e79430-23ef-420f-b582-d3c39b968749",
+      "remotePaymentId": "0aef70ba-876e-4b40-a72e-77f57c1fc134"
+    },
+    "batchId": "7446c2fd-4969-42f7-8ec2-0eeee7c6f28a:1:2",
+    "clientIdHash": "b7c8af441af7",
+    "queueHash": "ac1dab4b80b2",
+    "queueEntries": 2,
+    "phase": "passed",
+    "decision": "cancelled",
+    "outbox": 0,
+    "connected": true,
+    "uploadError": "none",
+    "remote": {
+      "pagos": 1,
+      "montos": [
+        "60.00"
+      ],
+      "saldo": "40.00"
+    },
+    "timedOut": {
+      "blocked": false,
+      "drain": false
+    },
+    "canRequestCancellation": false,
+    "timeline": [
+      {
+        "t": "2026-10-31T09:36:11.254Z",
+        "event": "start:resume"
+      },
+      {
+        "t": "2026-10-31T09:36:12.886Z",
+        "event": "connected:true"
+      },
+      {
+        "t": "2026-10-31T09:36:12.888Z",
+        "event": "sdk-connect"
+      },
+      {
+        "t": "2026-10-31T09:36:12.952Z",
+        "event": "outbox:0"
+      },
+      {
+        "t": "2026-10-31T09:36:12.953Z",
+        "event": "decision:cancelled"
+      },
+      {
+        "t": "2026-10-31T09:36:13.853Z",
+        "event": "verdict:passed"
+      }
+    ]
+  }
+}

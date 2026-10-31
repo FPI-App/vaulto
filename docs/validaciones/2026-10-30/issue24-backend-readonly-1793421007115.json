@@ -1,0 +1,41 @@
+{
+  "checkedAt": "2026-10-31T04:30:07.111Z",
+  "target": "pqxvttkyevbkfdhmcmxu",
+  "mode": "read-only",
+  "apply_anon": false,
+  "apply_authenticated": true,
+  "cancel_anon": false,
+  "cancel_authenticated": true,
+  "domain_tables_without_rls": 0,
+  "guarded_domain_tables": 8,
+  "migrations": [
+    "0001",
+    "0002",
+    "0003",
+    "0004",
+    "0005",
+    "0006",
+    "0007",
+    "0008",
+    "0009",
+    "0010",
+    "0011",
+    "0012",
+    "0013",
+    "0014",
+    "0015",
+    "0016"
+  ],
+  "physical_delete_grants": 0,
+  "replication_schemas": [
+    "auth",
+    "private",
+    "public",
+    "realtime",
+    "storage",
+    "supabase_migrations",
+    "vault"
+  ],
+  "rpc_apply": true,
+  "rpc_cancel": true
+}

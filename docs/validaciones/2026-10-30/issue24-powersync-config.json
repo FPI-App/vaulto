@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-10-31T04:36:06.761Z",
+  "mode": "read-only",
+  "canonical": "powersync/sync-config.yaml",
+  "remoteSha256": "4bd50a03b6bc6edf09402608b0c4ae64b9a0b3d8e509220aa6b0b99399c8f8b4",
+  "localSha256": "4bd50a03b6bc6edf09402608b0c4ae64b9a0b3d8e509220aa6b0b99399c8f8b4",
+  "equal": true,
+  "legacyLocal": "supabase/sync_rules.yaml",
+  "deploymentPerformed": false
+}
