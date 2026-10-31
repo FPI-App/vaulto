@@ -2,6 +2,8 @@
 // de la sesión, construye el payload de dominio y sanea el reporte. Solo lo usan development builds.
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
+export const esUuidQa = (valor: string) => UUID.test(valor)
+
 export interface QaMembership {
   user_id: string
   espacio_id: string
