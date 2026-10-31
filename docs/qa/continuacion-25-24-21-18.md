@@ -68,7 +68,7 @@ Confirmado en datos sintéticos del usuario QA A, a través de la API pública a
 - Código QA: `app/qa-native-entry.tsx`, `app/src/app/qa-storage.tsx`, `app/src/app/qa-sync-recovery.tsx`, `app/src/lib/db/qaStorageRemote.ts`, `app/src/lib/db/qaSyncRecovery.ts` y sus pruebas.
 - Arranque normal: `app/app.json`, `app/package.json`, `app/src/app/_layout.tsx`, `pnpm-lock.yaml`.
 - `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`: correctos. `pnpm test`: 230/230 (79 shared + 151 app).
-- `git push -u origin orchestration/issue-26`: correcto; commit `b78f34f`. `gh pr checks 37`: CI del SHA exacto pasó (50 s, ejecución 41191260552).
+- `git push -u origin orchestration/issue-26`: correcto; el head actual es `a914e2d`. `gh pr view 37 --json statusCheckRollup`: CI del SHA exacto pasó (46 s, ejecución 41192681667).
 - `adb install -r <APK>`: correcto; `apksigner verify --print-certs`: el SHA-256 de firma del APK nuevo coincidió con el anterior. La inspección remota de los lotes fue exclusivamente `SELECT`.
 
 ### Pendiente / no verificado
@@ -77,4 +77,4 @@ Confirmado en datos sintéticos del usuario QA A, a través de la API pública a
 - Vista normal de Vaulto sobre el segundo build: no renderizada por timeout/ANR de inicialización de Android.
 - #24: no se autorizó ni aplicó migración; el destino remoto observado ya tiene 0012–0016. La revisión coordinada del cambio de publicación de las ocho tablas sigue pendiente con lmilo.
 - #18: queda confirmación/revisión compartida de lmilo; no se envió mensaje externo.
-- CI del SHA `b78f34f` de PR #37: pasó. Merge del PR y cierre de Issues siguen pendientes; no se crearon gates de merge/cierre porque la apertura normal del APK no quedó validada y los issues conservan otros criterios abiertos.
+- CI del SHA `a914e2d` de PR #37: pasó (46 s, ejecución 41192681667). Merge del PR y cierre de Issues siguen pendientes; no se crearon gates de merge/cierre porque la apertura normal del APK no quedó validada y los issues conservan otros criterios abiertos.
