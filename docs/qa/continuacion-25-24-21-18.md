@@ -1,80 +1,76 @@
-# Continuación de #25, #24, #21 y #18 — 2026-10-30
+# Diagnóstico del arranque nativo y estado de evidencia de #25, #24 y #21 — 2026-10-31
 
-## Entrega local revisada
+Revisión de DEV, solo de lectura. No se cambió código de producción ni se ejecutaron pruebas, operaciones de dispositivo ni accesos al backend para esta versión. Convención: **Confirmado** (hay un archivo o consulta citado), **Supuesto**, **Desconocido**, **Propuesto**.
 
-- #25: `app/src/lib/sync/reactivacionSubida.test.ts`, `app/package.json` y `pnpm-lock.yaml`. Cuatro casos ejercitan el bucle real de subida de shared-internals 1.4.0 con el conector y recovery store reales; red, cola y primera línea se simulan. No se demostró un fallo de producción y no se modificó el conector para corregir una hipótesis sin reproducción.
-- #24: nuevas evidencias en `docs/validaciones/2026-10-30/`: migraciones0001–0016, RLS/guards/grants, esquema private no expuesto, estado PowerSync sin errores y hash de reglas remoto igual a `powersync/sync-config.yaml`. Consultas exclusivamente de lectura; sin despliegues ni SQL DML administrativo.
-- #21: inventario y plan nativo en `preflight-25-24-21-2026-10-30.md`; ejecución nativa adicional aún en curso al redactar esta sección.
-- #18: README raíz/app/Supabase, ARQUITECTURA, PLAN, INFRA-SETUP, DEMO, policies y plantilla raíz alineados con código. Se conserva el contrato real sin redefinirlo. Revisión DEV en `issue18-actualizacion.md`; hallazgos residuales corregidos por el coordinador: publishable key con compatibilidad legacy, llave SQLCipher aleatoria sin variable global, helper booleano correcto, paths y árboles reales.
+Rutas «worktree del orquestador» = `ORQUESTADOR-Codex-Main/` (no están en `feature/dev-features`). El informe de QA es `docs/qa/pending-acceptance-25-24-21-18.md` en la rama `feature/qa-tests` (leído con `git show`, sin tocar ese worktree).
 
-## Comandos y resultados del coordinador
+> **Corrección.** La versión anterior de este informe decía que #25 estaba bloqueado por `uploadError: conflict` y que le faltaba un segundo dispositivo. Ambas frases quedan retiradas: (a) `conflict` era una captura intermedia (`issue25-native-blocked.json`, estado `blocked`); las capturas posteriores terminan en `passed`; (b) existe evidencia histórica de dos dispositivos (sección 3, capa C). Lo que sigue pendiente es otra cosa y se precisa abajo.
 
-- `git merge --no-edit feature/dev-features` y `git merge --no-edit feature/qa-tests`: correctos. `git cherry-pick 10715a4`: incorpora solo revisión documental; no incorpora ediciones abandonadas ni su reversión.
-- `pnpm install --frozen-lockfile`: correcto, lockfile sin nueva resolución.
-- `pnpm typecheck`: app/shared correctos.
-- `pnpm lint`: app/shared correctos con linter real.
-- `pnpm test`: 201/201 (79 shared, 122 app), 24 archivos de prueba correctos.
-- `git diff --check`: correcto; avisos de normalización CRLF no son fallos.
-- PowerSync CLI0.10.3 `fetch config`/`status`: correctos; salida capturada en memoria y reducida a reglas/estado, sin registrar configuración de conexión ni credenciales. Comparación SHA-256 normalizando CRLF: igual. Réplica inicial completada, ocho tablas, sin errores.
-- Supabase CLI `db query` mediante el ejecutable ya instalado: una consulta SELECT de metadatos, correcta; resultado en el JSON fechado. No se ejecutó reset, push ni migración.
-- GET PostgREST con `Accept-Profile: private`: HTTP406/PGRST106, sin exposición del esquema. TLS verificado con almacén CA del sistema; no se deshabilitó validación.
-- Búsqueda de enlaces locales Markdown en documentos revisados: sin destinos faltantes.
+## 1. Arranque del APK de producto (`c43c9c15`): causa raíz no probada
 
-## NO verificado en esta entrega local
+### Confirmado
+- `docs/validaciones/2026-10-31/native-product-startup.json` (worktree del orquestador): APK EAS `c43c9c15-5167-4ae3-8ecf-7d878efefdf8`, perfil `development`, commit `df2b6a8`, instalado con reemplazo y firma coincidente. Android registró dos `INITIALIZATION FAILURE: start timeout state=empty` (10:17:54 y 10:19:27) y un `ANR: process failed to complete startup` (10:22:49); el dashboard no se renderizó (`result: dashboard-not-rendered`, `rootCause: unknown`).
+- Esos eventos ocurren antes de que arranque JS, por lo que `app/src/lib/sync/db.ts`, `PowerSyncProvider` y las rutas no pueden provocarlos.
+- `app/app.json`, `app/package.json`, `app/eas.json` y `pnpm-lock.yaml` no cambiaron entre `df2b6a8` y `HEAD` (`git diff --stat`).
+- Compilación previa `9692ce86`: `SplashScreenManager class not found`. `expo-dev-launcher` busca esa clase por reflexión dentro de un `try/catch` (`node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/DevLauncherController.kt:516`); es un aviso no fatal y no explica un timeout previo a JS.
+- Aparte, `docs/validaciones/2026-10-31/issue21-native-anr.json` registra un ANR anterior (05:02:22) con `DevLauncherErrorActivity` en pantalla. Es otro evento, en otro build; no se analizó su causa.
 
-- La suite del SDK no acredita SQLite cifrado, transporte nativo ni sincronización real. Los resultados nativos se incorporarán desde la entrega QA, conservando lo que permanezca pendiente.
-- No hay APK nuevo con expo-blur/linear-gradient ni validación del rediseño en el APK anterior. Exportar JavaScript no equivale a compilar/ejecutar ese APK.
-- No se ha confirmado revisión compartida de lmilo, ni enviado mensajes externos en su nombre.
-- No se aplicó la propuesta de restringir la publicación Postgres FOR ALL TABLES. Requiere cambio SQL revisado y autorización de despliegue.
-- No se borraron archivos legacy ni datos de prueba; no se probará iOS, excluido por decisión previa del usuario.
-- Los cierres de Issues conservan gates separados. Este informe no acredita cierre remoto ni publicación del árbol local.
+### Observaciones puntuales del emulador (hipótesis, no causa probada)
+Lectura de solo lectura de `emulator-5554` durante esta tarea: x86_64, API 36, 2 CPU, ~2 GB de RAM, `MemFree` ≈ 110 MB, swap casi agotado, `ActivityManager` con operaciones lentas en `startProcess`/`bindApplication`, y `artd` indicando que `base.apk` (≈ 311 MB) «has no usable artifacts» (sin dexopt). **Esto es una correlación observada, no una causa demostrada**: no hay traza ANR ni arranque instrumentado que lo conecte con los tres eventos de las 10:17–10:22, que ocurrieron horas antes de esa lectura.
 
-## Ejecución HTTP remota adicional del coordinador
+### Desconocido
+- Qué hilo bloqueó `Application.onCreate`/`bindApplication` (falta la traza de `/data/anr` del momento).
+- Si ocurre con más memoria, tras un dexopt, o en un dispositivo físico.
 
-Confirmado en datos sintéticos del usuario QA A, a través de la API pública autenticada; sin SQL administrativo de escritura. Un puente efímero ligado a 127.0.0.1 consume la respuesta exitosa del servidor y destruye el socket antes de entregarla al cliente; el listener se cierra al finalizar. HTTPS upstream conserva validación TLS.
+### Reproducción segura (solo lectura, sin borrar datos)
+```sh
+ADB="$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe"
+$ADB -s emulator-5554 shell dumpsys activity exit-info com.vaulto.app
+$ADB -s emulator-5554 shell 'grep -E "MemAvailable|SwapFree" /proc/meminfo'
+$ADB -s emulator-5554 logcat -d -v time -b main,system,crash | grep -E "com.vaulto.app|ANR in"
+```
+Para observar un arranque sin `pm clear` ni desinstalar: `adb shell am force-stop com.vaulto.app` y `adb shell am start -W -n com.vaulto.app/.MainActivity` (el `-W` informa `TotalTime`), capturando el logcat antes. Solo con autorización de QA (cambia el estado del emulador): `adb shell cmd package compile -m speed-profile -f com.vaulto.app`.
 
-- Aplicación: primera respuesta interna200/applied perdida; cliente observa fallo de red, reintenta mismo contenido/batch y recibe200/already_applied; una sola categoría por ID.
-- Anulación: deuda100 con pago60; lote posterior60 rechazado23514. Respuesta interna200/cancelled perdida; repetir cancelación y aplicar ese lote devuelven cancelled; un solo pago y saldo40.
-- Recibos: consulta SQL exclusivamente SELECT confirma un recibo por cada lote probado, estados applied/cancelled.
-- Cliente anterior: POST directo a categoría con espacio propio rechazado400/23514 y mensaje exacto del guard atómico; lectura posterior confirma cero filas. La primera versión del oráculo esperaba42501 por error y dejó ok:false en su reporte crudo; se conserva ese reporte y se añade `issue24-old-client-verified.json` con el código esperado verificado contra0012 y la ejecución real. No es un fallo del producto.
-- Evidencia: `issue24-25-http-response-loss.json`, `issue24-old-client-verified.json`, `issue24-response-loss-ledger.json`. Los fixtures se conservan, sin borrado.
-- NO verificado aquí: transporte móvil/SDK nativo, migración o sesión Android. Estos resultados cubren servidor y HTTP real; no sustituyen los pendientes nativos de #25 y #21.
+## 2. Inventario de dispositivos
 
-## Evidencia nativa y estado final — 2026-10-31
+- **Sesión del 2026-10-31 (Confirmado):** un solo emulador conectado, `emulator-5554`. Lo corroboran `adb devices` en esta tarea y el informe de QA (sección 1).
+- **Evidencia histórica (2026-10-30):** `docs/validaciones/2026-10-29/e2e-android-autenticado.json` (`checkedAt` 2026-10-30T00:30:00Z; campo `clientes`) registra `emulator-5554` (VaultoQA1) y `emulator-5556` (VaultoQA2). La evidencia histórica no queda invalidada por el inventario actual, y el inventario actual no la reproduce.
 
-### #21 — llave/migración y replay en Android
+## 3. Capas de evidencia (qué prueba cada una y qué no)
 
-- `issue21-native-create.json`: fixture nativo real exportado a SQLCipher; validación de llave correcta/incorrecta; dos operaciones pendientes preservadas con `clientId` y cola idénticos; no hubo conexión antes de terminar la exportación.
-- `issue21-process-restart.json`: proceso de la app detenido y vuelto a abrir con PID distinto, sin limpiar datos.
-- `issue21-native-resume.json`: SDK PowerSync y conector Supabase reales reabrieron como el propietario original, drenaron las dos operaciones y confirmaron la transacción en 60 s; copia original conservada.
-- `issue21-native-ledger.json`: SELECT remoto confirma un recibo `applied` para el mismo lote.
+| Capa | Artefactos y fechas | Qué muestra | Qué NO prueba |
+|---|---|---|---|
+| **A. Servidor/SQL** | `docs/validaciones/2026-10-29/carreras-sql-qa.json` (2026-10-29T23:04:56Z): casos `60+60 sobre deuda 100` y `40+60 sobre deuda 100`, `passed: true`, reintentos idempotentes. `docs/validaciones/2026-10-29/sql-qa-completa.json`. | Atomicidad e idempotencia en PostgreSQL con dos conexiones simultáneas. | PowerSync, dispositivos, SDK nativo; el propio archivo lo aclara. |
+| **B. Servidor remoto por HTTP** | `issue24-25-http-response-loss.json`, `issue24-response-loss-ledger.json`, `issue24-old-client-verified.json` (2026-10-31, en `docs/validaciones/2026-10-30/` del worktree del orquestador). | Reintento tras pérdida de respuesta: `already_applied` y `cancelled`, un recibo por lote; escritura directa de cliente antiguo rechazada con `23514`. | El SDK nativo (`nativeSdkExercised: false`). El archivo conserva `ok: false` y `rejected: false` en el caso de cliente antiguo por un oráculo incorrecto, ya corregido en `issue24-old-client-verified.json`. |
+| **C. E2E histórico en dos emuladores** | `e2e-android-autenticado.json` (2026-10-30): «D1 y D2 sin conexion, abono 60 en cada uno»; «D1 reconecta: servidor con 1 pago»; «D2 reconecta: rechazo 23514 -> Revisar abono pendiente -> Anular abono -> cola desbloqueada»; «Operacion posterior en D2 (egreso 20.000) sincroniza»; «Reinicio de la app en D1 sin conexion … conservados»; «pagos 60+40, 11 lotes applied + 1 cancelled». | El escenario de #25 de extremo a extremo con la UI real en dos development builds, backend remoto y datos sintéticos. | 40+60 concurrente entre dispositivos (registra 60 y luego 40 en secuencia). Pérdida de respuesta con SDK nativo (su `noCubierto` la lista). Reinicio de D2 con la cola rechazada pendiente: D2 se reinició solo para forzar el reintento (observación «Desconocido»: no reintentó hasta reiniciar). Ejecución manual única, no repetida. |
+| **D. Fixtures nativos de la sesión 2026-10-31 (1 emulador, rutas dev-only)** | #25: `issue25-native-reconnect-same-process.json` (09:23Z, `status: passed`, `decision: cancelled`, outbox 2 → 0, 1 pago de 60.00, saldo 40.00), `issue25-native-owner-b.json` (09:33Z, `rejected`, `propietario-distinto`, `opened: false`, `uploaded: false`), `issue25-native-owner-a-resume.json` (09:37Z, `passed`, mismo `clientIdHash` y `queueHash` en la captura), `issue25-native-ledger.json` (09:57Z, dos lotes `cancelled`, un recibo cada uno). Etapa intermedia `issue25-native-blocked.json` / `issue25-native-ab-test-blocked.json` (`blocked`, `conflict`). | Con el SDK real de PowerSync y SQLCipher en Android: rechazo, solicitud de anulación, reconexión en el mismo proceso, drenado de la cola, aislamiento por propietario y reanudación del dueño. | La UI normal del producto (rutas `qa-*` solo existen en development build, datos sintéticos). Dos dispositivos simultáneos. Pérdida de respuesta real en el conector nativo: `issue25-native-reconnect-same-process.json` simula una caída de red, no una respuesta perdida tras commit del servidor. |
+| **E. CI / unitarias** | Pruebas de `app/src/lib/sync/` (`reactivacionSubida.test.ts`, `SyncRecoveryStore.test.ts`, `recuperacionAbonosRechazados.test.ts`), `qaSyncRecovery.test.ts`. | Lógica pura y máquina de estados. | Runtime nativo, SQLCipher, PowerSync nativo. |
 
-### #25 — reactivación y cambio de propietario
+Los fixtures de la capa D son aportados por QA y DEV solo los leyó; la ejecución nativa en sí no se repitió.
 
-- `issue25-native-reconnect-same-process.json`: se detuvo el puente QA que transporta HTTPS y WebSocket, se observó `connected:false`, se solicitó cancelar con outbox=2 y se restauró el mismo puente. El SDK reconectó en el mismo proceso, canceló la operación inválida, vació la cola y confirmó un único pago de 60 con saldo 40.
-- `issue25-native-owner-b.json`: con el fixture solicitado por A, la sesión B obtuvo `propietario-distinto`, `opened:false`, `uploaded:false`.
-- `issue25-native-owner-a-resume.json`: A volvió a abrir exactamente el mismo cliente/lote/hash tras B; outbox=0, un pago de 60, saldo 40 y resultado `passed`.
-- `issue25-native-ledger.json`: consulta SELECT remota confirma un recibo `cancelled` por cada lote nativo. Se conserva la sesión/cola QA; no se borró ningún dato.
-- La app Auth no pudo completar la primera llamada de sign-out mientras no había transporte; el cierre local de la sesión del fixture sucedió antes de llamar Auth. Con el puente restaurado, sign-out terminó y se pudo iniciar B.
+## 4. Estado por Issue
 
-### Build y vista de producto
+### #25 — abonos rechazados sin bloquear la cola
+- **Aparece demostrado:** criterios 1–3 (anulación explícita atómica e idempotente; estado y acción recuperable; operación posterior sin duplicar pagos) con la capa C en UI real y dos dispositivos, más las capas A, B y D. Criterio 5 (dos development builds con datos sintéticos): la capa C lo describe en su ejecución del 2026-10-30.
+- **Parcial o incierto:**
+  - Criterio 4 (reinicio, cambio de cuenta, reintento, pérdida de respuesta, IDs y metadatos): reinicio de D1 y cambio de cuenta en el mismo dispositivo (capa C); IDs y metadatos conservados en los fixtures (capa D); pérdida de respuesta solo a nivel HTTP (capa B). **Falta cobertura de pérdida de respuesta/replay con el SDK nativo** y reinicio de D2 con una cola rechazada pendiente.
+  - Reintento tardío tras reconectar: **Desconocido** (capa C y `docs/qa/pending-acceptance-25-24-21-18.md`).
+  - Si la capa C satisface el criterio 5 tal como lo interpreta el Issue (es una ejecución histórica no repetida, con un build anterior al APK `c43c9c15`) es **Desconocido**; el juicio es del usuario/coordinador.
+- **No bloqueado «solo» por falta de un segundo dispositivo.** Lo que impide validar la UI normal del producto en el APK actual es el arranque (sección 1).
 
-- EAS build `9692ce86-65a2-41ee-bd76-b6e3561b6f7b` terminó correctamente desde el SHA `df2b6a8`. Se descargó el APK, se verificó que la firma coincidiera con la instalada y se instaló con `adb install -r` (sin borrar datos).
-- La primera apertura del producto mostró blanco. El log nativo reportó que no encontraba `SplashScreenManager`; el layout espera `useFonts` y retorna `null` mientras carga. Se agregó `expo-splash-screen ~58.0.12`, plugin SDK 58, `preventAutoHideAsync()` y ocultamiento al completar o fallar la carga de Inter.
-- Build EAS actualizado `c43c9c15-5167-4ae3-8ecf-7d878efefdf8`: `FINISHED`, APK descargado, firma coincidente e instalación `adb install -r` correcta. Expo `/_expo/open` respondió200 y resolvió `MainActivity`, pero el proceso agotó el tiempo de inicialización en dos aperturas y registró ANR en una tercera antes de cargar JavaScript. Dashboard no renderizado; causa raíz desconocida. Detalle sanitizado en `native-product-startup.json`. No se repitió el build.
+### #24 — protocolo atómico
+- 60+60: capas A y C. 40+60: solo capa A (en C es secuencial). Idempotencia: capas A y B. Cliente antiguo: capa B. Detalle de compuertas y discrepancias en `docs/qa/issue24-18-coordinacion-pendiente.md`.
+- Pendiente: revisión de lmilo (externa), decidir si se repite 60+60/40+60, 40+60 concurrente entre dispositivos y la propuesta de acotar la publicación `powersync`.
 
-### Archivos y comandos verificados
+### #21 — llave SQLCipher y migración
+Evidencia nativa 2026-10-31 en un emulador (worktree del orquestador, `docs/validaciones/2026-10-31/`): `issue21-native-create.json` (05:52Z, `queueEntries: 2`, `queueHash` conservado, `preservedClient: true`, `sourcePreserved: true`), `issue21-process-restart.json`, `issue21-native-resume.json` (05:57Z, `drained: true`, `uploadCalls: 1`, `uploadFailures: 0`, lote `…:1:2`), `issue21-native-ledger.json` (05:59Z, un recibo `applied`).
+- **Aparece demostrado en Android (1 dispositivo, ruta dev-only):** copia cifrada que conserva cola y `clientId`, reinicio de proceso, envío exactamente una vez de esa transacción y original conservado.
+- **Brechas precisas:**
+  1. Cambio de cuenta nativo en el **flujo real del producto** durante/tras la migración: los fixtures prueban `propietario-distinto` (25) y la migración (21) por separado.
+  2. La migración ejecutada desde el arranque normal del producto: el APK `c43c9c15` no completa el arranque.
+  3. iOS: fuera de alcance por decisión del usuario (`docs/VALIDACION-PRIORIDADES-2026-10-29.md`).
+  4. Retirada del original en texto plano: conservado; borrarlo requiere autorización con ruta y comando exactos.
+  5. Rechazo con llave incorrecta en development build: no se leyó un artefacto de esta sesión que lo cubra; **Desconocido** (la validación previa es `docs/validaciones/2026-10-29/sqlcipher-android-*.json`).
 
-- Código QA: `app/qa-native-entry.tsx`, `app/src/app/qa-storage.tsx`, `app/src/app/qa-sync-recovery.tsx`, `app/src/lib/db/qaStorageRemote.ts`, `app/src/lib/db/qaSyncRecovery.ts` y sus pruebas.
-- Arranque normal: `app/app.json`, `app/package.json`, `app/src/app/_layout.tsx`, `pnpm-lock.yaml`.
-- `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`: correctos. `pnpm test`: 230/230 (79 shared + 151 app).
-- `git push -u origin orchestration/issue-26`: correcto; el head actual es `a914e2d`. `gh pr view 37 --json statusCheckRollup`: CI del SHA exacto pasó (46 s, ejecución 41192681667).
-- `adb install -r <APK>`: correcto; `apksigner verify --print-certs`: el SHA-256 de firma del APK nuevo coincidió con el anterior. La inspección remota de los lotes fue exclusivamente `SELECT`.
-
-### Pendiente / no verificado
-
-- Concurrencia del caso #25 en dos dispositivos: solo se usó un AVD y dos propietarios alternados. No se probó iOS.
-- Vista normal de Vaulto sobre el segundo build: no renderizada por timeout/ANR de inicialización de Android.
-- #24: no se autorizó ni aplicó migración; el destino remoto observado ya tiene 0012–0016. La revisión coordinada del cambio de publicación de las ocho tablas sigue pendiente con lmilo.
-- #18: queda confirmación/revisión compartida de lmilo; no se envió mensaje externo.
-- CI del SHA `a914e2d` de PR #37: pasó (46 s, ejecución 41192681667). Merge del PR y cierre de Issues siguen pendientes; no se crearon gates de merge/cierre porque la apertura normal del APK no quedó validada y los issues conservan otros criterios abiertos.
+## 5. Cambios de código en la app
+Ninguno necesario con esta evidencia. Las rutas `qa-storage` y `qa-sync-recovery` ya existen en `HEAD`. Lo pendiente es validación (arranque del APK, SDK nativo con pérdida de respuesta, dos dispositivos si se quiere repetir), no código.
