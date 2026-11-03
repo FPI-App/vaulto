@@ -1,0 +1,11 @@
+{
+  "checkedAt": "2026-10-31T04:48:25.266Z",
+  "mode": "synthetic client API; no administrative SQL",
+  "status": 400,
+  "expectedCode": "23514",
+  "code": "23514",
+  "atomicProtocolGuardMessage": true,
+  "persistedRows": 0,
+  "passed": true,
+  "previousOracleCorrection": "42501 was incorrectly expected by the first probe. Migration0012 explicitly raises23514 for direct writes."
+}

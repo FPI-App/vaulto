@@ -1,0 +1,131 @@
+{
+  "capturedAt": "2026-10-31T09:23:01.930Z",
+  "report": {
+    "status": "passed",
+    "origin": "prepare",
+    "processId": "188a9601",
+    "connectorCreatedAfterRestart": false,
+    "reconnectAfterRequestedInProcess": true,
+    "fixture": {
+      "id": "b1f1c86a-5b9a-406a-a107-4fd2e434dc86",
+      "debtId": "0c431a45-66c9-47ad-bbd3-a3b06de81643",
+      "localPaymentId": "3e19cd90-5d8e-476a-9e78-2cfab8fabde0",
+      "remotePaymentId": "48a55670-43b9-4633-91ce-5971f3affc0b"
+    },
+    "batchId": "b2957f76-a13c-4459-b453-869c4426a3d0:1:2",
+    "clientIdHash": "4157d8eeae89",
+    "queueHash": "90a3a00ed5a6",
+    "queueEntries": 2,
+    "phase": "passed",
+    "decision": "cancelled",
+    "outbox": 0,
+    "connected": true,
+    "uploadError": "none",
+    "remote": {
+      "pagos": 1,
+      "montos": [
+        "60.00"
+      ],
+      "saldo": "40.00"
+    },
+    "timedOut": {
+      "blocked": false,
+      "drain": false
+    },
+    "canRequestCancellation": false,
+    "timeline": [
+      {
+        "t": "2026-10-31T06:00:44.248Z",
+        "event": "start:prepare"
+      },
+      {
+        "t": "2026-10-31T06:00:47.494Z",
+        "event": "upload-error:conflict"
+      },
+      {
+        "t": "2026-10-31T06:00:48.068Z",
+        "event": "connected:true"
+      },
+      {
+        "t": "2026-10-31T06:00:48.089Z",
+        "event": "sdk-connect"
+      },
+      {
+        "t": "2026-10-31T06:00:48.281Z",
+        "event": "outbox:2"
+      },
+      {
+        "t": "2026-10-31T06:00:48.281Z",
+        "event": "decision:blocked"
+      },
+      {
+        "t": "2026-10-31T06:22:46.763Z",
+        "event": "connected:false"
+      },
+      {
+        "t": "2026-10-31T06:22:59.155Z",
+        "event": "connected:true"
+      },
+      {
+        "t": "2026-10-31T07:20:47.384Z",
+        "event": "connected:false"
+      },
+      {
+        "t": "2026-10-31T07:20:48.647Z",
+        "event": "connected:true"
+      },
+      {
+        "t": "2026-10-31T08:18:50.352Z",
+        "event": "connected:false"
+      },
+      {
+        "t": "2026-10-31T08:18:51.304Z",
+        "event": "connected:true"
+      },
+      {
+        "t": "2026-10-31T09:16:56.628Z",
+        "event": "connected:false"
+      },
+      {
+        "t": "2026-10-31T09:17:03.478Z",
+        "event": "connected:true"
+      },
+      {
+        "t": "2026-10-31T09:20:21.629Z",
+        "event": "connected:false"
+      },
+      {
+        "t": "2026-10-31T09:20:24.925Z",
+        "event": "upload-error:retry"
+      },
+      {
+        "t": "2026-10-31T09:20:57.780Z",
+        "event": "requested-by-user"
+      },
+      {
+        "t": "2026-10-31T09:20:59.511Z",
+        "event": "requested"
+      },
+      {
+        "t": "2026-10-31T09:21:40.307Z",
+        "event": "connected:true"
+      },
+      {
+        "t": "2026-10-31T09:21:42.006Z",
+        "event": "upload-error:none"
+      },
+      {
+        "t": "2026-10-31T09:21:42.750Z",
+        "event": "outbox:0"
+      },
+      {
+        "t": "2026-10-31T09:21:42.750Z",
+        "event": "decision:cancelled"
+      },
+      {
+        "t": "2026-10-31T09:21:44.979Z",
+        "event": "verdict:passed"
+      }
+    ]
+  }
+}

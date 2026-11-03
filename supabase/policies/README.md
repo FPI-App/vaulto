@@ -1,6 +1,6 @@
 # Políticas RLS — modelo de aislamiento por espacio
 
-Referencia legible de las políticas Row Level Security de Vaulto. Las políticas **reales** se aplican vía migraciones: 0008 limita membresías al propietario, 0010 restringe la propiedad del espacio y 0011 fija los permisos de tablas del Track B. La existencia del archivo en Git no prueba su aplicación remota.
+Referencia legible de las políticas Row Level Security de Vaulto. Las políticas **reales** se aplican vía migraciones: 0008 limita membresías al propietario, 0010 restringe la propiedad del espacio y 0011 fija los permisos de tablas del Track B. Desde 0012, el trigger de lote exige el protocolo RPC para escribir las ocho tablas; 0013–0016 amplían recuperación y validaciones. Tener INSERT/UPDATE no habilita escrituras directas fuera del lote. La existencia del archivo en Git no prueba su aplicación remota.
 
 ## El pivot `espacio_miembro` es el corazón del modelo
 
@@ -61,26 +61,8 @@ Notas sobre los casos especiales:
 
 ## Coherencia con las reglas de sincronización de PowerSync
 
-PowerSync define *sync rules* que deben replicar exactamente el alcance de la RLS. El parámetro natural del bucket es el conjunto de espacios del usuario:
+La configuración Cloud versionada es [powersync/sync-config.yaml](../../powersync/sync-config.yaml), con Sync Streams edition 3. El 2026-10-30 se consultó `powersync fetch config` sin publicar cambios ni conservar credenciales: sus reglas coinciden con ese archivo. La configuración local [sync_rules.yaml](../sync_rules.yaml) usa buckets legacy con el servicio fijado en Docker; no es una copia literal del despliegue Cloud y no debe presentarse como tal.
 
-```yaml
-# Esbozo de sync rules (referencia; la definición real vive en la instancia de PowerSync)
-bucket_definitions:
-  espacios_del_usuario:
-    parameters: >
-      select espacio_id
-      from espacio_miembro
-      where user_id = request.user_id()
-        and deleted_at is null
-    data:
-      - select * from espacio        where id         = bucket.espacio_id
-      - select * from espacio_miembro where espacio_id = bucket.espacio_id
-      - select * from perfil         where espacio_id = bucket.espacio_id
-      - select * from cuenta         where espacio_id = bucket.espacio_id
-      - select * from categoria      where espacio_id = bucket.espacio_id
-      - select * from movimiento     where espacio_id = bucket.espacio_id
-      - select * from deuda          where espacio_id = bucket.espacio_id
-      - select * from pago           where espacio_id = bucket.espacio_id
-```
+Ambas delimitan las filas de dominio por membresía activa. Cloud baja solo el perfil propio, mientras RLS permite también leer perfiles del mismo espacio: sync selecciona un subconjunto permitido, no una equivalencia literal de todas las políticas. La membresía revocada deja de autorizar el espacio; los tombstones de dominio se conservan para sincronizar soft delete.
 
-Si la RLS y las sync rules divergen, un dispositivo podría intentar bajar filas que el servidor le niega (o viceversa). Mantenerlas alineadas es parte del contrato del esquema.
+La publicación Postgres actual incluye esquemas adicionales. Eso no significa que estén expuestos al dispositivo: las consultas Cloud seleccionan explícitamente las ocho tablas de dominio. Restringir la publicación es un endurecimiento propuesto y requiere migración revisada y autorización de despliegue; no se aplicó durante esta revisión.

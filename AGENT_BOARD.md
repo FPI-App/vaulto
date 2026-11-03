@@ -1,6 +1,26 @@
 # Vaulto — tablero de orquestación
 
-Actualizado: 2026-10-30. Run Orca: `run_7292d436ace4`.
+Actualizado: 2026-11-02. Run activo: `run_2d2020eeaebc` (historial anterior conservado).
+
+## Continuación solicitada — #25, #24, #21 y #18
+
+- Confirmado: los workers DEV/QA de esta continuación reportaron éxito; informes contrastados con artefactos y commits locales. Sin pregunta ni escalación pendiente. Un dispatch histórico de Claude falló al iniciar por `agent-hooks-review-prompt`; el usuario autorizó continuar y las tareas posteriores sí iniciaron.
+- Confirmado #21: Android validó SQLCipher con llave correcta/incorrecta, preservó dos operaciones y el mismo `clientId`, forzó cierre del proceso y el SDK real drenó la cola tras reabrir; un recibo `applied`. Pendiente demostrar migración desde la apertura normal de una base legacy. iOS continúa explícitamente fuera de alcance por decisión del usuario. Evidencia `issue21-native-create.json`, `issue21-native-resume.json`, `issue21-native-ledger.json`.
+- Confirmado #25: el E2E histórico del 2026-10-30 ejecutó el caso con `emulator-5554` y `emulator-5556`: 60+60 offline, rechazo 23514 de D2, anulación en UI, operación posterior de D2 sincronizada y reinicio offline de D1. En el fixture nativo reciente de un solo AVD se comprobó caída/reconexión del puente, outbox 2→0, un pago de 60/saldo 40 y aislamiento A→B→A. Pendiente reintento/pérdida de respuesta a través del SDK nativo y arranque en el build de producto actual. Ver `e2e-android-autenticado.json` y `issue25-native-*.json`.
+- Confirmado #24: las evidencias versionadas registran SQL 0006–0016 aplicado remotamente el 2026-10-29 (`despliegue-remoto.json`, `executed:true`, `exitCode:0`); esta continuación hizo solo lecturas remotas. La carrera PostgreSQL 60+60 y 40+60 pasó con reintentos idempotentes (`carreras-sql-qa.json`); también se inspeccionaron RLS, grants, esquema privado, reglas PowerSync Cloud e idempotencia HTTP. El Issue sigue con texto desactualizado sobre despliegue y sin revisión confirmada de lmilo; restringir `powersync FOR ALL TABLES` requiere coordinación/autorización aparte.
+- Confirmado #18: seis hallazgos documentales históricos están corregidos y el séptimo queda parcial (checklist antiguo del plan); ARQUITECTURA §1 y `supabase/policies/README.md` describen el modelo canónico. Revisión de lmilo y reconciliación de documentos históricos aún pendientes. Informe `docs/qa/issue24-18-coordinacion-pendiente.md`.
+- Confirmado calidad: `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test` (230: 79 shared + 151 app) pasaron en la validación previa. PR #37 head `b721bab`, CI pasó (41 s, run `41192959696`). La revisión de estándares detectó posible incumplimiento del proceso compartido: cambios de `app/src/lib/` requieren PR pequeño y aviso a lmilo; no consta aviso. La revisión Spec se corrigió con la evidencia histórica.
+- Confirmado: EAS build `c43c9c15-5167-4ae3-8ecf-7d878efefdf8` terminó, firma coincidente e instalación correcta; el producto registró dos timeouts y un ANR antes de renderizar UI. Presión de recursos y falta de dexopt son hipótesis, no causa probada. `native-product-startup.json`.
+- Pendiente: render normal del producto en el build actual y coordinación/revisión de lmilo. PR #37 sigue abierto; no se creó gate de merge. Ninguna Issue se cerró. Antes de merge y de cada cierre se requiere un gate separado.
+
+### Avance de continuación — 2026-11-02
+
+- Confirmado #18: Claude reconcilió `docs/PLAN-MVP1.md`, `docs/INFRA-SETUP.md` y tres documentos históricos en `feature/dev-features`; añadió una tabla criterio/evidencia en `docs/qa/issue24-18-coordinacion-pendiente.md`. Antigravity revisó de forma independiente y detectó que el runbook `docs/DESPLIEGUE-PRIORIDADES-MVP1.md` aún describía 0006–0016 como no ejecutadas. Esta rama añade nota de vigencia basada en evidencia versionada; no se consultó ni modificó el remoto. Diff de Claude sin eliminaciones y `git diff --check` limpio; QA no editó archivos. Tareas Orca: DEV `task_1312729034d1` / `ctx_e6c8e2f8a91b`, QA `task_d3acab9e886d` / `ctx_50d4866490bd`, ambas `succeeded`; lotes procesados y acusados, terminales liberados.
+- #18 continúa abierto: falta revisión/confirmación de lmilo y revisión de PR #37 antes de integrar los cambios compartidos. No se contactó a nadie. Las casillas históricas del Issue y del plan no se marcaron como completas.
+- Confirmado: `adb devices -l` no mostró dispositivos y `emulator -list-avds` no encontró AVD en esta sesión. La validación nativa actual de #25/#21 no se repitió; el bloqueo de arranque de APK continúa sin causa demostrada.
+- Confirmado #25: Claude añadió al harness una pérdida de respuesta después de aplicar el lote, con reintento del SDK y SupabaseConnector reales sobre RPC simulado. DEV y QA verificaron el caso; `pnpm --dir app typecheck` pasó, Vitest dirigido pasó 5/5 y `git diff --check` pasó. Esto no acredita PostgreSQL/RLS ni red móvil nativa; el cambio está preparado localmente en esta rama y aún no se publicó en el PR.
+- Confirmado en esta rama: `pnpm typecheck`, `pnpm lint` y `pnpm test` pasaron; 79 pruebas shared + 152 app = 231. No se generó un APK nuevo ni se ejecutó Expo nativo.
+- PR #37 sigue abierto. El commit de código/test `24aba26` está publicado y su CI pasó en 42 s (run `41558884581`). No se creó gate de merge ni gates de cierre; no se fusionó ni se cerró ninguna Issue.
 
 ## Puntos de parada obligatorios — instrucción vigente del usuario
 
@@ -32,10 +52,12 @@ Confirmado al incorporar estas reglas: workers asentados, bandeja sin mensajes p
 - Comandos/resultados: 31/31 pruebas afectadas correctas; exportación Android Hermes correcta (2.102 módulos); `git push -u origin orchestration/issue-25` exit 0; `gh pr create --base main --head orchestration/issue-25 --title ... --body-file .cache/orchestration/pr-issue-25.md` creó PR #33; CI remoto correcto.
 - NO verificado: reconexión automática, pérdida de respuesta contra servidor real, SQLCipher tras reinicio y sincronización entre dos dispositivos para los pendientes del Issue. Los mocks no cubren esas garantías. El PR ya se fusionó; el Issue no se cerró.
 
-## Ciclo activo — Issue #26
+## Ciclo completado — Issue #26
 
 - Issue: [#26 — Sustituir el lint ficticio de packages/shared por una verificación real](https://github.com/FPI-App/vaulto/issues/26).
-- Estado: código integrado en main mediante PR #34, merge `ae93ace42fcb7c7418498429128d4c1ba604573d`; CI remoto correcto (run `41139141904`, 49 s). Cierre del Issue pendiente de gate separado `gate_aff7f6bce8db`, Task `task_51e58afa1187`. El usuario delegó gates de PR, no se ha interpretado eso como delegación del cierre de Issues.
+- Estado: CLOSED y Done en el Project, verificados tras autorización explícita del usuario. Gate `gate_aff7f6bce8db` resuelto yes; Task `task_51e58afa1187` completada. Código integrado mediante PR #34, merge `ae93ace42fcb7c7418498429128d4c1ba604573d`, con CI correcto (run `41139141904`, 49 s).
+- Cierre ejecutado: `gh issue close 26 --repo FPI-App/vaulto` exit 0; `gh project item-edit` marcó Done, confirmado por lectura del Project. Archivos del Issue: `packages/shared/eslint.config.js`, `packages/shared/package.json`, `pnpm-lock.yaml`, reporte QA y este tablero. Comandos de lint/tipos/tests y sus resultados se conservan abajo; no se repitieron pruebas de código para este cierre administrativo ni se ejecutaron pruebas nativas nuevas.
+- Issues abiertos tras el cierre: #25, #24, #21, #18, #17, #16, #6 y #2 (épica Track B), confirmados con `gh issue list --state open --limit 100`.
 - Gate de apertura del PR de lint: `gate_fc85b1f44b0a`, Task `task_b6daaaa25133`, resuelto `yes` por delegación explícita del usuario tras revisión del coordinador. La publicación de las ramas ya estaba autorizada.
 
 ### Revisión de los demás PR solicitada por el usuario

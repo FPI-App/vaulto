@@ -1,8 +1,10 @@
 # Despliegue coordinado del MVP1
 
+> **Estado contrastado — 2026-11-02.** El plan de despliegue de abajo conserva su estado previo. La evidencia versionada posterior registra que el SQL SHA-256 `8aa2f82a…115a` se ejecutó en `pqxvttkyevbkfdhmcmxu` el 2026-10-29, con salida 0 e historial remoto 0001–0016 (`docs/validaciones/2026-10-29/despliegue-remoto.json`; `docs/VALIDACION-PRIORIDADES-2026-10-29.md`, § «Despliegue remoto»). Esta actualización solo leyó esos archivos; no revalidó el destino remoto. Por ello, «todavía no ejecutado» y el paso 5 describen el plan anterior al despliegue. No repitas el comando remoto sin revisar primero el estado actual y obtener la autorización exigida para el destino exacto.
+
 ## Destino y preparación
 
-**Confirmado:** proyecto Supabase `Vaulto`, referencia `pqxvttkyevbkfdhmcmxu`; historial remoto 0001–0005. Consultar las evidencias fechadas en `validaciones/2026-10-29/` antes de actuar.
+**Confirmado (preflight del 2026-10-29):** proyecto Supabase `Vaulto`, referencia `pqxvttkyevbkfdhmcmxu`; en ese momento el historial remoto era 0001–0005. El artefacto posterior de despliegue registra 0001–0016. Consultar las evidencias fechadas en `validaciones/2026-10-29/` antes de actuar.
 
 `node scripts/prepare-mvp1-deployment.mjs` solo genera `.cache/qa/deploy-mvp1.sql` y un manifiesto de hashes. No ejecuta SQL ni conecta a servidores. El SQL generado aplica 0006–0016 dentro de una única transacción y exige exactamente el historial inicial esperado. Un error o cambio de historial revierte la transacción. Un reintento después de un éxito se detiene por ese mismo guard, sin reaplicar migraciones.
 

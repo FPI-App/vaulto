@@ -40,6 +40,7 @@
     "expo-linking": "~58.0.14",
     "expo-router": "~58.0.26",
     "expo-secure-store": "~58.0.2",
+    "expo-splash-screen": "~58.0.12",
     "expo-status-bar": "~58.0.4",
     "js-logger": "^1.6.1",
     "lucide-react-native": "^1.56.0",
@@ -56,6 +57,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.0",
+    "@powersync/shared-internals": "1.4.0",
     "@types/react": "~19.3.0",
     "eslint": "^9.39.5",
     "eslint-config-expo": "^58.0.4",

@@ -1,0 +1,28 @@
+{
+  "capturedAt": "2026-10-31T05:57:22.096Z",
+  "report": {
+    "status": "passed",
+    "phase": "remote-resume",
+    "scenario": "208096d07a27",
+    "ownerValidated": true,
+    "categoryIds": [
+      "fd9fc3fb-e13a-4d96-8626-1faca99a2f55",
+      "9fc8e961-ba20-4548-bfc9-f02dd2bad4b7"
+    ],
+    "queueEntriesBefore": 2,
+    "queueHashBefore": "e2e4ec1881c5",
+    "preservedQueue": true,
+    "preservedClient": true,
+    "remoteBefore": 0,
+    "remoteAfter": 2,
+    "drained": true,
+    "uploadCalls": 1,
+    "uploadFailures": 0,
+    "transactionsCompleted": 1,
+    "recoveryRows": 0,
+    "batchIds": [
+      "cece8db4-dae0-49d9-8b56-1fd5231fa47d:1:2"
+    ],
+    "timeoutMs": 60000
+  }
+}

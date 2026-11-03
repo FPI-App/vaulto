@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-10-31T05:59:51.101Z",
+  "mode": "read-only",
+  "batch": "cece8db4-dae0-49d9-8b56-1fd5231fa47d:1:2",
+  "rows": [
+    {
+      "estado": "applied",
+      "lote_id": "cece8db4-dae0-49d9-8b56-1fd5231fa47d:1:2",
+      "receipt_count": 1
+    }
+  ]
+}
