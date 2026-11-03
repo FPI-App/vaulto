@@ -1,6 +1,6 @@
 # Vaulto — tablero de orquestación
 
-Actualizado: 2026-10-31. Run activo: `run_2d2020eeaebc` (historial anterior conservado).
+Actualizado: 2026-11-02. Run activo: `run_2d2020eeaebc` (historial anterior conservado).
 
 ## Continuación solicitada — #25, #24, #21 y #18
 
@@ -12,6 +12,15 @@ Actualizado: 2026-10-31. Run activo: `run_2d2020eeaebc` (historial anterior cons
 - Confirmado calidad: `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test` (230: 79 shared + 151 app) pasaron en la validación previa. PR #37 head `b721bab`, CI pasó (41 s, run `41192959696`). La revisión de estándares detectó posible incumplimiento del proceso compartido: cambios de `app/src/lib/` requieren PR pequeño y aviso a lmilo; no consta aviso. La revisión Spec se corrigió con la evidencia histórica.
 - Confirmado: EAS build `c43c9c15-5167-4ae3-8ecf-7d878efefdf8` terminó, firma coincidente e instalación correcta; el producto registró dos timeouts y un ANR antes de renderizar UI. Presión de recursos y falta de dexopt son hipótesis, no causa probada. `native-product-startup.json`.
 - Pendiente: render normal del producto en el build actual y coordinación/revisión de lmilo. PR #37 sigue abierto; no se creó gate de merge. Ninguna Issue se cerró. Antes de merge y de cada cierre se requiere un gate separado.
+
+### Avance de continuación — 2026-11-02
+
+- Confirmado #18: Claude reconcilió `docs/PLAN-MVP1.md`, `docs/INFRA-SETUP.md` y tres documentos históricos en `feature/dev-features`; añadió una tabla criterio/evidencia en `docs/qa/issue24-18-coordinacion-pendiente.md`. Antigravity revisó de forma independiente y detectó que el runbook `docs/DESPLIEGUE-PRIORIDADES-MVP1.md` aún describía 0006–0016 como no ejecutadas. Esta rama añade nota de vigencia basada en evidencia versionada; no se consultó ni modificó el remoto. Diff de Claude sin eliminaciones y `git diff --check` limpio; QA no editó archivos. Tareas Orca: DEV `task_1312729034d1` / `ctx_e6c8e2f8a91b`, QA `task_d3acab9e886d` / `ctx_50d4866490bd`, ambas `succeeded`; lotes procesados y acusados, terminales liberados.
+- #18 continúa abierto: falta revisión/confirmación de lmilo y revisión de PR #37 antes de integrar los cambios compartidos. No se contactó a nadie. Las casillas históricas del Issue y del plan no se marcaron como completas.
+- Confirmado: `adb devices -l` no mostró dispositivos y `emulator -list-avds` no encontró AVD en esta sesión. La validación nativa actual de #25/#21 no se repitió; el bloqueo de arranque de APK continúa sin causa demostrada.
+- Confirmado #25: Claude añadió al harness una pérdida de respuesta después de aplicar el lote, con reintento del SDK y SupabaseConnector reales sobre RPC simulado. DEV y QA verificaron el caso; `pnpm --dir app typecheck` pasó, Vitest dirigido pasó 5/5 y `git diff --check` pasó. Esto no acredita PostgreSQL/RLS ni red móvil nativa; el cambio está preparado localmente en esta rama y aún no se publicó en el PR.
+- Confirmado en esta rama: `pnpm typecheck`, `pnpm lint` y `pnpm test` pasaron; 79 pruebas shared + 152 app = 231. No se generó un APK nuevo ni se ejecutó Expo nativo.
+- PR #37 sigue abierto; el head `55c65d6` conserva CI verde (run `41253551479`). Esta actualización documental aún no está publicada en el PR. No se creó gate de merge ni gates de cierre; no se fusionó ni se cerró ninguna Issue.
 
 ## Puntos de parada obligatorios — instrucción vigente del usuario
 

@@ -23,8 +23,14 @@ const operations = crud.map((op) => ({ table: op.table, id: op.id, op: op.op, da
 
 class Red {
   up = true
-  server: 'rechaza' | 'acepta' = 'rechaza'
+  server: 'rechaza' | 'acepta' | 'ledger' = 'rechaza'
   rpcs: string[] = []
+  // Servidor idempotente simulado: el ledger guarda lo que el commit dejó aplicado, por lote.
+  ledger = new Map<string, string>()
+  applications = 0
+  loseNextResponse = true
+  calls: { batchId: string; payload: string }[] = []
+  clientIds: string[] = []
   private onDrop?: () => void
   drop() { this.up = false; this.onDrop?.() }
   restore() { this.up = true }
@@ -72,18 +78,31 @@ beforeEach(async () => {
   store = new SyncRecoveryStore(database.queries)
   await store.init()
   mocks.createClient.mockReturnValue({
-    rpc: (name: string) => ({
+    rpc: (name: string, args: { p_lote_id: string; p_operaciones: unknown }) => ({
       throwOnError: async () => {
         red.rpcs.push(name)
         if (!red.up) throw { code: 'NETWORK', message: 'QA-private-detail' }
         if (name === 'cancelar_lote_abono') return { data: { protocol: 1, batch_id: BATCH, status: 'cancelled' } }
+        if (red.server === 'ledger') {
+          const payload = JSON.stringify(args.p_operaciones)
+          red.calls.push({ batchId: args.p_lote_id, payload })
+          const previous = red.ledger.get(args.p_lote_id)
+          if (previous !== undefined) {
+            if (previous !== payload) throw { code: '22023', message: 'QA-private-detail' } // mismo lote con otro payload
+            return { data: { protocol: 1, batch_id: args.p_lote_id, status: 'already_applied' } }
+          }
+          red.ledger.set(args.p_lote_id, payload) // commit del servidor
+          red.applications++
+          if (red.loseNextResponse) { red.loseNextResponse = false; throw { code: 'NETWORK', message: 'QA-private-detail' } } // respuesta perdida
+          return { data: { protocol: 1, batch_id: args.p_lote_id, status: 'applied' } }
+        }
         if (red.server === 'rechaza') throw { code: '23514', message: 'QA-private-detail' }
         return { data: { protocol: 1, batch_id: BATCH, status: 'applied' } }
       },
     }),
   })
   const source = {
-    getClientId: async () => 'QA-device',
+    getClientId: async () => { red.clientIds.push('QA-device'); return 'QA-device' },
     getNextCrudTransaction: async () => queue.length ? { crud: queue, complete: async () => { completes++; queue = [] } } : null,
   } as unknown as Parameters<SupabaseConnector['uploadData']>[0]
   const connector = new SupabaseConnector('a', store)
@@ -135,5 +154,24 @@ describe('Reactivación de la subida con el bucle real del SDK', () => {
     red.restore()
     await vi.waitFor(() => expect(completes).toBe(1), { timeout: RETRY_MS * 15 })
     expect((await store.get(BATCH, operations))?.decision).toBe('applied')
+  })
+
+  it('si el servidor aplica el lote y la respuesta se pierde, el reintento real repite el mismo lote, no lo duplica y completa la cola una vez', async () => {
+    red.server = 'ledger' // el lote entra al ledger y la respuesta se pierde en el primer RPC
+    await vi.waitFor(() => expect(completes).toBe(1), { timeout: RETRY_MS * 15 })
+    await new Promise((resolve) => setTimeout(resolve, RETRY_MS * 4)) // un tercer envío o un segundo complete se verían aquí
+    expect(red.calls).toHaveLength(2)
+    const [primera, segunda] = red.calls
+    if (primera === undefined || segunda === undefined) throw new Error('Se esperaban dos llamadas registradas')
+    expect(segunda).toEqual(primera) // mismo batch_id y mismo payload byte a byte
+    expect(primera.batchId).toBe(BATCH)
+    expect(JSON.parse(primera.payload)).toEqual(operations) // mismos IDs de pago/deuda
+    expect(new Set(red.clientIds)).toEqual(new Set(['QA-device']))
+    expect(red.applications).toBe(1)
+    expect(red.ledger.size).toBe(1)
+    expect(completes).toBe(1)
+    expect(queue).toEqual([])
+    // Un error de red no es un rechazo del servidor: no debe quedar fila en la tienda de recuperación.
+    expect(await database.queries.getOptional('SELECT count(*) n FROM vaulto_sync_recovery')).toEqual({ n: 0 })
   })
 })
