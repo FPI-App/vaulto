@@ -20,7 +20,7 @@ Actualizado: 2026-11-02. Run activo: `run_2d2020eeaebc` (historial anterior cons
 - Confirmado: `adb devices -l` no mostró dispositivos y `emulator -list-avds` no encontró AVD en esta sesión. La validación nativa actual de #25/#21 no se repitió; el bloqueo de arranque de APK continúa sin causa demostrada.
 - Confirmado #25: Claude añadió al harness una pérdida de respuesta después de aplicar el lote, con reintento del SDK y SupabaseConnector reales sobre RPC simulado. DEV y QA verificaron el caso; `pnpm --dir app typecheck` pasó, Vitest dirigido pasó 5/5 y `git diff --check` pasó. Esto no acredita PostgreSQL/RLS ni red móvil nativa; el cambio está preparado localmente en esta rama y aún no se publicó en el PR.
 - Confirmado en esta rama: `pnpm typecheck`, `pnpm lint` y `pnpm test` pasaron; 79 pruebas shared + 152 app = 231. No se generó un APK nuevo ni se ejecutó Expo nativo.
-- PR #37 sigue abierto; el head `55c65d6` conserva CI verde (run `41253551479`). Esta actualización documental aún no está publicada en el PR. No se creó gate de merge ni gates de cierre; no se fusionó ni se cerró ninguna Issue.
+- PR #37 sigue abierto. El commit de código/test `24aba26` está publicado y su CI pasó en 42 s (run `41558884581`). No se creó gate de merge ni gates de cierre; no se fusionó ni se cerró ninguna Issue.
 
 ## Puntos de parada obligatorios — instrucción vigente del usuario
 
